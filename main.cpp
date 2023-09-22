@@ -152,25 +152,35 @@ int main(void)
     //*==================================
 
     float vertices[] = {
-        -0.5f, -0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
-        0.0f, 0.5f, 0.0f
+        0.5f, 0.5f, 0.0f, // top right
+        0.5f, -0.5f, 0.0f, // bottom right
+        -0.5f, -0.5f, 0.0f, // bottom left
+        -0.5f, 0.5f, 0.0f // top left
+    };
+    unsigned int indices[] = { // note that we start from 0!
+        0, 1, 3, // first triangle
+        1, 2, 3 // second triangle
     };
 
-    // acquare a VAO ( vertex array object ) to store our triangle context into
+    // acquire a VAO ( vertex array object ) to store our triangle context into
     unsigned int VAO;
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
-    // acquire a VBO ( vertex buffer object ) to store our triangle in
+    // acquire a VBO ( vertex buffer object ) to store our rectangle vertices in
     unsigned int VBO;
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO); // bind VBO to array buffer
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // send data to graphics card
 
+    // acquire an EBO ( element buffer object ) to store our rectangle vertex indices in
+    unsigned int EBO;
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW); // send data to graphics card
+
     // applies to our currently bound VBO
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
-                          (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
     //*==================================
@@ -184,8 +194,8 @@ int main(void)
 
         // imagine having multiple of these for now    
         glUseProgram(shaderProgram);        // use our shader for the triangle
-        glBindVertexArray(VAO);             // use our triangle VAO
-        glDrawArrays(GL_TRIANGLES, 0, 3);   // draw the actual triangle ( interpret the VAO as a triangle )
+        glBindVertexArray(VAO);             // use our rectangle VAO
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // draw the actual rectangle ( interpret the VAO as a triangle )
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
