@@ -7,10 +7,14 @@
 #include "util.hpp"
 
 void error_callback(int code, const char* description);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 int main(void)
 {
     GLFWwindow* window;
+
+    std::cout << "Compiled against GLFW " 
+        << GLFW_VERSION_MAJOR << "." << GLFW_VERSION_MINOR << "." << GLFW_VERSION_REVISION << std::endl;
 
     glfwSetErrorCallback(&error_callback);
 
@@ -24,6 +28,8 @@ int main(void)
         glfwTerminate();
         return -1;
     }
+
+    glfwSetKeyCallback(window, &key_callback);
 
     // Make the window's context current
     glfwMakeContextCurrent(window);
@@ -69,4 +75,12 @@ void error_callback(int code, const char* description)
 			std::cout << std::endl;
     }
     #endif
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    PARAM_UNUSED(scancode);
+    PARAM_UNUSED(mods);
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
