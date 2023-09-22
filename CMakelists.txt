@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.27)
 project(Mandlebrot
 		VERSION 		1.0
 		DESCRIPTION 	"Generates a mandlebrot"
-		LANGUAGES		CXX)
+		LANGUAGES		C CXX)
 
 set(CMAKE_C_COMPILER 		"gcc")
 set(CMAKE_CXX_COMPILER 		"g++")
@@ -12,6 +12,9 @@ set(CMAKE_SYSTEM_NAME 		Generic)
 set(CMAKE_SYSTEM_VERSION 	1)
 
 find_package(glfw3 3.3 REQUIRED)
+
+# Add library here before compile options are introduced to prevent 381 or so warnings
+add_library(glad STATIC lib/glad/glad.c)
 
 add_compile_options(
 	-Wall
@@ -47,9 +50,11 @@ add_compile_definitions(
 )
 
 include_directories(inc/)
+include_directories(lib/)
 
 add_executable(${PROJECT_NAME} 	main.cpp
 								src/util.cpp)
 
 target_link_libraries(${PROJECT_NAME} opengl32)
 target_link_libraries(${PROJECT_NAME} glfw)
+target_link_libraries(${PROJECT_NAME} glad)
