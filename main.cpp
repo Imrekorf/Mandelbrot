@@ -23,6 +23,10 @@ int main(void)
 {
     GLFWwindow* window;
 
+    // shader build output buffer
+    int success;
+    char infoLog[512];
+
     std::cout << "Compiled against GLFW " 
         << GLFW_VERSION_MAJOR << "." << GLFW_VERSION_MINOR << "." << GLFW_VERSION_REVISION << std::endl;
 
@@ -70,6 +74,106 @@ int main(void)
     glfwSetErrorCallback(&event_error_callback);
 
     //*==================================
+    //* Setup shaders
+    //*==================================
+    
+    // TODO: generate shaders from res folder
+    // create vertex shader & compile
+    char const* vert_shader_src = R"(
+        #version 330 core
+        layout (location = 0) in vec3 aPos;
+
+        void main()
+        {
+            gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+        }
+    )";
+
+    unsigned int vertexShader;
+    vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vert_shader_src, NULL);
+    glCompileShader(vertexShader);
+    
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success); // check compile output
+    if(!success) {
+        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        std::cout << "[GL] [ERR]: \"Failed to compile vertex shader\", " << infoLog << std::endl;
+        glfwTerminate();
+        return -1;
+    }
+
+    // create fragment shader & compile
+    char const* frag_shader_src = R"(
+        #version 330 core
+        out vec4 FragColor;
+
+        void main()
+        {
+            FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+        }
+    )";
+
+    unsigned int fragmentShader;
+    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &frag_shader_src, NULL);
+    glCompileShader(fragmentShader);
+
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success); // check compile output
+    if(!success) {
+        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        std::cout << "[GL] [ERR]: \"Failed to compile fragment shader\", " << infoLog << std::endl;
+        glfwTerminate();
+        return -1;
+    }
+
+    // create shader program
+    unsigned int shaderProgram;
+    shaderProgram = glCreateProgram();
+
+    // link fragment and vertex shader to shader program
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+
+    glGetShaderiv(shaderProgram, GL_COMPILE_STATUS, &success); // check link output
+    if(!success) {
+        glGetShaderInfoLog(shaderProgram, 512, NULL, infoLog);
+        std::cout << "[GL] [ERR]: \"Failed to link shaders\", " << infoLog << std::endl;
+        glfwTerminate();
+        return -1;
+    }
+
+    // clean up vertex and fragment shader, as program has been compiled, so individual units are no longer necessary
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+    //*==================================
+    //* Create a triangle :D
+    //*==================================
+
+    float vertices[] = {
+        -0.5f, -0.5f, 0.0f,
+        0.5f, -0.5f, 0.0f,
+        0.0f, 0.5f, 0.0f
+    };
+
+    // acquare a VAO ( vertex array object ) to store our triangle context into
+    unsigned int VAO;
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+
+    // acquire a VBO ( vertex buffer object ) to store our triangle in
+    unsigned int VBO;
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO); // bind VBO to array buffer
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // send data to graphics card
+
+    // applies to our currently bound VBO
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+                          (void*)0);
+    glEnableVertexAttribArray(0);
+
+    //*==================================
     //* Actual render loop happens here
     //*==================================
     
@@ -77,6 +181,11 @@ int main(void)
     while (!glfwWindowShouldClose(window)) {
         // Render here
         glClear(GL_COLOR_BUFFER_BIT);
+
+        // imagine having multiple of these for now    
+        glUseProgram(shaderProgram);        // use our shader for the triangle
+        glBindVertexArray(VAO);             // use our triangle VAO
+        glDrawArrays(GL_TRIANGLES, 0, 3);   // draw the actual triangle ( interpret the VAO as a triangle )
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
