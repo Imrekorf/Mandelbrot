@@ -37,7 +37,7 @@ add_link_options(
 
 add_compile_definitions(
 	# Debug definitions
-	$<$<CONFIG:DEBUG>:>
+	$<$<CONFIG:DEBUG>:DEBUG>
 	# Release definitions
 	$<$<CONFIG:RELEASE>:NDEBUG>
 	# C defintions
@@ -48,7 +48,8 @@ add_compile_definitions(
 
 include_directories(inc/)
 
-add_executable(${PROJECT_NAME} main.cpp)
+add_executable(${PROJECT_NAME} 	main.cpp
+								src/util.cpp)
 
 target_link_libraries(${PROJECT_NAME} opengl32)
 target_link_libraries(${PROJECT_NAME} glfw)
