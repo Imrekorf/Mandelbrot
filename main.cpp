@@ -10,15 +10,18 @@
 #include "util.hpp"
 
 namespace my_window {
-    constexpr size_t        height = 480;
-    constexpr size_t        width  = 640;
-    constexpr char const*   title  = "Hello World";
+    constexpr size_t        height = 800;
+    constexpr size_t        width  = 800;
+    constexpr char const*   title  = "Mandlebrot";
 };
 
 // callback defines
 void event_error_callback(int code, const char* description);
 void event_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void event_mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void event_framebuffer_size_callback(GLFWwindow* window, int width, int height);
+
+double offset_x = 0.7, offset_y = 0.5;
 
 int main(void)
 {
@@ -71,6 +74,7 @@ int main(void)
     //*==================================
     
     glfwSetKeyCallback(window, &event_key_callback);
+    glfwSetMouseButtonCallback(window, &event_mouse_button_callback);
     glfwSetFramebufferSizeCallback(window, &event_framebuffer_size_callback);
     glfwSetErrorCallback(&event_error_callback);
 
@@ -132,14 +136,17 @@ int main(void)
     //*==================================
 
     float vertices[] = {
-        0.5f, 0.5f, 0.0f, // top right
-        0.5f, -0.5f, 0.0f, // bottom right
-        -0.5f, -0.5f, 0.0f, // bottom left
-        -0.5f, 0.5f, 0.0f // top left
+        -1.0f, -1.0f, -0.0f, // bottom left
+         1.0f,  1.0f, -0.0f, // bottom right
+        -1.0f,  1.0f, -0.0f, // top left
+         1.0f, -1.0f, -0.0f  // top right
     };
     unsigned int indices[] = { // note that we start from 0!
-        0, 1, 3, // first triangle
-        1, 2, 3 // second triangle
+        //  2---,1
+        //  | .' |
+        //  0'---3
+        0, 1, 2, // first triangle
+        0, 3, 1 // second triangle
     };
 
     // acquire a VAO ( vertex array object ) to store our triangle context into
@@ -170,16 +177,22 @@ int main(void)
     float timeValue = glfwGetTime();
     int u_time_loc = glGetUniformLocation(shaderProgram, GSV::u_time);
     int u_resolution_loc = glGetUniformLocation(shaderProgram, GSV::u_resolution);
-    
+    int u_offset_loc = glGetUniformLocation(shaderProgram, GSV::u_offset);
+    int u_zoom_loc = glGetUniformLocation(shaderProgram, GSV::u_zoom);
+
     glUseProgram(shaderProgram);        // use our shader for the triangle
     glBindVertexArray(VAO);             // use our rectangle VAO
     glUniform1f(u_time_loc, timeValue);
-    glUniform2f(u_resolution_loc, (float)my_window::width/2, (float)my_window::height/2);
+    glUniform2f(u_resolution_loc, (float)my_window::width, (float)my_window::height);
+    glUniform2f(u_offset_loc, (float)offset_x, (float)offset_y);
+    glUniform1f(u_zoom_loc, (float)2.0);
+    glEnable(GL_DEPTH_TEST);
 
     // Loop until the user closes the window
     while (!glfwWindowShouldClose(window)) {
         // Render here
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClearColor(0.2f, 0.0f, 0.2f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // imagine having multiple of these for now    
         glUseProgram(shaderProgram);        // use our shader for the triangle
@@ -188,6 +201,7 @@ int main(void)
 
         timeValue = glfwGetTime();
         glUniform1f(u_time_loc, timeValue);
+        glUniform2f(u_offset_loc, (float)offset_x, (float)offset_y);
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
@@ -240,6 +254,18 @@ void event_key_callback(GLFWwindow* window, int key, int scancode, int action, i
     PARAM_UNUSED(mods);
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
+}
+
+void event_mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+    PARAM_UNUSED(mods);
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+        // translate coordinates to center
+        offset_x -= (xpos - my_window::width/2) / (my_window::width/2);
+        offset_y -= (ypos - my_window::height/2) / (my_window::height/2);
+    }
 }
 
 void event_framebuffer_size_callback(GLFWwindow* window, int width, int height)

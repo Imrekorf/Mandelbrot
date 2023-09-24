@@ -1,24 +1,53 @@
-#version 330 core
+#version 460 core
+precision highp float;
+
 out vec4 FragColor;
 
-in vec4 vPos; // input variable from vs (same name and type)
 uniform float u_time;
 uniform vec2 u_resolution;
+uniform float u_zoom = 2.0;
+uniform vec2 u_offset;
+
+#define MAX_ITTERATIONS 500
+
+vec4 	mandlebrot(in dvec2 c);
+dvec2 	step_mandlebrot(in dvec2 z, in dvec2 c);
+vec4 	integerToColor(in int i, in int max_i);
 
 void main()
 {
-	vec2 st = gl_FragCoord.xy/u_resolution.xy;
-	float fr = u_resolution.x/40.0;
-	vec3 x = vec3(st.x);
-	vec3 y = vec3(st.y);
+	FragColor = mandlebrot(dvec2((gl_FragCoord.x / u_resolution.x - u_offset.x) * u_zoom, 	// real
+								 (gl_FragCoord.y / u_resolution.y - u_offset.y) * u_zoom));// imag
+}
 
-	vec3 colorA = vec3(0.5, 0., 0.5);
-	vec3 colorB = vec3(1.0, 0.41, 0.71);
-	vec3 colorC = vec3(0.0, 1.0, 1.0);
+vec4 mandlebrot(in dvec2 c)
+{	
+	int itterations = 0;
 
-	vec3 color1 = mix(colorA, colorB, fract(vPos.x*fr+cos(u_time)));
-	vec3 color2 = mix(colorB, colorC, (vPos.y-sin(u_time))*0.5);
-	vec3 color3 = mix(color1, color2, vPos.x*cos(u_time+2.));
+	dvec2 z = dvec2(0.0, 0.0);
+	for (; itterations < MAX_ITTERATIONS; itterations++) {
+		z = step_mandlebrot(z, c);
+		if ((z.x * z.x + z.y * z.y) > (4.0) ) // check if |z| < 2.0
+			return integerToColor(itterations, MAX_ITTERATIONS);
+	}
 
-	FragColor = vec4(color3, 1.0);
+	return vec4(0.0, 0.0, 0.0, 1.0);
+}
+
+dvec2 step_mandlebrot(in dvec2 z, in dvec2 c)
+{
+	return vec2(
+		(z.x * z.x - z.y * z.y) + c.x,	// z.x = z.real^2 - z.imag^2 + c.real
+		(2.0 * z.x * z.y) + c.y			// z.y = 2 * z.real * z.imag + c.imag
+	);
+}
+
+vec4 integerToColor(in int i, in int max_i)
+{
+	float _i = i * 255 / max_i;
+	return vec4(
+		(sin(_i + 0) * 127 + 128) / 255, 
+		(sin(_i + 2) * 127 + 128) / 255,
+		(sin(_i + 4) * 127 + 128) / 255,
+		1.0);
 }
