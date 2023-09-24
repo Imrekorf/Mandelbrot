@@ -49,11 +49,31 @@ add_compile_definitions(
 	# $<$<COMPILE_LANG_AND_ID:CXX,GNU>:__LANGUAGE=CXX>
 )
 
+set(SHADER_SRC
+	res/shaders/fragment_shader.frag
+	res/shaders/vertex_shader.vert)
+
+message("Shaders found:")
+
+foreach(SHADER IN ITEMS ${SHADER_SRC})
+	message(${SHADER})
+endforeach()
+
+add_custom_command(
+	OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/generated/gen_shaders.cpp
+	COMMAND bash -c "res/gen_shaders.sh"
+	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+	DEPENDS ${SHADER_SRC} res/gen_shaders.sh
+	BYPRODUCTS ${CMAKE_CURRENT_SOURCE_DIR}/generated/gen_shaders.h
+)
+
 include_directories(inc/)
 include_directories(lib/)
+include_directories(generated)
 
 add_executable(${PROJECT_NAME} 	main.cpp
-								src/util.cpp)
+								src/util.cpp
+								generated/gen_shaders.cpp)
 
 target_link_libraries(${PROJECT_NAME} opengl32)
 target_link_libraries(${PROJECT_NAME} glfw)

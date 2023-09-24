@@ -6,6 +6,7 @@
 #include <map>
 #include <string>
 
+#include "gen_shaders.h"
 #include "util.hpp"
 
 namespace my_window {
@@ -77,21 +78,10 @@ int main(void)
     //* Setup shaders
     //*==================================
     
-    // TODO: generate shaders from res folder
     // create vertex shader & compile
-    char const* vert_shader_src = R"(
-        #version 330 core
-        layout (location = 0) in vec3 aPos;
-
-        void main()
-        {
-            gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
-        }
-    )";
-
     unsigned int vertexShader;
     vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vert_shader_src, NULL);
+    glShaderSource(vertexShader, 1, &vertex_shader, NULL);
     glCompileShader(vertexShader);
     
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success); // check compile output
@@ -103,19 +93,9 @@ int main(void)
     }
 
     // create fragment shader & compile
-    char const* frag_shader_src = R"(
-        #version 330 core
-        out vec4 FragColor;
-
-        void main()
-        {
-            FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
-        }
-    )";
-
     unsigned int fragmentShader;
     fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &frag_shader_src, NULL);
+    glShaderSource(fragmentShader, 1, &fragment_shader, NULL);
     glCompileShader(fragmentShader);
 
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success); // check compile output
