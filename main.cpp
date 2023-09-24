@@ -81,7 +81,7 @@ int main(void)
     // create vertex shader & compile
     unsigned int vertexShader;
     vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertex_shader, NULL);
+    glShaderSource(vertexShader, 1, &GSV::vertex_shader, NULL);
     glCompileShader(vertexShader);
     
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success); // check compile output
@@ -95,7 +95,7 @@ int main(void)
     // create fragment shader & compile
     unsigned int fragmentShader;
     fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragment_shader, NULL);
+    glShaderSource(fragmentShader, 1, &GSV::fragment_shader, NULL);
     glCompileShader(fragmentShader);
 
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success); // check compile output
@@ -167,6 +167,15 @@ int main(void)
     //* Actual render loop happens here
     //*==================================
     
+    float timeValue = glfwGetTime();
+    int u_time_loc = glGetUniformLocation(shaderProgram, GSV::u_time);
+    int u_resolution_loc = glGetUniformLocation(shaderProgram, GSV::u_resolution);
+    
+    glUseProgram(shaderProgram);        // use our shader for the triangle
+    glBindVertexArray(VAO);             // use our rectangle VAO
+    glUniform1f(u_time_loc, timeValue);
+    glUniform2f(u_resolution_loc, (float)my_window::width/2, (float)my_window::height/2);
+
     // Loop until the user closes the window
     while (!glfwWindowShouldClose(window)) {
         // Render here
@@ -176,6 +185,9 @@ int main(void)
         glUseProgram(shaderProgram);        // use our shader for the triangle
         glBindVertexArray(VAO);             // use our rectangle VAO
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // draw the actual rectangle ( interpret the VAO as a triangle )
+
+        timeValue = glfwGetTime();
+        glUniform1f(u_time_loc, timeValue);
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
