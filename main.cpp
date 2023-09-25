@@ -23,6 +23,8 @@ namespace my_window {
 
 #define TRANSLATE_ZOOM(level) (powf(2, -level))
 
+void handle_mouse(GLFWwindow* window);
+
 // callback defines
 void event_error_callback(int code, const char* description);
 void event_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -33,6 +35,7 @@ void event_scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 double offset_x = my_window::start_offset_x;
 double offset_y = my_window::start_offset_y;
 double zoom     = my_window::start_zoom;
+std::stack<float> prev_diff_x, prev_diff_y;
 
 // profiling
 void countFPS();
@@ -236,6 +239,34 @@ int main(void)
     return 0;
 }
 
+void handle_mouse(GLFWwindow* window)
+{
+    // prev_zoom.push(zoom);
+    prev_diff_x.push(offset_x);
+    prev_diff_y.push(offset_y);
+
+    double xpos, ypos;
+    glfwGetCursorPos(window, &xpos, &ypos);
+
+    // translate coordinates to center
+    float diff_x, diff_y;
+    diff_x = (xpos - my_window::width /2) / (my_window::width /2);
+    diff_y = (ypos - my_window::height/2) / (my_window::height/2);
+
+    float zoom_mult = TRANSLATE_ZOOM(zoom);
+    // divide zoom constant by 2 as number range is -1.0 - 1.0
+    diff_x *= zoom_mult / 2;
+    diff_y *= zoom_mult / 2;
+
+    offset_x -= diff_x;
+    offset_y += diff_y;
+
+    std::cout << "zoom: " << zoom_mult << " zoom level: " << zoom
+                << "\n diff (" << diff_x << ", " << diff_y << ")"
+                << "\n offset: (" << offset_x << ", " << offset_y << ")" 
+                << std::endl;
+}
+
 
 //==== event callbacks ====//
 
@@ -276,43 +307,19 @@ void event_key_callback(GLFWwindow* window, int key, int scancode, int action, i
 
 void event_mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
-    static std::stack<float> prev_diff_x, prev_diff_y;
-
     PARAM_UNUSED(mods);
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-        double xpos, ypos;
-        glfwGetCursorPos(window, &xpos, &ypos);
-        // translate coordinates to center
-        float diff_x, diff_y;
-        diff_x = (xpos - my_window::width /2) / (my_window::width /2);
-        diff_y = (ypos - my_window::height/2) / (my_window::height/2);
-
-        std::cout << "diff (" << diff_x << ", " << diff_y 
-                  << ") offset: (" << offset_x << ", " << offset_y << ")" 
-                  << std::endl;
-
-        // divide zoom constant by 2 as number range is -1.0 - 1.0
-        float zoom_mult = TRANSLATE_ZOOM(zoom) / 2;
-        diff_x *= zoom_mult;
-        diff_y *= zoom_mult;
-
-        offset_x -= diff_x;
-        offset_y += diff_y;
-        prev_diff_x.push(diff_x);
-        prev_diff_y.push(diff_y);
-
-        std::cout << "zoom_mult: " << zoom_mult 
-                  << ", diff (" << diff_x << ", " << diff_y 
-                  << ") offset: (" << offset_x << ", " << offset_y << ")" 
-                  << std::endl;
-    }
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+        handle_mouse(window);
     
     if (button == GLFW_MOUSE_BUTTON_4 && action == GLFW_PRESS) {
         if (prev_diff_x.size() > 0) {
-            offset_x = (offset_x + prev_diff_x.top());
-            offset_y = (offset_y - prev_diff_y.top());
+            offset_x = prev_diff_x.top();
+            offset_y = prev_diff_y.top();
+            // zoom = prev_zoom.top();
+
             prev_diff_x.pop();
             prev_diff_y.pop();
+            // prev_zoom.pop();
         }
     }
 }
@@ -321,9 +328,8 @@ void event_scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     PARAM_UNUSED(window);
     PARAM_UNUSED(xoffset);
-    zoom += yoffset;
 
-    std::cout << "zoom: " << zoom << " zoom, translated: " << TRANSLATE_ZOOM(zoom) << std::endl;
+    zoom += yoffset * 0.2;
 }
 
 void event_framebuffer_size_callback(GLFWwindow* window, int width, int height)
