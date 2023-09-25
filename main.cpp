@@ -7,6 +7,8 @@
 #include <string>
 #include <stack>
 
+#include <cmath>
+
 #include "gen_shaders.h"
 #include "util.hpp"
 
@@ -14,15 +16,23 @@ namespace my_window {
     constexpr size_t        height = 800;
     constexpr size_t        width  = 800;
     constexpr char const*   title  = "Mandlebrot";
+    constexpr float         start_offset_x =  0.2;
+    constexpr float         start_offset_y =  0.0;
+    constexpr float         start_zoom     = -1.0;
 };
+
+#define TRANSLATE_ZOOM(level) ((zoom <= 1 ? abs(zoom) : (1.0 / zoom)))
 
 // callback defines
 void event_error_callback(int code, const char* description);
 void event_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void event_mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void event_framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void event_scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
-double offset_x = 0.7, offset_y = 0.5, zoom = 2.0;
+double offset_x = my_window::start_offset_x;
+double offset_y = my_window::start_offset_y;
+double zoom     = my_window::start_zoom;
 
 // profiling
 void countFPS();
@@ -71,7 +81,7 @@ int main(void)
         return -1;
     }
     glfwSwapInterval(1);                                    //
-    glViewport(0, 0, my_window::width, my_window::height);  // setup initial view port here
+    glViewport(0.5, 0.5, my_window::width, my_window::height);  // setup initial view port here
 
     //*==================================
     //* Setup event callbacks
@@ -79,6 +89,7 @@ int main(void)
     
     glfwSetKeyCallback(window, &event_key_callback);
     glfwSetMouseButtonCallback(window, &event_mouse_button_callback);
+    glfwSetScrollCallback(window, &event_scroll_callback);
     glfwSetFramebufferSizeCallback(window, &event_framebuffer_size_callback);
     glfwSetErrorCallback(&event_error_callback);
 
@@ -189,7 +200,7 @@ int main(void)
     glUniform1f(u_time_loc, timeValue);
     glUniform2f(u_resolution_loc, (float)my_window::width, (float)my_window::height);
     glUniform2f(u_offset_loc, (float)offset_x, (float)offset_y);
-    glUniform1f(u_zoom_loc, (float)zoom);
+    glUniform1f(u_zoom_loc, (float)TRANSLATE_ZOOM(zoom));
     glEnable(GL_DEPTH_TEST);
 
     // Loop until the user closes the window
@@ -208,7 +219,7 @@ int main(void)
         timeValue = glfwGetTime();
         glUniform1f(u_time_loc, timeValue);
         glUniform2f(u_offset_loc, (float)offset_x, (float)offset_y);
-        glUniform1f(u_zoom_loc, (float)zoom);
+        glUniform1f(u_zoom_loc, (float)TRANSLATE_ZOOM(zoom));
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
@@ -273,15 +284,25 @@ void event_mouse_button_callback(GLFWwindow* window, int button, int action, int
         glfwGetCursorPos(window, &xpos, &ypos);
         // translate coordinates to center
         float diff_x, diff_y;
-        diff_x = (xpos - my_window::width/2) / (my_window::width/2);
+        diff_x = (xpos - my_window::width /2) / (my_window::width /2);
         diff_y = (ypos - my_window::height/2) / (my_window::height/2);
 
-        offset_x -= diff_x / zoom;
-        offset_y += diff_y / zoom;
+        std::cout << "diff (" << diff_x << ", " << diff_y 
+                  << ") offset: (" << offset_x << ", " << offset_y << ")" 
+                  << std::endl;
+
+        // divide zoom constant by 2 as number range is -1.0 - 1.0
+        float zoom_mult = TRANSLATE_ZOOM(zoom) / 2;
+        diff_x *= zoom_mult;
+        diff_y *= zoom_mult;
+
+        offset_x -= diff_x;
+        offset_y += diff_y;
         prev_diff_x.push(diff_x);
         prev_diff_y.push(diff_y);
 
-        std::cout << "diff (" << diff_x << ", " << diff_y 
+        std::cout << "zoom_mult: " << zoom_mult 
+                  << ", diff (" << diff_x << ", " << diff_y 
                   << ") offset: (" << offset_x << ", " << offset_y << ")" 
                   << std::endl;
     }
@@ -296,10 +317,21 @@ void event_mouse_button_callback(GLFWwindow* window, int button, int action, int
     }
 }
 
+void event_scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    PARAM_UNUSED(window);
+    PARAM_UNUSED(xoffset);
+    zoom += yoffset;
+    if (zoom == 0)
+        zoom += yoffset;
+
+    std::cout << "zoom: " << zoom << " zoom, translated: " << (zoom < 1 ? abs(zoom) : (1.0 / zoom)) << std::endl;
+}
+
 void event_framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     PARAM_UNUSED(window);
-    glViewport(0, 0, width, height);
+    glViewport(0.5, 0.5, width, height);
 }
 
 void countFPS()

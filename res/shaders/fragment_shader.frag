@@ -5,7 +5,7 @@ out vec4 FragColor;
 
 uniform float u_time;
 uniform vec2 u_resolution;
-uniform float u_zoom = 2.0;
+uniform float u_zoom = 1.0;
 uniform vec2 u_offset;
 
 #define MAX_ITTERATIONS 256
@@ -16,8 +16,23 @@ vec4 	integerToColor(in int i, in int max_i);
 
 void main()
 {
-	FragColor = mandlebrot(dvec2((gl_FragCoord.x / u_resolution.x - u_offset.x) * u_zoom, 	// real
-								 (gl_FragCoord.y / u_resolution.y - u_offset.y) * u_zoom)); // imag
+	vec2 translated = vec2((gl_FragCoord.x / u_resolution.x) - 0.5, (gl_FragCoord.y / u_resolution.y) - 0.5);
+
+	if (		all(greaterThan(translated.xy, vec2( 0.00,  0.00))) &&
+				all(lessThan(   translated.xy, vec2( 0.01,  0.01)))){
+		FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+	} else if (	all(greaterThan(translated.xy, vec2( 0.00, -0.01))) &&
+				all(lessThan(   translated.xy, vec2( 0.01,  0.00)))) {
+		FragColor = vec4(0.0, 1.0, 0.0, 1.0);
+	} else if (	all(greaterThan(translated.xy, vec2(-0.01,  0.00))) &&
+				all(lessThan(   translated.xy, vec2( 0.00,  0.01)))) {
+		FragColor = vec4(0.0, 0.0, 1.0, 1.0);
+	} else if (	all(greaterThan(translated.xy, vec2(-0.01, -0.01))) &&
+				all(lessThan(   translated.xy, vec2( 0.00,  0.00)))) {
+		FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+	} else {
+		FragColor = mandlebrot(dvec2((translated * u_zoom) - u_offset));
+	}
 }
 
 vec4 mandlebrot(in dvec2 c)
