@@ -18,6 +18,9 @@ void main()
 {
 	vec2 translated = vec2((gl_FragCoord.x / u_resolution.x) - 0.5, (gl_FragCoord.y / u_resolution.y) - 0.5);
 
+	FragColor = mandlebrot(dvec2((translated * u_zoom) - u_offset));
+
+#ifdef DEBUG_SQUARE
 	if (		all(greaterThan(translated.xy, vec2( 0.00,  0.00))) &&
 				all(lessThan(   translated.xy, vec2( 0.01,  0.01)))){
 		FragColor = vec4(1.0, 0.0, 0.0, 1.0);
@@ -30,9 +33,8 @@ void main()
 	} else if (	all(greaterThan(translated.xy, vec2(-0.01, -0.01))) &&
 				all(lessThan(   translated.xy, vec2( 0.00,  0.00)))) {
 		FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-	} else {
-		FragColor = mandlebrot(dvec2((translated * u_zoom) - u_offset));
 	}
+#endif
 }
 
 vec4 mandlebrot(in dvec2 c)
