@@ -5,6 +5,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <stack>
 
 #include "gen_shaders.h"
 #include "util.hpp"
@@ -21,7 +22,10 @@ void event_key_callback(GLFWwindow* window, int key, int scancode, int action, i
 void event_mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void event_framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
-double offset_x = 0.7, offset_y = 0.5;
+double offset_x = 0.7, offset_y = 0.5, zoom = 2.0;
+
+// profiling
+void countFPS();
 
 int main(void)
 {
@@ -66,8 +70,8 @@ int main(void)
         std::cout << "[GLAD] [ERR]: Failed to initialize GLAD" << std::endl;
         return -1;
     }
-    glfwSwapInterval(1);                //
-    glViewport(0, 0, my_window::width, my_window::height); // setup initial view port here
+    glfwSwapInterval(1);                                    //
+    glViewport(0, 0, my_window::width, my_window::height);  // setup initial view port here
 
     //*==================================
     //* Setup event callbacks
@@ -185,7 +189,7 @@ int main(void)
     glUniform1f(u_time_loc, timeValue);
     glUniform2f(u_resolution_loc, (float)my_window::width, (float)my_window::height);
     glUniform2f(u_offset_loc, (float)offset_x, (float)offset_y);
-    glUniform1f(u_zoom_loc, (float)2.0);
+    glUniform1f(u_zoom_loc, (float)zoom);
     glEnable(GL_DEPTH_TEST);
 
     // Loop until the user closes the window
@@ -193,6 +197,8 @@ int main(void)
         // Render here
         glClearColor(0.2f, 0.0f, 0.2f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // countFPS();
 
         // imagine having multiple of these for now    
         glUseProgram(shaderProgram);        // use our shader for the triangle
@@ -202,6 +208,7 @@ int main(void)
         timeValue = glfwGetTime();
         glUniform1f(u_time_loc, timeValue);
         glUniform2f(u_offset_loc, (float)offset_x, (float)offset_y);
+        glUniform1f(u_zoom_loc, (float)zoom);
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
@@ -258,13 +265,34 @@ void event_key_callback(GLFWwindow* window, int key, int scancode, int action, i
 
 void event_mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
+    static std::stack<float> prev_diff_x, prev_diff_y;
+
     PARAM_UNUSED(mods);
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
         double xpos, ypos;
         glfwGetCursorPos(window, &xpos, &ypos);
         // translate coordinates to center
-        offset_x -= (xpos - my_window::width/2) / (my_window::width/2);
-        offset_y -= (ypos - my_window::height/2) / (my_window::height/2);
+        float diff_x, diff_y;
+        diff_x = (xpos - my_window::width/2) / (my_window::width/2);
+        diff_y = (ypos - my_window::height/2) / (my_window::height/2);
+
+        offset_x -= diff_x / zoom;
+        offset_y += diff_y / zoom;
+        prev_diff_x.push(diff_x);
+        prev_diff_y.push(diff_y);
+
+        std::cout << "diff (" << diff_x << ", " << diff_y 
+                  << ") offset: (" << offset_x << ", " << offset_y << ")" 
+                  << std::endl;
+    }
+    
+    if (button == GLFW_MOUSE_BUTTON_4 && action == GLFW_PRESS) {
+        if (prev_diff_x.size() > 0) {
+            offset_x = (offset_x + prev_diff_x.top());
+            offset_y = (offset_y - prev_diff_y.top());
+            prev_diff_x.pop();
+            prev_diff_y.pop();
+        }
     }
 }
 
@@ -273,3 +301,19 @@ void event_framebuffer_size_callback(GLFWwindow* window, int width, int height)
     PARAM_UNUSED(window);
     glViewport(0, 0, width, height);
 }
+
+void countFPS()
+{
+    static int num_frames = 0;
+    static float last_time = 0.0f;
+
+    double current_time = glfwGetTime();
+    num_frames++;
+    if (current_time - last_time >= 1.0)
+    {
+        std::cout << num_frames << " fps" << std::endl;
+        num_frames = 0;
+        last_time += 1.0;
+    }
+}
+ 

@@ -8,7 +8,7 @@ uniform vec2 u_resolution;
 uniform float u_zoom = 2.0;
 uniform vec2 u_offset;
 
-#define MAX_ITTERATIONS 500
+#define MAX_ITTERATIONS 256
 
 vec4 	mandlebrot(in dvec2 c);
 dvec2 	step_mandlebrot(in dvec2 z, in dvec2 c);
@@ -17,7 +17,7 @@ vec4 	integerToColor(in int i, in int max_i);
 void main()
 {
 	FragColor = mandlebrot(dvec2((gl_FragCoord.x / u_resolution.x - u_offset.x) * u_zoom, 	// real
-								 (gl_FragCoord.y / u_resolution.y - u_offset.y) * u_zoom));// imag
+								 (gl_FragCoord.y / u_resolution.y - u_offset.y) * u_zoom)); // imag
 }
 
 vec4 mandlebrot(in dvec2 c)
