@@ -20,6 +20,10 @@ add_compile_options(
 	-Wall
 	-Wextra
 	-Wpedantic
+	-fPIC
+	-static
+	-static-libgcc
+	-static-libstdc++
 	# C compile options
 	$<$<COMPILE_LANG_AND_ID:C,GNU>:-std=c11>
 	
