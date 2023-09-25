@@ -21,7 +21,7 @@ namespace my_window {
     constexpr float         start_zoom     = -1.0;
 };
 
-#define TRANSLATE_ZOOM(level) ((zoom <= 1 ? abs(zoom) : (1.0 / zoom)))
+#define TRANSLATE_ZOOM(level) (powf(2, -level))
 
 // callback defines
 void event_error_callback(int code, const char* description);
@@ -322,10 +322,8 @@ void event_scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     PARAM_UNUSED(window);
     PARAM_UNUSED(xoffset);
     zoom += yoffset;
-    if (zoom == 0)
-        zoom += yoffset;
 
-    std::cout << "zoom: " << zoom << " zoom, translated: " << (zoom < 1 ? abs(zoom) : (1.0 / zoom)) << std::endl;
+    std::cout << "zoom: " << zoom << " zoom, translated: " << TRANSLATE_ZOOM(zoom) << std::endl;
 }
 
 void event_framebuffer_size_callback(GLFWwindow* window, int width, int height)
