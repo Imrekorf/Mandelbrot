@@ -1,0 +1,79 @@
+{
+	"version": 7,
+	"cmakeMinimumRequired": {
+		"major": 3,
+		"minor": 27,
+		"patch": 0
+	},
+	"configurePresets": [
+		{
+			"name": "BasePreset",
+			"displayName": "BasePreset",
+			"description": "BasePreset build options for GCC/G++-compatible compilers",
+			"environment": {
+				"BASE_FLAGS": "-Wall -Wextra -pedantic"
+			},
+			"cacheVariables": {
+				"CMAKE_C_FLAGS": "$env{BASE_FLAGS}",
+				"CMAKE_CXX_FLAGS": "$env{BASE_FLAGS}"
+			},
+			"hidden": true
+		},
+		{
+			"name": "Debug",
+			"inherits": "BasePreset",
+			"displayName": "Debug",
+			"description": "Debug build options for GCC/G++-compatible compilers",
+			"generator": "MinGW Makefiles",
+			"binaryDir": "${sourceDir}/Debug",
+			"cacheVariables": {
+				"CMAKE_C_FLAGS": "$env{BASE_FLAGS} -g3 -Og",
+				"CMAKE_CXX_FLAGS": "$env{BASE_FLAGS} -g3 -Og",
+				"CMAKE_BUILD_TYPE": "Debug"
+			}
+		},
+		{
+			"name": "Release",
+			"inherits": "BasePreset",
+			"displayName": "Release",
+			"description": "Release build options for GCC/G++-compatible compilers",
+			"generator": "MinGW Makefiles",
+			"binaryDir": "${sourceDir}/Release",
+			"cacheVariables": {
+				"CMAKE_C_FLAGS": "$env{BASE_FLAGS} -O2",
+				"CMAKE_CXX_FLAGS": "$env{BASE_FLAGS} -O2",
+				"CMAKE_BUILD_TYPE": "Release"
+			}
+		}
+	],
+	"buildPresets": [
+		{
+			"name": "Debug",
+			"description": "Builds Debug preset",
+			"displayName": "Debug",
+			"configurePreset": "Debug",
+			"targets": "all"
+		},
+		{
+			"name": "Release",
+			"description": "Builds Release preset",
+			"displayName": "Release",
+			"configurePreset": "Release",
+			"targets": "all"
+		},
+		{
+			"name": "Debug ShaderGenTool",
+			"description": "Builds ShaderGenTool with Debug preset",
+			"displayName": "Debug ShaderGenTool",
+			"configurePreset": "Debug",
+			"targets": "ShaderGenTool"
+		},
+		{
+			"name": "Release ShaderGenTool",
+			"description": "Release ShaderGenTool with Release preset",
+			"displayName": "Release ShaderGenTool",
+			"configurePreset": "Release",
+			"targets": "ShaderGenTool"
+		}
+	]
+}

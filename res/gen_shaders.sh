@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 WORKING_DIR="."
-OUTPUT_DIR="${WORKING_DIR}/generated"
+OUTPUT_DIR="${WORKING_DIR}/app/generated"
 
 HEADER="${OUTPUT_DIR}/gen_shaders.h"
 SOURCE="${OUTPUT_DIR}/gen_shaders.cpp"
