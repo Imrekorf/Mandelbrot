@@ -8,11 +8,17 @@ uniform vec2 u_resolution;
 uniform float u_zoom = 1.0;
 uniform vec2 u_offset;
 
-#define MAX_ITTERATIONS 256
+#define PI 				3.1415926538
+
+#define MAX_ITTERATIONS (1000)
+#define COLOR_REPEAT	3
+// #define DEBUG_SQUARE
+
+const float ln_max_ittr = log(MAX_ITTERATIONS+1);
 
 vec4 	mandlebrot(in dvec2 c);
 dvec2 	step_mandlebrot(in dvec2 z, in dvec2 c);
-vec4 	integerToColor(in int i, in int max_i);
+vec4 	integerToColor(in float i);
 
 void main()
 {
@@ -45,7 +51,7 @@ vec4 mandlebrot(in dvec2 c)
 	for (; itterations < MAX_ITTERATIONS; itterations++) {
 		z = step_mandlebrot(z, c);
 		if ((z.x * z.x + z.y * z.y) > (4.0) ) // check if |z| < 2.0
-			return integerToColor(itterations, MAX_ITTERATIONS);
+			return integerToColor(itterations);
 	}
 
 	return vec4(0.0, 0.0, 0.0, 1.0);
@@ -59,12 +65,15 @@ dvec2 step_mandlebrot(in dvec2 z, in dvec2 c)
 	);
 }
 
-vec4 integerToColor(in int i, in int max_i)
+vec4 integerToColor(in float i)
 {
-	float _i = i * 255 / max_i;
+	float angle = log(i+1.0) / log(256.0); // reduce to value between 0.0-1.0
+	angle = angle * COLOR_REPEAT;
+	angle = fract(angle);
+
 	return vec4(
-		(sin(_i + 0) * 127 + 128) / 255, 
-		(sin(_i + 2) * 127 + 128) / 255,
-		(sin(_i + 4) * 127 + 128) / 255,
+		0.5 * (1.0 + (cos((2.0*PI) * (angle            )))),
+		0.5 * (1.0 - (cos((2.0*PI) * (angle - (1.0/3.0))))),
+		0.5 * (1.0 + (cos((2.0*PI) * (angle + (1.0/3.0))))),
 		1.0);
 }
