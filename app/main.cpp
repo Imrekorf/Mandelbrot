@@ -204,15 +204,14 @@ int main(void)
     glUniform2f(u_resolution_loc, (float)my_window::width, (float)my_window::height);
     glUniform2f(u_offset_loc, (float)offset_x, (float)offset_y);
     glUniform1f(u_zoom_loc, (float)TRANSLATE_ZOOM(zoom));
-    glEnable(GL_DEPTH_TEST);
 
     // Loop until the user closes the window
     while (!glfwWindowShouldClose(window)) {
         // Render here
         glClearColor(0.2f, 0.0f, 0.2f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT);
 
-        // countFPS();
+        countFPS();
 
         // imagine having multiple of these for now    
         glUseProgram(shaderProgram);        // use our shader for the triangle
