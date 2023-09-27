@@ -233,7 +233,7 @@ int main(void)
         timeValue = glfwGetTime();
         glUniform1f(u_time_loc, timeValue);
         glUniform2f(u_offset_loc, (float)offset_x, (float)offset_y);
-        glUniform1f(u_zoom_loc, (float)TRANSLATE_ZOOM(zoom));
+        glUniform1f(u_zoom_loc, (float)(zoom));
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
@@ -341,6 +341,8 @@ void event_scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     PARAM_UNUSED(xoffset);
 
     zoom += yoffset * 0.2;
+    float zoom_mult = TRANSLATE_ZOOM(zoom);
+    std::cout << "zoom: " << zoom_mult << " zoom level: " << zoom << std::endl;
 }
 
 void event_framebuffer_size_callback(GLFWwindow* window, int width, int height)
