@@ -50,10 +50,15 @@ int main(void)
 
     std::cout << "Compiled against GLFW " 
         << GLFW_VERSION_MAJOR << "." << GLFW_VERSION_MINOR << "." << GLFW_VERSION_REVISION << std::endl;
+    #ifdef DEBUG
+        std::cout << "[DEBUG BUILD]" << std::endl;
+    #endif // DEBUG
 
     // Initialize the library
-    if (!glfwInit())
+    if (!glfwInit()) {
+        std::cout << "[GLFW] [ERR]: Failed initialization" << std::endl;
         return -1;
+    }
 
     //*==================================
     //* setup GLFW window hints before window creation, as otherwise they are not used
@@ -73,6 +78,7 @@ int main(void)
     // Create a windowed mode window and its OpenGL context
     window = glfwCreateWindow(my_window::width, my_window::height, my_window::title, NULL, NULL);
     if (!window) {
+        std::cout << "[GLFW] [ERR]: Failed to create window" << std::endl;
         glfwTerminate();
         return -1;
     }
