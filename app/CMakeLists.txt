@@ -9,17 +9,14 @@ add_executable(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC 	
+	-Wl,-Bstatic # hack to make sure that libraries asre linked statically
+	stdc++
+	pthread
+	glfw3
+	gdi32
 	opengl32
-	libglfw3.a
 	LibGlad
 	Shaders
-)
-
-target_compile_options(${PROJECT_NAME} PUBLIC
-	-fPIC
-	-static
-	-static-libgcc
-	-static-libstdc++
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC 	

@@ -11,11 +11,14 @@
 			"displayName": "BasePreset",
 			"description": "BasePreset build options for GCC/G++-compatible compilers",
 			"environment": {
-				"BASE_FLAGS": "-Wall -Wextra -pedantic"
+				"WARNING_FLAGS": "-Wall -Wextra -pedantic",
+				"BASE_FLAGS": "",
+				"STATIC_LINK_FLAGS": "-fPIC -static-libgcc -static-libstdc++ -Wl,-Bstatic"
 			},
 			"cacheVariables": {
-				"CMAKE_C_FLAGS": "$env{BASE_FLAGS}",
-				"CMAKE_CXX_FLAGS": "$env{BASE_FLAGS}"
+				"CMAKE_C_FLAGS": "$env{BASE_FLAGS} $env{WARNING_FLAGS}",
+				"CMAKE_CXX_FLAGS": "$env{BASE_FLAGS} $env{WARNING_FLAGS}",
+				"CMAKE_EXE_LINKER_FLAGS": "$env{STATIC_LINK_FLAGS}"
 			},
 			"hidden": true
 		},
@@ -27,8 +30,8 @@
 			"generator": "MinGW Makefiles",
 			"binaryDir": "${sourceDir}/Debug",
 			"cacheVariables": {
-				"CMAKE_C_FLAGS": "$env{BASE_FLAGS} -g3 -Og",
-				"CMAKE_CXX_FLAGS": "$env{BASE_FLAGS} -g3 -Og",
+				"CMAKE_C_FLAGS": "$env{BASE_FLAGS} $env{WARNING_FLAGS} -g3 -Og",
+				"CMAKE_CXX_FLAGS": "$env{BASE_FLAGS} $env{WARNING_FLAGS} -g3 -Og",
 				"CMAKE_BUILD_TYPE": "Debug"
 			}
 		},
@@ -40,8 +43,8 @@
 			"generator": "MinGW Makefiles",
 			"binaryDir": "${sourceDir}/Release",
 			"cacheVariables": {
-				"CMAKE_C_FLAGS": "$env{BASE_FLAGS} -O2",
-				"CMAKE_CXX_FLAGS": "$env{BASE_FLAGS} -O2",
+				"CMAKE_C_FLAGS": "$env{STATIC_FLAGS} $env{BASE_FLAGS} $env{WARNING_FLAGS} -O2",
+				"CMAKE_CXX_FLAGS": "$env{STATIC_FLAGS} $env{BASE_FLAGS} $env{WARNING_FLAGS} -O2",
 				"CMAKE_BUILD_TYPE": "Release"
 			}
 		}
