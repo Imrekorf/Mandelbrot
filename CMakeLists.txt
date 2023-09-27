@@ -21,7 +21,7 @@ option(CMAKE_C_STANDARD_REQUIRED "Enable to enforce strict C standard selection"
 option(CMAKE_CXX_STANDARD_REQUIRED "Enable to enforce strict C standard selection" ON)
 option(CMAKE_C_EXTENSIONS "Enable to allow compiler-specific C extensions" OFF)
 
-set(CMAKE_VERBOSE_MAKEFILE 1)
+# set(CMAKE_VERBOSE_MAKEFILE 1)
 
 add_subdirectory(lib/)
 add_subdirectory(tools/)
