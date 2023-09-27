@@ -56,6 +56,9 @@ int main(void)
 
     // Initialize the library
     if (!glfwInit()) {
+        const char* description;
+        int err = glfwGetError(&description);
+        event_error_callback(err, description);
         std::cout << "[GLFW] [ERR]: Failed initialization" << std::endl;
         return -1;
     }
@@ -78,6 +81,9 @@ int main(void)
     // Create a windowed mode window and its OpenGL context
     window = glfwCreateWindow(my_window::width, my_window::height, my_window::title, NULL, NULL);
     if (!window) {
+        const char* description;
+        int err = glfwGetError(&description);
+        event_error_callback(err, description);
         std::cout << "[GLFW] [ERR]: Failed to create window" << std::endl;
         glfwTerminate();
         return -1;
