@@ -15,7 +15,7 @@
 namespace my_window {
     constexpr size_t        height = 800;
     constexpr size_t        width  = 800;
-    constexpr char const*   title  = "Mandlebrot";
+    constexpr char const*   title  = "mandelbrot";
     constexpr float         start_offset_x =  0.2;
     constexpr float         start_offset_y =  0.0;
     constexpr float         start_zoom     = -1.0;

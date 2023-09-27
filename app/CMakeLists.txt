@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.27)
 
 add_subdirectory(generated/)
 
-# Define Mandlebrot output
+# Define mandelbrot output
 add_executable(${PROJECT_NAME}
 	main.cpp
 	src/util.cpp

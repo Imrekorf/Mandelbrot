@@ -3,9 +3,9 @@ cmake_minimum_required(VERSION 3.27)
 set(CMAKE_C_COMPILER 		"gcc")
 set(CMAKE_CXX_COMPILER 		"g++")
 
-project(Mandlebrot
+project(Mandelbrot
 		VERSION 		1.0
-		DESCRIPTION 	"Generates a mandlebrot"
+		DESCRIPTION 	"Generates a mandelbrot"
 		LANGUAGES		C CXX)
 
 set(CMAKE_SYSTEM_NAME 		Generic)
