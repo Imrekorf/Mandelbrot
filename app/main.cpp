@@ -10,8 +10,12 @@
 
 #include <cmath>
 
+#include <gmp.h>
+#include <mpfr.h>
+
 #include "gen_shaders.h"
 #include "util.hpp"
+#include "arb_prec.hpp"
 
 namespace my_window {
     constexpr size_t        height = 800;           // window height
@@ -23,247 +27,6 @@ namespace my_window {
     constexpr float         zoom_step      =  0.2;  // how much a scroll movement scrolls in
     constexpr size_t        max_deque_size = 25;    // maximum amount of "back" clicks to remember
 };
-
-// Arbitrary precision
-// based on: https://github.com/RohanFredriksson/glsl-arbitrary-precision
-class arb_prec_t {
-    static constexpr int PRECISION = 3;
-
-    static constexpr float BASE = 4294967296.0f;
-    static constexpr unsigned int HALF_BASE = 2147483648u;
-
-    unsigned int val[PRECISION+1];
-public:
-    arb_prec_t(void) : val{0} {}
-    arb_prec_t(float val) {
-        *this = val;
-    }
-
-    static constexpr size_t size() {
-        return PRECISION+1;
-    }
-
-    static constexpr size_t precision() {
-        return PRECISION;
-    }
-
-    unsigned int* buffer() {
-        return &val[0];
-    }
-
-    arb_prec_t& zero(void) {
-        // TODO: change to memset
-        for(int zero_i = 0; zero_i <= PRECISION; zero_i++)
-            this->val[zero_i] = 0u;
-        return *this;
-    }
-
-    arb_prec_t& operator=(float load_value) {
-        if (load_value == 0.0)
-            return zero();
-
-        this->val[0] = load_value < 0.0;
-        load_value *= load_value < 0.0 ? -1.0 : 1.0;
-
-        for(int load_i = 1; load_i <= PRECISION; load_i++) {
-            this->val[load_i] = (unsigned int)(load_value); 
-            load_value -= this->val[load_i];
-            load_value *= BASE;
-        }
-        return *this;
-    }
-
-    arb_prec_t& shift(int shift_n) {
-        for(int shift_i = shift_n+1; shift_i <= PRECISION; shift_i++)
-            this->val[shift_i] = this->val[shift_i-shift_n];
-        
-        for(int shift_i = 1; shift_i<=shift_n; shift_i++)
-            this->val[shift_i] = 0u;
-        
-        return *this;
-    }
-
-    arb_prec_t& negate(void) {
-        this->val[0] = this->val[0]==0u ? 1u : 0u;
-        return *this;
-    }
-
-    const arb_prec_t operator+(const arb_prec_t &b) {
-        return arb_prec_t(*this) += b;
-    }
-
-    const arb_prec_t operator+(const float b) {
-        return arb_prec_t(*this) += arb_prec_t(b);
-    }
-
-    const arb_prec_t operator-(const arb_prec_t &b) {
-        return arb_prec_t(*this) -= b;
-    }
-
-    const arb_prec_t operator-(const float b) {
-        return arb_prec_t(*this) -= arb_prec_t(b);
-    }
-
-    const arb_prec_t operator*(const arb_prec_t &b) {
-        return arb_prec_t(*this) *= b;
-    }
-
-    const arb_prec_t operator*(const float b) {
-        return arb_prec_t(*this) * arb_prec_t(b);
-    }
-
-    const arb_prec_t operator/(const float b) {
-        return arb_prec_t(*this) /= b;
-    }
-
-    arb_prec_t& operator+=(const float b) {
-        return *this += arb_prec_t(b);
-    }
-
-    arb_prec_t& operator-=(const float b) {
-        return *this -= arb_prec_t(b);
-    }
-
-    arb_prec_t& operator*=(const float b) {
-        return *this *= arb_prec_t(b);
-    }
-
-    arb_prec_t& operator/=(const float b) {
-        return *this *= arb_prec_t(1/b);
-    }
-
-    arb_prec_t& operator-=(const arb_prec_t &b) {
-        return *this += arb_prec_t(b).negate();
-    }
-
-    arb_prec_t& operator+=(const arb_prec_t &b) {
-        unsigned int add_buffer[PRECISION+1]; 
-        bool add_pa = this->val[0] == 0u; 
-        bool add_pb = b.val[0] == 0u; 
-        
-        if(add_pa == add_pb) {
-            unsigned int add_carry = 0u;
-
-            for(int add_i=  PRECISION; add_i > 0; add_i--) {
-                unsigned int add_next = (unsigned int)(this->val[add_i] + b.val[add_i] < this->val[add_i]);
-                add_buffer[add_i] = this->val[add_i] + b.val[add_i] + add_carry;
-                add_carry = add_next;
-            }
-            add_buffer[0] = (unsigned int)(!add_pa);
-
-        } else {
-            bool add_flip=false;
-
-            for(int add_i = 1; add_i <= PRECISION; add_i++) {
-                if(b.val[add_i] > this->val[add_i]) {
-                    add_flip=true; 
-                    break;
-                } 
-                if(this->val[add_i] > b.val[add_i]) {
-                    break;
-                }
-            }
-
-            unsigned int add_borrow = 0u;
-            if(add_flip) {
-                for(int add_i = PRECISION; add_i > 0; add_i--) {
-                    add_buffer[add_i] = b.val[add_i] - this->val[add_i] - add_borrow; 
-                    add_borrow = (unsigned int)(b.val[add_i] < this->val[add_i] + add_borrow);
-                }
-            } else {
-                for(int add_i = PRECISION; add_i > 0; add_i--) {
-                    add_buffer[add_i] = this->val[add_i] - b.val[add_i] - add_borrow; 
-                    add_borrow = (unsigned int)(this->val[add_i] < b.val[add_i] || this->val[add_i] < b.val[add_i] + add_borrow);
-                }
-            }
-
-            add_buffer[0] = (unsigned int)(add_pa == add_flip);
-        }
-
-        for (int assign_i = 0; assign_i <= PRECISION; assign_i++)
-            this->val[assign_i] = add_buffer[assign_i];
-        
-        return *this;
-    }
-
-    arb_prec_t& operator*=(const arb_prec_t &b) {
-        unsigned int mul_buffer[PRECISION+1] = {0};
-        unsigned int mul_product[2*PRECISION-1] = {0};
-
-        for(int mul_i = 0; mul_i < PRECISION; mul_i++) {
-            unsigned int mul_carry = 0u; 
-            for(int mul_j = 0; mul_j < PRECISION; mul_j++) {
-                unsigned int mul_next = 0; 
-                unsigned int mul_value = this->val[PRECISION-mul_i] * b.val[PRECISION-mul_j]; 
-                if (mul_product[mul_i+mul_j] + mul_value < mul_product[mul_i+mul_j]) {
-                    mul_next++;
-                } 
-                mul_product[mul_i+mul_j] += mul_value; 
-                if(mul_product[mul_i+mul_j] + mul_carry < mul_product[mul_i+mul_j]) {
-                    mul_next++;
-                } 
-                mul_product[mul_i+mul_j] += mul_carry; 
-                unsigned int mul_lower_a = this->val[PRECISION-mul_i] & 0xFFFF; 
-                unsigned int mul_upper_a = this->val[PRECISION-mul_i] >> 16; 
-                unsigned int mul_lower_b = b.val[PRECISION-mul_j] & 0xFFFF; 
-                unsigned int mul_upper_b = b.val[PRECISION-mul_j] >> 16; 
-                unsigned int mul_lower = mul_lower_a * mul_lower_b; 
-                unsigned int mul_upper = mul_upper_a * mul_upper_b; 
-                unsigned int mul_mid = mul_lower_a * mul_upper_b; 
-                mul_upper += mul_mid >> 16;
-                mul_mid = mul_mid << 16;
-
-                if (mul_lower+mul_mid<mul_lower) {
-                    mul_upper++;
-                }
-
-                mul_lower += mul_mid; 
-                mul_mid = mul_lower_b * mul_upper_a;
-                mul_upper += mul_mid >> 16;
-                mul_mid = mul_mid << 16;
-                
-                if(mul_lower + mul_mid < mul_lower) {
-                    mul_upper++;
-                }
-                
-                mul_carry = mul_upper + mul_next;
-            }
-            
-            if(mul_i + PRECISION < 2*PRECISION-1) {
-                mul_product[mul_i+PRECISION] += mul_carry;
-            }
-        }
-        if(mul_product[PRECISION-2] >= HALF_BASE) {
-            for(int mul_i = PRECISION-1; mul_i < 2*PRECISION-1; mul_i++) {
-                if(mul_product[mul_i] + 1 > mul_product[mul_i]) {
-                    mul_product[mul_i]++;
-                    break;
-                }
-                mul_product[mul_i]++;
-            }
-        }
-        for(int mul_i = 0; mul_i < PRECISION; mul_i++) {
-            mul_buffer[mul_i+1] = mul_product[2*PRECISION-2-mul_i];
-        } if((this->val[0] == 0u) != (b.val[0] == 0u)) {
-            mul_buffer[0] = 1u;
-        }
-        
-        for (int assign_i = 0; assign_i <= PRECISION; assign_i++)
-            this->val[assign_i] = mul_buffer[assign_i];
-        
-        return *this;
-    }
-
-    friend std::ostream& operator<<(std::ostream& os, const arb_prec_t& dt) {
-        if (dt.val[0])
-            os << "-";
-        for (unsigned int print_i = 1; print_i < arb_prec_t::size(); print_i++)
-            os << std::setfill('0') << std::setw(4) << dt.val[print_i] << " ";
-        return os;
-    }
-};
-
-#define TRANSLATE_ZOOM(level) (powf(2, -level))
 
 void handle_mouse(GLFWwindow* window);
 
@@ -463,9 +226,10 @@ int main(void)
     glBindVertexArray(VAO);             // use our rectangle VAO
     glUniform1f(u_time_loc, timeValue);
     glUniform2f(u_resolution_loc, (float)my_window::width, (float)my_window::height);
-    glUniform1uiv(u_offset_r_loc, offset_x.size(), offset_x.buffer());
-    glUniform1uiv(u_offset_i_loc, offset_y.size(), offset_y.buffer());
-    glUniform1uiv(u_zoom_loc, zoom.size(), zoom.buffer());
+    unsigned int _offset_x[4] = {0}, _offset_y[4] = {0}, _zoom[4] = {0, 2, 0, 0};
+    glUniform1uiv(u_offset_r_loc, 4, _offset_x);
+    glUniform1uiv(u_offset_i_loc, 4, _offset_y);
+    glUniform1uiv(u_zoom_loc, 4, _zoom);
 
     // Loop until the user closes the window
     while (!glfwWindowShouldClose(window)) {
@@ -482,9 +246,9 @@ int main(void)
 
         timeValue = glfwGetTime();
         glUniform1f(u_time_loc, timeValue);
-        glUniform1uiv(u_offset_r_loc, offset_x.size(), offset_x.buffer());
-        glUniform1uiv(u_offset_i_loc, offset_y.size(), offset_y.buffer());
-        glUniform1uiv(u_zoom_loc, zoom.size(), zoom.buffer());
+        // glUniform1uiv(u_offset_r_loc, offset_x.size(), offset_x.buffer());
+        // glUniform1uiv(u_offset_i_loc, offset_y.size(), offset_y.buffer());
+        // glUniform1uiv(u_zoom_loc, zoom.size(), zoom.buffer());
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
@@ -515,17 +279,20 @@ void handle_mouse(GLFWwindow* window)
     double xpos, ypos;
     glfwGetCursorPos(window, &xpos, &ypos);
 
-    // translate coordinates to center
+    // // translate coordinates to center
     arb_prec_t diff_x, diff_y;
-    diff_x = (xpos - my_window::width /2) / (my_window::width /2);
-    diff_y = (ypos - my_window::height/2) / (my_window::height/2);
+    diff_x = 1.0; // (xpos - my_window::width /2) / (my_window::width /2);
+    diff_y = 1.0; // (ypos - my_window::height/2) / (my_window::height/2);
 
-    // divide zoom constant by 2 as number range is -1.0 - 1.0
-    diff_x *= zoom / 2;
-    diff_y *= zoom / 2;
+    diff_x /= 1000000000.0;
+    diff_x /= 1000000000.0;
 
-    offset_x += diff_x.negate();
-    offset_y += diff_y;
+    // // divide zoom constant by 2 as number range is -1.0 - 1.0
+    // diff_x *= zoom / 2.0;
+    // diff_y *= zoom / 2.0;
+
+    // offset_x -= diff_x;
+    // offset_y += diff_y;
 
     std::cout << "zoom: 2^" << zoom_lvl << " = " << zoom
                 << "\n diff (" << diff_x << ", " << diff_y << ")"

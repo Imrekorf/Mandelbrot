@@ -8,6 +8,9 @@ project(Mandelbrot
 		DESCRIPTION 	"Generates a mandelbrot"
 		LANGUAGES		C CXX)
 
+# Append the cmake/ directory to the CMAKE_MODULE_PATH
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 set(CMAKE_SYSTEM_NAME 		Generic)
 set(CMAKE_SYSTEM_VERSION 	1)
 
@@ -28,3 +31,5 @@ add_subdirectory(tools/)
 add_subdirectory(app/)
 
 find_package(glfw3 3.3 REQUIRED)
+find_package(GMP 6.0 REQUIRED)
+find_package(MPFR 3.0 REQUIRED)

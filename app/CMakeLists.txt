@@ -6,23 +6,26 @@ add_subdirectory(generated/)
 add_executable(${PROJECT_NAME}
 	main.cpp
 	src/util.cpp
+	src/arb_prec.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC 	
 	-Wl,-Bstatic # hack to make sure that libraries asre linked statically
 	stdc++
 	pthread
+	mpfr
 	glfw3
 	gdi32
 	opengl32
 	LibGlad
 	Shaders
+	gmp # needs to be last for some reason
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC 	
-	{CMAKE_SOURCE_DIR}/lib/ 
-	inc/ 
-	generated/
+	${CMAKE_SOURCE_DIR}/lib
+	${CMAKE_SOURCE_DIR}/app/inc
+	${CMAKE_SOURCE_DIR}/app/generated
 )
 
 target_link_options(${PROJECT_NAME} PUBLIC
