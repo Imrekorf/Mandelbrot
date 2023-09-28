@@ -27,7 +27,7 @@ namespace my_window {
 // Arbitrary precision
 // based on: https://github.com/RohanFredriksson/glsl-arbitrary-precision
 class arb_prec_t {
-    static constexpr int PRECISION = 3;
+    static constexpr int PRECISION = 5;
 
     static constexpr float BASE = 4294967296.0f;
     static constexpr unsigned int HALF_BASE = 2147483648u;
