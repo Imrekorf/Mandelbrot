@@ -32,6 +32,7 @@ process_folder() {
 			while read -r uniform ;
 			do
 				UNIFORM_NAME=${uniform% =*}
+				UNIFORM_NAME=${UNIFORM_NAME%[*}
 				UNIFORM_NAME=${UNIFORM_NAME##* }
 				if [ -z "$(grep "${UNIFORM_NAME}" <<< "$HEADER_VAR")" ]; then
 					# only process non duplicate keys
