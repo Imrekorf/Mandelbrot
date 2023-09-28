@@ -22,8 +22,9 @@ out vec4 FragColor;
 
 uniform float u_time;
 uniform vec2 u_resolution;
-uniform float u_zoom = 1.0;
-uniform vec2 u_offset;
+uniform uint u_zoom[ARRAY_SIZE];
+uniform uint u_offset_r[ARRAY_SIZE];
+uniform uint u_offset_i[ARRAY_SIZE];
 
 #define PI 				3.1415926538
 
@@ -37,7 +38,7 @@ vec4 	mandelbrot(in dvec2 c);
 dvec2 	step_mandelbrot(in dvec2 z, in dvec2 c);
 vec4 	integerToColor(in float i);
 
-vec4 	mandelbrot_arbprec(in vec2 c, in vec2 offset, in float zoom_lvl);
+vec4 	mandelbrot_arbprec(in vec2 c, in uint offset_r[ARRAY_SIZE], in uint offset_i[ARRAY_SIZE], in uint zoom[ARRAY_SIZE]);
 void 	step_mandelbrot_arb_prec(
 			in uint z_r[ARRAY_SIZE], in uint z_i[ARRAY_SIZE], 
 			in uint c_r[ARRAY_SIZE], in uint c_i[ARRAY_SIZE], 
@@ -69,7 +70,7 @@ void main()
 #endif
 
 	// FragColor = mandelbrot(dvec2((translated * u_zoom) - u_offset));
-	FragColor = mandelbrot_arbprec(translated, u_offset, u_zoom);
+	FragColor = mandelbrot_arbprec(translated, u_offset_r, u_offset_i, u_zoom);
 }
 
 vec4 mandelbrot(in dvec2 c)
@@ -107,7 +108,7 @@ vec4 integerToColor(in float i)
 		1.0);
 }
 
-vec4 mandelbrot_arbprec(in vec2 c, in vec2 offset, in float zoom_lvl)
+vec4 mandelbrot_arbprec(in vec2 c, in uint offset_r[ARRAY_SIZE], in uint offset_i[ARRAY_SIZE], in uint zoom[ARRAY_SIZE])
 {
 	uint c_r[ARRAY_SIZE];
     uint c_i[ARRAY_SIZE];
@@ -117,30 +118,11 @@ vec4 mandelbrot_arbprec(in vec2 c, in vec2 offset, in float zoom_lvl)
 	uint nz_r[ARRAY_SIZE];
     uint nz_i[ARRAY_SIZE];
 
-	uint offset_r[ARRAY_SIZE];
-	uint offset_i[ARRAY_SIZE];
-	uint zoom[ARRAY_SIZE];
-	uint zoom_mult[ARRAY_SIZE];
-
 	load(c_r, c.x);
 	load(c_i, c.y);
-	load(offset_r, offset.x);
-	load(offset_i, offset.y);
 	
-	if (abs(zoom_lvl) > 0.01) {
-		load(zoom, 1.0);
-		load(zoom_mult, (zoom_lvl <= 0 ? 2.0 : 0.5));
-		
-		for (int i = 0; i < abs(floor(zoom_lvl)); i++){
-			mul(zoom, zoom_mult, zoom); // zoom/(2 * zoom_lvl)
-		}
-		if (fract(zoom_lvl) > 0.01) {
-			load(zoom_mult, pow(2, -1*fract(zoom_lvl)));
-			mul(zoom, zoom_mult, zoom);
-		}
-		mul(c_r, zoom, c_r);
-		mul(c_i, zoom, c_i);
-	}
+	mul(c_r, zoom, c_r);
+	mul(c_i, zoom, c_i);
 	
 	negate(offset_r);
 	negate(offset_i);

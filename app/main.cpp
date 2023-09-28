@@ -3,9 +3,10 @@
 #include <GLFW/glfw3.h>
 
 #include <iostream>
+#include <iomanip>
 #include <map>
 #include <string>
-#include <stack>
+#include <deque>
 
 #include <cmath>
 
@@ -13,12 +14,253 @@
 #include "util.hpp"
 
 namespace my_window {
-    constexpr size_t        height = 800;
-    constexpr size_t        width  = 800;
-    constexpr char const*   title  = "mandelbrot";
-    constexpr float         start_offset_x =  0.2;
-    constexpr float         start_offset_y =  0.0;
-    constexpr float         start_zoom     = -1.0;
+    constexpr size_t        height = 800;           // window height
+    constexpr size_t        width  = 800;           // window width
+    constexpr char const*   title  = "mandelbrot";  // window name
+    constexpr float         start_offset_x =  0.2;  // starting x offset of mandelbrot
+    constexpr float         start_offset_y =  0.0;  // starting y offset of mandelbrot
+    constexpr float         start_zoom     =  1.0;  // starting zoom of mandelbrot
+    constexpr float         zoom_step      =  0.2;  // how much a scroll movement scrolls in
+    constexpr size_t        max_deque_size = 25;    // maximum amount of "back" clicks to remember
+};
+
+// Arbitrary precision
+// based on: https://github.com/RohanFredriksson/glsl-arbitrary-precision
+class arb_prec_t {
+    static constexpr int PRECISION = 3;
+
+    static constexpr float BASE = 4294967296.0f;
+    static constexpr unsigned int HALF_BASE = 2147483648u;
+
+    unsigned int val[PRECISION+1];
+public:
+    arb_prec_t(void) : val{0} {}
+    arb_prec_t(float val) {
+        *this = val;
+    }
+
+    static constexpr size_t size() {
+        return PRECISION+1;
+    }
+
+    static constexpr size_t precision() {
+        return PRECISION;
+    }
+
+    unsigned int* buffer() {
+        return &val[0];
+    }
+
+    arb_prec_t& zero(void) {
+        // TODO: change to memset
+        for(int zero_i = 0; zero_i <= PRECISION; zero_i++)
+            this->val[zero_i] = 0u;
+        return *this;
+    }
+
+    arb_prec_t& operator=(float load_value) {
+        if (load_value == 0.0)
+            return zero();
+
+        this->val[0] = load_value < 0.0;
+        load_value *= load_value < 0.0 ? -1.0 : 1.0;
+
+        for(int load_i = 1; load_i <= PRECISION; load_i++) {
+            this->val[load_i] = (unsigned int)(load_value); 
+            load_value -= this->val[load_i];
+            load_value *= BASE;
+        }
+        return *this;
+    }
+
+    arb_prec_t& shift(int shift_n) {
+        for(int shift_i = shift_n+1; shift_i <= PRECISION; shift_i++)
+            this->val[shift_i] = this->val[shift_i-shift_n];
+        
+        for(int shift_i = 1; shift_i<=shift_n; shift_i++)
+            this->val[shift_i] = 0u;
+        
+        return *this;
+    }
+
+    arb_prec_t& negate(void) {
+        this->val[0] = this->val[0]==0u ? 1u : 0u;
+        return *this;
+    }
+
+    const arb_prec_t operator+(const arb_prec_t &b) {
+        return arb_prec_t(*this) += b;
+    }
+
+    const arb_prec_t operator+(const float b) {
+        return arb_prec_t(*this) += arb_prec_t(b);
+    }
+
+    const arb_prec_t operator-(const arb_prec_t &b) {
+        return arb_prec_t(*this) -= b;
+    }
+
+    const arb_prec_t operator-(const float b) {
+        return arb_prec_t(*this) -= arb_prec_t(b);
+    }
+
+    const arb_prec_t operator*(const arb_prec_t &b) {
+        return arb_prec_t(*this) *= b;
+    }
+
+    const arb_prec_t operator*(const float b) {
+        return arb_prec_t(*this) * arb_prec_t(b);
+    }
+
+    const arb_prec_t operator/(const float b) {
+        return arb_prec_t(*this) /= b;
+    }
+
+    arb_prec_t& operator+=(const float b) {
+        return *this += arb_prec_t(b);
+    }
+
+    arb_prec_t& operator-=(const float b) {
+        return *this -= arb_prec_t(b);
+    }
+
+    arb_prec_t& operator*=(const float b) {
+        return *this *= arb_prec_t(b);
+    }
+
+    arb_prec_t& operator/=(const float b) {
+        return *this *= arb_prec_t(1/b);
+    }
+
+    arb_prec_t& operator-=(const arb_prec_t &b) {
+        return *this += arb_prec_t(b).negate();
+    }
+
+    arb_prec_t& operator+=(const arb_prec_t &b) {
+        unsigned int add_buffer[PRECISION+1]; 
+        bool add_pa = this->val[0] == 0u; 
+        bool add_pb = b.val[0] == 0u; 
+        
+        if(add_pa == add_pb) {
+            unsigned int add_carry = 0u;
+
+            for(int add_i=  PRECISION; add_i > 0; add_i--) {
+                unsigned int add_next = (unsigned int)(this->val[add_i] + b.val[add_i] < this->val[add_i]);
+                add_buffer[add_i] = this->val[add_i] + b.val[add_i] + add_carry;
+                add_carry = add_next;
+            }
+            add_buffer[0] = (unsigned int)(!add_pa);
+
+        } else {
+            bool add_flip=false;
+
+            for(int add_i = 1; add_i <= PRECISION; add_i++) {
+                if(b.val[add_i] > this->val[add_i]) {
+                    add_flip=true; 
+                    break;
+                } 
+                if(this->val[add_i] > b.val[add_i]) {
+                    break;
+                }
+            }
+
+            unsigned int add_borrow = 0u;
+            if(add_flip) {
+                for(int add_i = PRECISION; add_i > 0; add_i--) {
+                    add_buffer[add_i] = b.val[add_i] - this->val[add_i] - add_borrow; 
+                    add_borrow = (unsigned int)(b.val[add_i] < this->val[add_i] + add_borrow);
+                }
+            } else {
+                for(int add_i = PRECISION; add_i > 0; add_i--) {
+                    add_buffer[add_i] = this->val[add_i] - b.val[add_i] - add_borrow; 
+                    add_borrow = (unsigned int)(this->val[add_i] < b.val[add_i] || this->val[add_i] < b.val[add_i] + add_borrow);
+                }
+            }
+
+            add_buffer[0] = (unsigned int)(add_pa == add_flip);
+        }
+
+        for (int assign_i = 0; assign_i <= PRECISION; assign_i++)
+            this->val[assign_i] = add_buffer[assign_i];
+        
+        return *this;
+    }
+
+    arb_prec_t& operator*=(const arb_prec_t &b) {
+        unsigned int mul_buffer[PRECISION+1] = {0};
+        unsigned int mul_product[2*PRECISION-1] = {0};
+
+        for(int mul_i = 0; mul_i < PRECISION; mul_i++) {
+            unsigned int mul_carry = 0u; 
+            for(int mul_j = 0; mul_j < PRECISION; mul_j++) {
+                unsigned int mul_next = 0; 
+                unsigned int mul_value = this->val[PRECISION-mul_i] * b.val[PRECISION-mul_j]; 
+                if (mul_product[mul_i+mul_j] + mul_value < mul_product[mul_i+mul_j]) {
+                    mul_next++;
+                } 
+                mul_product[mul_i+mul_j] += mul_value; 
+                if(mul_product[mul_i+mul_j] + mul_carry < mul_product[mul_i+mul_j]) {
+                    mul_next++;
+                } 
+                mul_product[mul_i+mul_j] += mul_carry; 
+                unsigned int mul_lower_a = this->val[PRECISION-mul_i] & 0xFFFF; 
+                unsigned int mul_upper_a = this->val[PRECISION-mul_i] >> 16; 
+                unsigned int mul_lower_b = b.val[PRECISION-mul_j] & 0xFFFF; 
+                unsigned int mul_upper_b = b.val[PRECISION-mul_j] >> 16; 
+                unsigned int mul_lower = mul_lower_a * mul_lower_b; 
+                unsigned int mul_upper = mul_upper_a * mul_upper_b; 
+                unsigned int mul_mid = mul_lower_a * mul_upper_b; 
+                mul_upper += mul_mid >> 16;
+                mul_mid = mul_mid << 16;
+
+                if (mul_lower+mul_mid<mul_lower) {
+                    mul_upper++;
+                }
+
+                mul_lower += mul_mid; 
+                mul_mid = mul_lower_b * mul_upper_a;
+                mul_upper += mul_mid >> 16;
+                mul_mid = mul_mid << 16;
+                
+                if(mul_lower + mul_mid < mul_lower) {
+                    mul_upper++;
+                }
+                
+                mul_carry = mul_upper + mul_next;
+            }
+            
+            if(mul_i + PRECISION < 2*PRECISION-1) {
+                mul_product[mul_i+PRECISION] += mul_carry;
+            }
+        }
+        if(mul_product[PRECISION-2] >= HALF_BASE) {
+            for(int mul_i = PRECISION-1; mul_i < 2*PRECISION-1; mul_i++) {
+                if(mul_product[mul_i] + 1 > mul_product[mul_i]) {
+                    mul_product[mul_i]++;
+                    break;
+                }
+                mul_product[mul_i]++;
+            }
+        }
+        for(int mul_i = 0; mul_i < PRECISION; mul_i++) {
+            mul_buffer[mul_i+1] = mul_product[2*PRECISION-2-mul_i];
+        } if((this->val[0] == 0u) != (b.val[0] == 0u)) {
+            mul_buffer[0] = 1u;
+        }
+        
+        for (int assign_i = 0; assign_i <= PRECISION; assign_i++)
+            this->val[assign_i] = mul_buffer[assign_i];
+        
+        return *this;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const arb_prec_t& dt) {
+        if (dt.val[0])
+            os << "-";
+        for (unsigned int print_i = 1; print_i < arb_prec_t::size(); print_i++)
+            os << std::setfill('0') << std::setw(4) << dt.val[print_i] << " ";
+        return os;
+    }
 };
 
 #define TRANSLATE_ZOOM(level) (powf(2, -level))
@@ -32,10 +274,11 @@ void event_mouse_button_callback(GLFWwindow* window, int button, int action, int
 void event_framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void event_scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
-double offset_x = my_window::start_offset_x;
-double offset_y = my_window::start_offset_y;
-double zoom     = my_window::start_zoom;
-std::stack<float> prev_diff_x, prev_diff_y;
+arb_prec_t offset_x(my_window::start_offset_x);
+arb_prec_t offset_y(my_window::start_offset_y);
+arb_prec_t zoom(my_window::start_zoom);
+float zoom_lvl = my_window::start_zoom;
+std::deque<arb_prec_t> prev_diff_x, prev_diff_y;
 
 // profiling
 void countFPS();
@@ -53,6 +296,11 @@ int main(void)
     #ifdef DEBUG
         std::cout << "[DEBUG BUILD]" << std::endl;
     #endif // DEBUG
+
+    for (int i = 0; i < fabs(floorf(zoom_lvl)); i++)
+        zoom *= (zoom_lvl <= 0 ? 0.5 : 2.0);
+    if ((zoom_lvl-floorf(zoom_lvl)) > 0.01)
+        zoom *= powf(2.0f, -1*(zoom_lvl-floorf(zoom_lvl)));
 
     // Initialize the library
     if (!glfwInit()) {
@@ -207,15 +455,17 @@ int main(void)
     float timeValue = glfwGetTime();
     int u_time_loc = glGetUniformLocation(shaderProgram, GSV::u_time);
     int u_resolution_loc = glGetUniformLocation(shaderProgram, GSV::u_resolution);
-    int u_offset_loc = glGetUniformLocation(shaderProgram, GSV::u_offset);
+    int u_offset_r_loc = glGetUniformLocation(shaderProgram, GSV::u_offset_r);
+    int u_offset_i_loc = glGetUniformLocation(shaderProgram, GSV::u_offset_i);
     int u_zoom_loc = glGetUniformLocation(shaderProgram, GSV::u_zoom);
 
     glUseProgram(shaderProgram);        // use our shader for the triangle
     glBindVertexArray(VAO);             // use our rectangle VAO
     glUniform1f(u_time_loc, timeValue);
     glUniform2f(u_resolution_loc, (float)my_window::width, (float)my_window::height);
-    glUniform2f(u_offset_loc, (float)offset_x, (float)offset_y);
-    glUniform1f(u_zoom_loc, (float)TRANSLATE_ZOOM(zoom));
+    glUniform1uiv(u_offset_r_loc, offset_x.size(), offset_x.buffer());
+    glUniform1uiv(u_offset_i_loc, offset_y.size(), offset_y.buffer());
+    glUniform1uiv(u_zoom_loc, zoom.size(), zoom.buffer());
 
     // Loop until the user closes the window
     while (!glfwWindowShouldClose(window)) {
@@ -232,8 +482,9 @@ int main(void)
 
         timeValue = glfwGetTime();
         glUniform1f(u_time_loc, timeValue);
-        glUniform2f(u_offset_loc, (float)offset_x, (float)offset_y);
-        glUniform1f(u_zoom_loc, (float)(zoom));
+        glUniform1uiv(u_offset_r_loc, offset_x.size(), offset_x.buffer());
+        glUniform1uiv(u_offset_i_loc, offset_y.size(), offset_y.buffer());
+        glUniform1uiv(u_zoom_loc, zoom.size(), zoom.buffer());
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
@@ -253,26 +504,30 @@ int main(void)
 void handle_mouse(GLFWwindow* window)
 {
     // prev_zoom.push(zoom);
-    prev_diff_x.push(offset_x);
-    prev_diff_y.push(offset_y);
+    prev_diff_x.push_front(offset_x);
+    prev_diff_y.push_front(offset_y);
+    if (prev_diff_x.size() > my_window::max_deque_size)
+        prev_diff_x.pop_back();
+    if (prev_diff_y.size() > my_window::max_deque_size)
+        prev_diff_y.pop_back();
+
 
     double xpos, ypos;
     glfwGetCursorPos(window, &xpos, &ypos);
 
     // translate coordinates to center
-    float diff_x, diff_y;
+    arb_prec_t diff_x, diff_y;
     diff_x = (xpos - my_window::width /2) / (my_window::width /2);
     diff_y = (ypos - my_window::height/2) / (my_window::height/2);
 
-    float zoom_mult = TRANSLATE_ZOOM(zoom);
     // divide zoom constant by 2 as number range is -1.0 - 1.0
-    diff_x *= zoom_mult / 2;
-    diff_y *= zoom_mult / 2;
+    diff_x *= zoom / 2;
+    diff_y *= zoom / 2;
 
-    offset_x -= diff_x;
+    offset_x += diff_x.negate();
     offset_y += diff_y;
 
-    std::cout << "zoom: " << zoom_mult << " zoom level: " << zoom
+    std::cout << "zoom: 2^" << zoom_lvl << " = " << zoom
                 << "\n diff (" << diff_x << ", " << diff_y << ")"
                 << "\n offset: (" << offset_x << ", " << offset_y << ")" 
                 << std::endl;
@@ -324,12 +579,12 @@ void event_mouse_button_callback(GLFWwindow* window, int button, int action, int
     
     if (button == GLFW_MOUSE_BUTTON_4 && action == GLFW_PRESS) {
         if (prev_diff_x.size() > 0) {
-            offset_x = prev_diff_x.top();
-            offset_y = prev_diff_y.top();
+            offset_x = prev_diff_x.front();
+            offset_y = prev_diff_y.front();
             // zoom = prev_zoom.top();
 
-            prev_diff_x.pop();
-            prev_diff_y.pop();
+            prev_diff_x.pop_front();
+            prev_diff_y.pop_front();
             // prev_zoom.pop();
         }
     }
@@ -340,9 +595,13 @@ void event_scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     PARAM_UNUSED(window);
     PARAM_UNUSED(xoffset);
 
-    zoom += yoffset * 0.2;
-    float zoom_mult = TRANSLATE_ZOOM(zoom);
-    std::cout << "zoom: " << zoom_mult << " zoom level: " << zoom << std::endl;
+    if (yoffset > 0)
+        zoom *= powf(2.0f, -my_window::zoom_step);
+    else if (yoffset < 0)
+        zoom *= powf(2.0f, my_window::zoom_step);
+    
+    zoom_lvl -= yoffset * 0.2;
+    std::cout << "zoom: 2^" << zoom_lvl << " = " << zoom << std::endl;
 }
 
 void event_framebuffer_size_callback(GLFWwindow* window, int width, int height)
