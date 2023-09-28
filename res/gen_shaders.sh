@@ -31,9 +31,10 @@ process_folder() {
 			
 			while read -r uniform ;
 			do
-				UNIFORM_NAME=${uniform% =*}
-				UNIFORM_NAME=${UNIFORM_NAME%[*}
-				UNIFORM_NAME=${UNIFORM_NAME##* }
+				UNIFORM_NAME=${uniform% *=*}	 		# remove every after name decleration
+				UNIFORM_NAME=${UNIFORM_NAME%[*}  		# remove possible array tag
+				UNIFORM_NAME=${UNIFORM_NAME##* } 		# remove everything before first space
+				UNIFORM_NAME="$(echo $UNIFORM_NAME | sed -e 's/^[[:space:]]*//')" 	# remove prefix whitespaces
 				if [ -z "$(grep "${UNIFORM_NAME}" <<< "$HEADER_VAR")" ]; then
 					# only process non duplicate keys
 					HEADER_VAR="${HEADER_VAR}"$'\n'"extern ${UNIFORM_NAME_T} ${UNIFORM_NAME%\;*};"
