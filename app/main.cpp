@@ -27,7 +27,7 @@ namespace my_window {
 // Arbitrary precision
 // based on: https://github.com/RohanFredriksson/glsl-arbitrary-precision
 class arb_prec_t {
-    static constexpr int PRECISION = 5;
+    static constexpr int PRECISION = 3;
 
     static constexpr float BASE = 4294967296.0f;
     static constexpr unsigned int HALF_BASE = 2147483648u;
@@ -258,7 +258,7 @@ public:
         if (dt.val[0])
             os << "-";
         for (unsigned int print_i = 1; print_i < arb_prec_t::size(); print_i++)
-            os << std::setfill('0') << std::setw(4) << dt.val[print_i] << " ";
+            os << std::setfill('0') << std::setw(10) << dt.val[print_i] << " ";
         return os;
     }
 };
@@ -295,6 +295,15 @@ int main(void)
         << GLFW_VERSION_MAJOR << "." << GLFW_VERSION_MINOR << "." << GLFW_VERSION_REVISION << std::endl;
     #ifdef DEBUG
         std::cout << "[DEBUG BUILD]" << std::endl;
+
+        arb_prec_t temp(1.0f);
+        std::cout << temp << std::endl;
+        temp /= 10.0f;
+        std::cout << temp << std::endl;
+        temp *= 10.0f;
+        std::cout << temp << std::endl;
+
+        return 0;
     #endif // DEBUG
 
     for (int i = 0; i < fabs(floorf(zoom_lvl)); i++)

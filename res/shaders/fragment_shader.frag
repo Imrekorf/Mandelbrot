@@ -1,7 +1,7 @@
 #version 460 core
 precision highp float;
 
-#define PRECISION 	(5)
+#define PRECISION 	(3)
 #define ARRAY_SIZE 	(PRECISION+1)
 
 uniform float 	AP_BASE 		= 4294967296.0;
