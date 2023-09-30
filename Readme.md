@@ -9,8 +9,16 @@
 ```bash
 git clone https://github.com/Imrekorf/Mandelbrot
 cd mandelbrot
-cmake --preset=<Release/Debug>
-cd <Release/Debug> && make -j$(nproc)
+cmake --preset Release
+cmake --build Release
+```
+After building applications will be available in ```Release/bin```
+
+If you wish to build a debug version use the following commands after cloning the repo:
+```bash
+cd mandelbrot
+cmake --preset Debug
+cmake --build Debug
 ```
 
-After building applications will be available in ```<Release/Debug>/bin```
+After building applications will be available in ```Debug/bin```
