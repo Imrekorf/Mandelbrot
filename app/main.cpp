@@ -9,6 +9,8 @@
 #include <deque>
 
 #include <cmath>
+#include <cstring>
+#include <vector>
 
 #include "gen_shaders.h"
 #include "util.hpp"
@@ -27,12 +29,15 @@ namespace my_window {
 // Arbitrary precision
 // based on: https://github.com/RohanFredriksson/glsl-arbitrary-precision
 class arb_prec_t {
-    static constexpr int PRECISION = 3;
-
-    static constexpr float BASE = 4294967296.0f;
+    static constexpr int PRECISION = 5;
+                                  
+    static constexpr float BASE             = 4294967296.0f;
     static constexpr unsigned int HALF_BASE = 2147483648u;
+    static constexpr unsigned int MASK      = 0xFFFF;
 
-    unsigned int val[PRECISION+1];
+    typedef unsigned int arb_base_t;
+
+    arb_base_t val[PRECISION+1];
 public:
     arb_prec_t(void) : val{0} {}
     arb_prec_t(float val) {
@@ -137,22 +142,22 @@ public:
     }
 
     arb_prec_t& operator+=(const arb_prec_t &b) {
-        unsigned int add_buffer[PRECISION+1]; 
+        arb_base_t add_buffer[PRECISION+1]; 
         bool add_pa = this->val[0] == 0u; 
         bool add_pb = b.val[0] == 0u; 
         
         if(add_pa == add_pb) {
-            unsigned int add_carry = 0u;
+            arb_base_t add_carry = 0u;
 
             for(int add_i=  PRECISION; add_i > 0; add_i--) {
-                unsigned int add_next = (unsigned int)(this->val[add_i] + b.val[add_i] < this->val[add_i]);
+                arb_base_t add_next = (arb_base_t)(this->val[add_i] + b.val[add_i] < this->val[add_i]);
                 add_buffer[add_i] = this->val[add_i] + b.val[add_i] + add_carry;
                 add_carry = add_next;
             }
-            add_buffer[0] = (unsigned int)(!add_pa);
+            add_buffer[0] = (arb_base_t)(!add_pa);
 
         } else {
-            bool add_flip=false;
+            bool add_flip=false; // true if b > a
 
             for(int add_i = 1; add_i <= PRECISION; add_i++) {
                 if(b.val[add_i] > this->val[add_i]) {
@@ -164,20 +169,20 @@ public:
                 }
             }
 
-            unsigned int add_borrow = 0u;
-            if(add_flip) {
+            arb_base_t add_borrow = 0u;
+            if(add_flip) { // do -1 * (b - a)
                 for(int add_i = PRECISION; add_i > 0; add_i--) {
                     add_buffer[add_i] = b.val[add_i] - this->val[add_i] - add_borrow; 
-                    add_borrow = (unsigned int)(b.val[add_i] < this->val[add_i] + add_borrow);
+                    add_borrow = (arb_base_t)(b.val[add_i] < this->val[add_i] + add_borrow);
                 }
-            } else {
+            } else { // do (a - b)
                 for(int add_i = PRECISION; add_i > 0; add_i--) {
                     add_buffer[add_i] = this->val[add_i] - b.val[add_i] - add_borrow; 
-                    add_borrow = (unsigned int)(this->val[add_i] < b.val[add_i] || this->val[add_i] < b.val[add_i] + add_borrow);
+                    add_borrow = (arb_base_t)(this->val[add_i] < b.val[add_i] || this->val[add_i] < b.val[add_i] + add_borrow);
                 }
             }
 
-            add_buffer[0] = (unsigned int)(add_pa == add_flip);
+            add_buffer[0] = (arb_base_t)(add_pa == add_flip);
         }
 
         for (int assign_i = 0; assign_i <= PRECISION; assign_i++)
@@ -187,14 +192,14 @@ public:
     }
 
     arb_prec_t& operator*=(const arb_prec_t &b) {
-        unsigned int mul_buffer[PRECISION+1] = {0};
-        unsigned int mul_product[2*PRECISION-1] = {0};
+        arb_base_t mul_buffer[PRECISION+1] = {0};
+        arb_base_t mul_product[2*PRECISION-1] = {0};
 
         for(int mul_i = 0; mul_i < PRECISION; mul_i++) {
-            unsigned int mul_carry = 0u; 
+            arb_base_t mul_carry = 0u; 
             for(int mul_j = 0; mul_j < PRECISION; mul_j++) {
-                unsigned int mul_next = 0; 
-                unsigned int mul_value = this->val[PRECISION-mul_i] * b.val[PRECISION-mul_j]; 
+                arb_base_t mul_next = 0; 
+                arb_base_t mul_value = this->val[PRECISION-mul_i] * b.val[PRECISION-mul_j]; 
                 if (mul_product[mul_i+mul_j] + mul_value < mul_product[mul_i+mul_j]) {
                     mul_next++;
                 } 
@@ -203,15 +208,15 @@ public:
                     mul_next++;
                 } 
                 mul_product[mul_i+mul_j] += mul_carry; 
-                unsigned int mul_lower_a = this->val[PRECISION-mul_i] & 0xFFFF; 
-                unsigned int mul_upper_a = this->val[PRECISION-mul_i] >> 16; 
-                unsigned int mul_lower_b = b.val[PRECISION-mul_j] & 0xFFFF; 
-                unsigned int mul_upper_b = b.val[PRECISION-mul_j] >> 16; 
-                unsigned int mul_lower = mul_lower_a * mul_lower_b; 
-                unsigned int mul_upper = mul_upper_a * mul_upper_b; 
-                unsigned int mul_mid = mul_lower_a * mul_upper_b; 
-                mul_upper += mul_mid >> 16;
-                mul_mid = mul_mid << 16;
+                arb_base_t mul_lower_a = this->val[PRECISION-mul_i] % (MASK + 1); 
+                arb_base_t mul_upper_a = this->val[PRECISION-mul_i] / MASK; 
+                arb_base_t mul_lower_b = b.val[PRECISION-mul_j] % (MASK + 1); 
+                arb_base_t mul_upper_b = b.val[PRECISION-mul_j] / MASK;
+                arb_base_t mul_lower = mul_lower_a * mul_lower_b; 
+                arb_base_t mul_upper = mul_upper_a * mul_upper_b; 
+                arb_base_t mul_mid = mul_lower_a * mul_upper_b; 
+                mul_upper += mul_mid / MASK;
+                mul_mid = mul_mid * MASK;
 
                 if (mul_lower+mul_mid<mul_lower) {
                     mul_upper++;
@@ -219,8 +224,8 @@ public:
 
                 mul_lower += mul_mid; 
                 mul_mid = mul_lower_b * mul_upper_a;
-                mul_upper += mul_mid >> 16;
-                mul_mid = mul_mid << 16;
+                mul_upper += mul_mid / MASK;
+                mul_mid = mul_mid * MASK;
                 
                 if(mul_lower + mul_mid < mul_lower) {
                     mul_upper++;
@@ -257,13 +262,43 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const arb_prec_t& dt) {
         if (dt.val[0])
             os << "-";
-        for (unsigned int print_i = 1; print_i < arb_prec_t::size(); print_i++)
-            os << std::setfill('0') << std::setw(10) << dt.val[print_i] << " ";
+        
+        unsigned int num_length = (unsigned int)ceil(log10(BASE));
+        char* full_number = new char[num_length*arb_prec_t::size()-2];
+        char* format_num = new char[num_length+2];
+        double decimal_base = pow(10, num_length);
+        sprintf(format_num, "%%0%u.%ulf", (num_length*2)+1, num_length);
+        snprintf(full_number, num_length+2, format_num, (double)dt.val[1]);
+        char* num_ptr = &full_number[num_length+1];
+        for (unsigned int print_i = 2; print_i < arb_prec_t::size(); print_i++) {
+            double base_mult = 1.0;
+            for (unsigned int i = 0; i < print_i-1; i++) {
+                base_mult *= 1.0 / (double)BASE;
+                if (i > 0)
+                    base_mult *= decimal_base;
+            }
+            // get normalized number=val*(pow(pow(10, num_length), (n-1))/pow(BASE, n))
+            double normalized = base_mult * (double)(dt.val[print_i]);
+            // check if normalized overflows in previous number, if so, add
+            if ((unsigned int)normalized) {
+                double last_num = atof(num_ptr-num_length);
+                snprintf(num_ptr-num_length, num_length+1, format_num, normalized + last_num);
+            }
+            // get decimal part of current number
+            double f, i;
+            f = modf(normalized, &i);
+            f *= decimal_base;
+            snprintf(num_ptr, num_length+1, format_num, f);
+            num_ptr+=num_length;
+        }
+        os << full_number;
+        
+        delete[] full_number;
+        delete[] format_num;
+
         return os;
     }
 };
-
-#define TRANSLATE_ZOOM(level) (powf(2, -level))
 
 void handle_mouse(GLFWwindow* window);
 
@@ -295,15 +330,6 @@ int main(void)
         << GLFW_VERSION_MAJOR << "." << GLFW_VERSION_MINOR << "." << GLFW_VERSION_REVISION << std::endl;
     #ifdef DEBUG
         std::cout << "[DEBUG BUILD]" << std::endl;
-
-        arb_prec_t temp(1.0f);
-        std::cout << temp << std::endl;
-        temp /= 10.0f;
-        std::cout << temp << std::endl;
-        temp *= 10.0f;
-        std::cout << temp << std::endl;
-
-        return 0;
     #endif // DEBUG
 
     for (int i = 0; i < fabs(floorf(zoom_lvl)); i++)
