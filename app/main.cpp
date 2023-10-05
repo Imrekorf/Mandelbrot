@@ -334,7 +334,32 @@ int main(void)
     #ifdef DEBUG
         std::cout << "[DEBUG BUILD]" << std::endl;
 
-        return 0;
+        // ttmath::Big<1,3> temp;
+        // temp = 1.0;
+        // std::cout << temp << std::endl;
+        // temp *= 0.5;
+        // std::cout << temp << std::endl;
+        // for (int i = 0; i < 20; i++) {
+        //     temp /= 10;
+        //     std::cout << i << ":" << temp << std::endl;
+        // }
+
+        // big_uint_t temp;
+        // big_uint_init_uint(&temp, 1);
+        // std::cout << "carry: " << big_uint_mul_int(&temp, 2) << std::endl;
+        // big_num_lstrg_t res;
+        // big_num_strg_t remainder;
+        // for (int i = 0; i < 20; i++) {
+        //     std::cout << i << ": mul carry: " << big_uint_mul_int(&temp, 10) << ", ";
+        //     std::cout << "cast carry: " << big_uint_to_luint(temp, &res) << ", "; 
+        //     std::cout << "value: " << res << std::endl;
+        // }
+        // for (int i = 0; i < 20; i++) {
+        //     std::cout << i << ": div carry: " << big_uint_div_int(&temp, 10, &remainder) << ", ";
+        //     std::cout << "cast carry: " << big_uint_to_luint(temp, &res) << ", "; 
+        //     std::cout << "value: " << res << ", remainder: " << remainder << std::endl;
+        // }
+        // return 0;
     #endif // DEBUG
 
     for (int i = 0; i < fabs(floorf(zoom_lvl)); i++)
@@ -420,9 +445,23 @@ int main(void)
     glShaderSource(fragmentShader, 1, &GSV::fragment_shader, NULL);
     glCompileShader(fragmentShader);
 
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success); // check compile output
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success); // check compile output
     if(!success) {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+        std::cout << "[GL] [ERR]: \"Failed to compile fragment shader\", " << infoLog << std::endl;
+        glfwTerminate();
+        return -1;
+    }
+
+    // create biguint shader & compile
+    unsigned int bigUIntShader;
+    bigUIntShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(bigUIntShader, 1, &GSV::bignum_uint, NULL);
+    glCompileShader(bigUIntShader);
+
+    glGetShaderiv(bigUIntShader, GL_COMPILE_STATUS, &success); // check compile output
+    if(!success) {
+        glGetShaderInfoLog(bigUIntShader, 512, NULL, infoLog);
         std::cout << "[GL] [ERR]: \"Failed to compile fragment shader\", " << infoLog << std::endl;
         glfwTerminate();
         return -1;
@@ -435,6 +474,7 @@ int main(void)
     // link fragment and vertex shader to shader program
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
+    glAttachShader(shaderProgram, bigUIntShader);
     glLinkProgram(shaderProgram);
 
     glGetShaderiv(shaderProgram, GL_COMPILE_STATUS, &success); // check link output

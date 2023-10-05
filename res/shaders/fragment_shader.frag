@@ -1,5 +1,135 @@
 #version 460 core
+#extension GL_ARB_gpu_shader_int64 : require
 precision highp float;
+
+// Config
+
+#define BIG_NUM_PREC_EXP 	3 // integer part precision
+#define BIG_NUM_PREC_MAN 	3 // floating part precision
+
+#define BIG_NUM_DEF_MUL_ALGO 	BIG_NUM_MUL1
+#define BIG_NUM_DEF_DIV_ALGO 	BIG_NUM_DIV1
+
+//===============
+// Don't touch
+//===============
+
+//===============
+// defines from BigNum.h
+//===============
+
+#define BIG_NUM_MAX_STRG 			((1<<( 32   ))-1)
+#define BIG_NUM_MAX_LSTRG 			((1<<( 64   ))-1)
+#define BIG_NUM_MAX_SSTRG 			((1<<((32)-1))-1)
+#define BIG_NUM_MAX_LSSTRG 			((1<<((64)-1))-1)
+#define BIG_NUM_MIN_SSTRG 			((1<<((32)-1)))
+#define BIG_NUM_MIN_LSSTRG 			((1<<((64)-1)))
+#define BIG_NUM_HIGHEST_BIT			((1<<( 32   )))
+#define BIG_NUM_BITS_PER_STRG		(32)
+#define BIG_NUM_BITS_PER_LSTRG		(64)
+#define BIG_NUM_BITS_PER_SSTRG		(32)
+#define BIG_NUM_BITS_PER_LSSTRG		(64)
+
+#define BIG_NUM_PREC_INT 	BIG_NUM_PREC_EXP
+#define BIG_NUM_PREC_UINT 	BIG_NUM_PREC_MAN
+
+#define big_num_strg_t		uint
+#define big_num_sstrg_t		int
+#define big_num_lstrg_t		uint64_t
+#define big_num_lsstrg_t	int64_t
+#define big_num_carry_t		big_num_strg_t
+// let glsl know about some C types to make C code a bit easier to port
+#define size_t				uint
+#define ssize_t				int
+
+#define BIG_NUM_MUL1 		0
+// #define BIG_NUM_MUL2 		1
+#define BIG_NUM_DIV1		0
+// #define BIG_NUM_DIV2		1
+#define big_num_algo_t		uint
+
+#define BIG_NUM_DIV_OK		0
+#define BIG_NUM_DIV_ZERO	1
+#define BIG_NUM_DIV_BUSY	2
+#define big_num_div_ret_t	uint
+
+#define BIG_NUM_POW_OK		0
+#define BIG_NUM_POW_CARRY	1
+#define BIG_NUM_POW_INVALID	2
+#define big_num_pow_ret_t	uint
+
+//===============
+// BigUint.h
+//===============
+
+struct big_uint_t {
+	big_num_strg_t			table[BIG_NUM_PREC_UINT];
+};
+
+size_t	 			big_uint_size(inout big_uint_t self);
+void 				big_uint_set_zero(inout big_uint_t self);
+void 				big_uint_set_one(inout big_uint_t self);
+void 				big_uint_set_max(inout big_uint_t self);
+void 				big_uint_set_min(inout big_uint_t self);
+void 				big_uint_swap(inout big_uint_t self, inout big_uint_t ss2);
+void 				big_uint_set_from_table(inout big_uint_t self, in const big_num_strg_t temp_table[BIG_NUM_PREC_UINT], in size_t temp_table_len);
+
+
+big_num_strg_t		big_uint_add_one(inout big_uint_t self);
+big_num_carry_t 	big_uint_add(inout big_uint_t self, in big_uint_t ss2, in big_num_carry_t c);
+big_num_strg_t		big_uint_sub_one(inout big_uint_t self);
+big_num_carry_t 	big_uint_sub(inout big_uint_t self, in big_uint_t ss2, in big_num_carry_t c);
+big_num_strg_t 		big_uint_rcl(inout big_uint_t self, in size_t bits, in big_num_carry_t c);
+big_num_strg_t 		big_uint_rcr(inout big_uint_t self, in size_t bits, in big_num_carry_t c);
+size_t	 			big_uint_compensation_to_left(inout big_uint_t self);
+bool 				big_uint_find_leading_bit(in big_uint_t self, inout size_t table_id, inout size_t index);
+bool 				big_uint_find_lowest_bit(in big_uint_t self, inout size_t table_id, inout size_t index);
+bool	 			big_uint_get_bit(in big_uint_t self, in size_t bit_index);
+bool	 			big_uint_set_bit(inout big_uint_t self, in size_t bit_index);
+void 				big_uint_bit_and(inout big_uint_t self, in const big_uint_t ss2);
+void 				big_uint_bit_or(inout big_uint_t self, in const big_uint_t ss2);
+void 				big_uint_bit_xor(inout big_uint_t self, in const big_uint_t ss2);
+void 				big_uint_bit_not(inout big_uint_t self);
+void				big_uint_bit_not2(inout big_uint_t self);
+
+
+big_num_carry_t		big_uint_mul_int(inout big_uint_t self, in big_num_strg_t ss2);
+big_num_carry_t		big_uint_mul(inout big_uint_t self, in const big_uint_t ss2, in big_num_algo_t algorithm);
+
+
+big_num_div_ret_t 	big_uint_div_int(inout big_uint_t self, big_num_strg_t divisor, inout big_num_strg_t remainder);
+big_num_div_ret_t 	big_uint_div(inout big_uint_t self, const big_uint_t divisor, inout big_uint_t remainder, big_num_algo_t algorithm);
+
+big_num_pow_ret_t	big_uint_pow(inout big_uint_t self, big_uint_t _pow);
+void 				big_uint_sqrt(inout big_uint_t self);
+
+
+void 				big_uint_clear_first_bits(inout big_uint_t self, size_t n);
+bool 				big_uint_is_the_highest_bit_set(big_uint_t self);
+bool 				big_uint_is_the_lowest_bit_set(big_uint_t self);
+bool 				big_uint_is_only_the_highest_bit_set(big_uint_t self);
+bool 				big_uint_is_only_the_lowest_bit_set(big_uint_t self);
+bool 				big_uint_is_zero(big_uint_t self);
+bool 				big_uint_are_first_bits_zero(big_uint_t self, size_t bits);
+
+
+void 				big_uint_init(inout big_uint_t self);
+void 				big_uint_init_uint(inout big_uint_t self, big_num_strg_t value);
+void 				big_uint_init_big_uint(inout big_uint_t self, const big_uint_t value);
+big_num_carry_t		big_uint_init_int(inout big_uint_t self, big_num_sstrg_t value);
+big_num_carry_t		big_uint_to_uint(big_uint_t self, inout big_num_strg_t result);
+big_num_carry_t		big_uint_to_int(big_uint_t self, inout big_num_sstrg_t result);
+
+bool 				big_uint_cmp_smaller(big_uint_t self, const big_uint_t l, ssize_t index);
+bool 				big_uint_cmp_bigger(big_uint_t self, const big_uint_t l, ssize_t index);
+bool 				big_uint_cmp_equal(big_uint_t self, const big_uint_t l, ssize_t index);
+bool 				big_uint_cmp_smaller_equal(big_uint_t self, const big_uint_t l, ssize_t index);
+bool 				big_uint_cmp_bigger_equal(big_uint_t self, const big_uint_t l, ssize_t index);
+
+
+
+
+
 
 #define PRECISION 	(3)
 #define ARRAY_SIZE 	(PRECISION+1)
@@ -44,7 +174,6 @@ void 	step_mandelbrot_arb_prec(
 void main()
 {
 	vec2 translated = vec2((gl_FragCoord.x / u_resolution.x) - 0.5, (gl_FragCoord.y / u_resolution.y) - 0.5);
-
 
 #ifdef DEBUG_SQUARE
 	if (		all(greaterThan(translated.xy, vec2( 0.00,  0.00))) &&

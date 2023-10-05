@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.27)
 
 set(SHADER_DEPENDENCIES
 	${CMAKE_SOURCE_DIR}/res/shaders/fragment_shader.frag
+	${CMAKE_SOURCE_DIR}/res/shaders/bignum_uint.frag
 	${CMAKE_SOURCE_DIR}/res/shaders/vertex_shader.vert
 	${CMAKE_SOURCE_DIR}/res/gen_shaders.sh)
 
