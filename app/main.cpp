@@ -15,6 +15,9 @@
 #include "gen_shaders.h"
 #include "util.hpp"
 
+#include "ttmath.h"
+#include "BigNum/BigUInt.h"
+
 namespace my_window {
     constexpr size_t        height = 800;           // window height
     constexpr size_t        width  = 800;           // window width
@@ -330,6 +333,8 @@ int main(void)
         << GLFW_VERSION_MAJOR << "." << GLFW_VERSION_MINOR << "." << GLFW_VERSION_REVISION << std::endl;
     #ifdef DEBUG
         std::cout << "[DEBUG BUILD]" << std::endl;
+
+        return 0;
     #endif // DEBUG
 
     for (int i = 0; i < fabs(floorf(zoom_lvl)); i++)

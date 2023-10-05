@@ -16,13 +16,15 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 	gdi32
 	opengl32
 	LibGlad
+	LibBigNum
 	Shaders
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC 	
-	{CMAKE_SOURCE_DIR}/lib/ 
-	inc/ 
-	generated/
+	${CMAKE_SOURCE_DIR}/lib/
+	${CMAKE_SOURCE_DIR}/lib/ttmath/ttmath/
+	${CMAKE_SOURCE_DIR}/app/inc/ 
+	${CMAKE_SOURCE_DIR}/app/generated/
 )
 
 target_link_options(${PROJECT_NAME} PUBLIC
