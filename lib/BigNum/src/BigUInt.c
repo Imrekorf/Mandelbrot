@@ -67,12 +67,15 @@ typedef enum {
 	BIG_NUM_CALC_SELF_EQ   = 4,
 } div_calc_test_t;
 
+// protected functions
+big_num_carry_t			_big_uint_sub_uint(big_uint_t* self, big_num_strg_t value, size_t index);
+big_num_carry_t			_big_uint_add_uint(big_uint_t* self, big_num_strg_t value, size_t index);
+big_num_carry_t 		_big_uint_add_two_uints(big_uint_t* self, big_num_strg_t x2, big_num_strg_t x1, size_t index);
+
+// private functions
 static big_num_carry_t 	_big_uint_add_two_words(big_num_strg_t a, big_num_strg_t b, big_num_strg_t carry, big_num_strg_t * result);
-static big_num_carry_t	_big_uint_add_uint(big_uint_t* self, big_num_strg_t value, size_t index);
-static big_num_carry_t 	_big_uint_add_two_uints(big_uint_t* self, big_num_strg_t x2, big_num_strg_t x1, size_t index);
 static big_num_carry_t 	_big_uint_add_vector(const big_num_strg_t* ss1, const big_num_strg_t* ss2, size_t ss1_size, size_t ss2_size, big_num_strg_t * result);
 static big_num_carry_t	_big_uint_sub_two_words(big_num_strg_t a, big_num_strg_t b, big_num_strg_t carry, big_num_strg_t * result);
-static big_num_carry_t	_big_uint_sub_uint(big_uint_t* self, big_num_strg_t value, size_t index);
 static big_num_carry_t 	_big_uint_sub_vector(const big_num_strg_t* ss1, const big_num_strg_t* ss2, size_t ss1_size, size_t ss2_size, big_num_strg_t * result);
 static big_num_carry_t	_big_uint_rcl2_one(big_uint_t* self, big_num_strg_t c);
 static big_num_carry_t 	_big_uint_rcr2_one(big_uint_t* self, big_num_strg_t c);
@@ -226,13 +229,14 @@ void big_uint_set_from_table(big_uint_t* self, const big_num_strg_t temp_table[]
  */
 
 /**
- * this method adds one to the existing value
+ * this method adds val to the existing value
  * @param[in, out] self the big num object
- * @return big_num_strg_t the carry, if there was one
+ * @param[in] val the value to add to the existing vlaue
+ * @return big_num_carry_t the carry, if there was one
  */
-big_num_strg_t big_uint_add_one(big_uint_t* self)
+big_num_carry_t big_uint_add_uint(big_uint_t* self, big_num_strg_t val)
 {
-	return _big_uint_add_uint(self, 1, 0);
+	return _big_uint_add_uint(self, val, 0);
 }
 
 /**
@@ -252,15 +256,15 @@ big_num_carry_t big_uint_add(big_uint_t* self, big_uint_t ss2, big_num_carry_t c
 	return c;
 }
 
-
 /**
- * this method subtracts one from the existing value
+ * this method subtracts val from the existing value
  * @param[in, out] self the big num object
- * @return big_num_strg_t the carry, if there was one
+ * @param[in] val the value to subtract from self
+ * @return big_num_carry_t the carry, if there was one
  */
-big_num_strg_t big_uint_sub_one(big_uint_t* self)
+big_num_carry_t	big_uint_sub_uint(big_uint_t* self, big_num_strg_t val)
 {
-	return _big_uint_sub_uint(self, 1, 0);
+	return _big_uint_sub_uint(self, val, 0);
 }
 
 /**
@@ -634,8 +638,8 @@ big_num_carry_t big_uint_mul(big_uint_t* self, const big_uint_t ss2, big_num_alg
  * division by one unsigned word
  * 
  * @param[in, out] self the big num object
- * @param divisor 
- * @param remainder 
+ * @param[in] divisor 
+ * @param[out] remainder 
  * @return big_num_div_ret_t 
  */
 big_num_div_ret_t big_uint_div_int(big_uint_t* self, big_num_strg_t divisor, big_num_strg_t * remainder)
@@ -676,9 +680,9 @@ big_num_div_ret_t big_uint_div_int(big_uint_t* self, big_num_strg_t divisor, big
  * division self = self / ss2
  * 
  * @param[in, out] self the big num object
- * @param divisor 
- * @param remainder 
- * @param algorithm 
+ * @param[in] divisor 
+ * @param[out] remainder 
+ * @param[in] algorithm 
  * @return big_num_div_ret_t 
  */
 big_num_div_ret_t big_uint_div(big_uint_t* self, const big_uint_t divisor, big_uint_t * remainder, big_num_algo_t algorithm)
@@ -698,7 +702,7 @@ big_num_div_ret_t big_uint_div(big_uint_t* self, const big_uint_t divisor, big_u
  * binary algorithm (r-to-l)
  * 
  * @param[in, out] self the big num object
- * @param pow The power to raise self to
+ * @param[in] pow The power to raise self to
  * @return big_num_pow_ret_t 
  */
 big_num_pow_ret_t big_uint_pow(big_uint_t* self, big_uint_t pow)
@@ -715,13 +719,13 @@ big_num_pow_ret_t big_uint_pow(big_uint_t* self, big_uint_t pow)
 	while( !c )
 	{
 		if( pow.table[0] & 1 )
-			c += big_uint_mul(&result, start, BIG_NUM_MUL2);
+			c += big_uint_mul(&result, start, BIG_NUM_MUL_DEF);
 
 		_big_uint_rcr2_one(&pow, 0);
 		if( big_uint_is_zero(pow) )
 			break;
 
-		c += big_uint_mul(&start, start, BIG_NUM_MUL2);
+		c += big_uint_mul(&start, start, BIG_NUM_MUL_DEF);
 	}
 
 	*self = result;
@@ -774,7 +778,7 @@ void big_uint_sqrt(big_uint_t* self)
  * For example:
  * let n=2 then if there's a value 111 (bin) there'll be '100' (bin)
  * @param[in, out] self the big num object
- * @param n 
+ * @param[in] n 
  */
 void big_uint_clear_first_bits(big_uint_t* self, size_t n)
 {
@@ -880,7 +884,7 @@ bool big_uint_is_zero(big_uint_t self)
 /**
  * returning true if first 'bits' bits are equal zero
  * @param[in, out] self the big num object
- * @param bits 
+ * @param[in] bits 
  * @return true 
  * @return false 
  */
@@ -909,19 +913,9 @@ bool big_uint_are_first_bits_zero(big_uint_t self, size_t bits)
  */
 
 /**
- * a default constructor
- * we don't clear the table
- * @param[in, out] self the big num object
- */
-void big_uint_init(big_uint_t* self)
-{
-	return;
-}
-
-/**
  * a constructor for converting the big_num_strg_t big_uint_t
  * @param[in, out] self the big num object
- * @param value
+ * @param[in] value
  */
 void big_uint_init_uint(big_uint_t* self, big_num_strg_t value)
 {
@@ -934,7 +928,7 @@ void big_uint_init_uint(big_uint_t* self, big_num_strg_t value)
 /**
  * a constructor for converting big_num_lstrg_t int to big_uint_t
  * @param[in, out] self the big num object
- * @param value
+ * @param[in] value
  * @return big_num_carry_t
  */
 big_num_carry_t big_uint_init_ulint(big_uint_t* self, big_num_lstrg_t value)
@@ -959,7 +953,7 @@ big_num_carry_t big_uint_init_ulint(big_uint_t* self, big_num_lstrg_t value)
 /**
  * a copy constructor
  * @param[in, out] self the big num object
- * @param u the other big num object
+ * @param[in] u the other big num object
  */
 void big_uint_init_big_uint(big_uint_t* self, const big_uint_t value)
 {
@@ -971,7 +965,7 @@ void big_uint_init_big_uint(big_uint_t* self, const big_uint_t value)
  * a constructor for converting the big_num_sstrg_t to big_uint_t
  * 
  * @param[in, out] self the big num object
- * @param value
+ * @param[in] value
  * @return big_num_carry_t
  */
 big_num_carry_t big_uint_init_int(big_uint_t* self, big_num_sstrg_t value)
@@ -985,7 +979,7 @@ big_num_carry_t big_uint_init_int(big_uint_t* self, big_num_sstrg_t value)
 /**
  * a constructor for converting big_num_lsstrg_t to big_uint_t
  * @param[in, out] self the big num object
- * @param value
+ * @param[in] value
  * @return big_num_carry_t
  */
 big_num_carry_t big_uint_init_lint(big_uint_t* self, big_num_lsstrg_t value)
@@ -1000,7 +994,7 @@ big_num_carry_t big_uint_init_lint(big_uint_t* self, big_num_lsstrg_t value)
  * this method converts the value to big_num_strg_t type
  * can return a carry if the value is too long to store it in big_num_strg_t type
  * @param[in, out] self the big num object
- * @param result 
+ * @param[out] result 
  * @return big_num_carry_t
  */
 big_num_carry_t big_uint_to_uint(big_uint_t self, big_num_strg_t * result)
@@ -1018,7 +1012,7 @@ big_num_carry_t big_uint_to_uint(big_uint_t self, big_num_strg_t * result)
  * this method converts the value to big_num_sstrg_t type (signed integer)
  * can return a carry if the value is too long to store it in big_num_sstrg_t type
  * @param[in, out] self the big num object
- * @param result 
+ * @param[out] result 
  * @return big_num_carry_t
  */
 big_num_carry_t big_uint_to_int(big_uint_t self, big_num_sstrg_t * result)
@@ -1030,7 +1024,7 @@ big_num_carry_t big_uint_to_int(big_uint_t self, big_num_sstrg_t * result)
  * this method converts the value to big_num_lstrg_t type (long integer)
  * can return a carry if the value is too long to store it in big_num_lstrg_t type
  * @param[in, out] self the big num object
- * @param result 
+ * @param[out] result 
  * @return big_num_carry_t 
  */
 big_num_carry_t	big_uint_to_luint(big_uint_t self, big_num_lstrg_t * result)
@@ -1049,7 +1043,7 @@ big_num_carry_t	big_uint_to_luint(big_uint_t self, big_num_lstrg_t * result)
  * this method converts the value to big_num_lsstrg_t type (long signed integer)
  * can return a carry if the value is too long to store it in big_num_lsstrg_t type
  * @param[in, out] self the big num object
- * @param result 
+ * @param[out] result 
  * @return big_num_carry_t 
  */
 big_num_carry_t	big_uint_to_lint(big_uint_t self, big_num_lsstrg_t * result)
@@ -1072,8 +1066,8 @@ big_num_carry_t	big_uint_to_lint(big_uint_t self, big_num_lsstrg_t * result)
  * 
  * introduced for some optimization in the second division algorithm (Div2)
  * @param[in, out] self the big num object
- * @param l the other big num object
- * @param index 
+ * @param[in] l the other big num object
+ * @param[in] index 
  * @return true 
  * @return false 
  */
@@ -1106,8 +1100,8 @@ bool big_uint_cmp_smaller(big_uint_t self, const big_uint_t l, ssize_t index)
  * 
  * introduced it for some optimization in the second division algorithm (Div2)
  * @param[in, out] self the big num object
- * @param l the other big num object
- * @param index 
+ * @param[in] l the other big num object
+ * @param[in] index 
  * @return true 
  * @return false 
  */
@@ -1138,8 +1132,8 @@ bool big_uint_cmp_bigger(big_uint_t self, const big_uint_t l, ssize_t index)
  * (note: we start the comparison from back - from the last word, when index is -1 /default/
  * it is automatically set into the last word)
  * @param[in, out] self the big num object
- * @param l the other big num object
- * @param index 
+ * @param[in] l the other big num object
+ * @param[in] index 
  * @return true 
  * @return false 
  */
@@ -1166,8 +1160,8 @@ bool big_uint_cmp_equal(big_uint_t self, const big_uint_t l, ssize_t index)
  * (note: we start the comparison from back - from the last word, when index is -1 /default/
  * it is automatically set into the last word)
  * @param[in, out] self the big num object
- * @param l the other big num object
- * @param index 
+ * @param[in] l the other big num object
+ * @param[in] index 
  * @return true 
  * @return false 
  */
@@ -1194,8 +1188,8 @@ bool big_uint_cmp_smaller_equal(big_uint_t self, const big_uint_t l, ssize_t ind
  * (note: we start the comparison from back - from the last word, when index is -1 /default/
  * it is automatically set into the last word)
  * @param[in, out] self the big num object
- * @param l the other big num object
- * @param index 
+ * @param[in] l the other big num object
+ * @param[in] index 
  * @return true 
  * @return false 
  */
@@ -1220,10 +1214,10 @@ bool big_uint_cmp_bigger_equal(big_uint_t self, const big_uint_t l, ssize_t inde
 
 /**
  * this method adds two words together
- * @param a 
- * @param b 
- * @param carry carry
- * @param result 
+ * @param[in] a 
+ * @param[in] b 
+ * @param[in] carry carry
+ * @param[out] result 
  * @return big_num_carry_t carry
  */
 static big_num_carry_t _big_uint_add_two_words(big_num_strg_t a, big_num_strg_t b, big_num_carry_t carry, big_num_strg_t * result)
@@ -1263,11 +1257,11 @@ static big_num_carry_t _big_uint_add_two_words(big_num_strg_t a, big_num_strg_t 
  * 		table[2] = 5;
  * of course if there was a carry from table[2] it would be returned
  * @param[in, out] self the big num object
- * @param value 
- * @param index 
+ * @param[in] value 
+ * @param[in] index 
  * @return big_num_carry_t carry
  */
-static big_num_carry_t _big_uint_add_uint(big_uint_t* self, big_num_strg_t value, size_t index)
+big_num_carry_t _big_uint_add_uint(big_uint_t* self, big_num_strg_t value, size_t index)
 {
 	size_t i;
 	big_num_carry_t c;
@@ -1305,12 +1299,12 @@ static big_num_carry_t _big_uint_add_uint(big_uint_t* self, big_num_strg_t value
  * (of course if there was a carry in table[2](5+20) then 
  * this carry would be passed to the table[3] etc.)
  * @param[in, out] self the big num object
- * @param x1
- * @param x2
- * @param index
+ * @param[in] x1 lower word
+ * @param[in] x2 higher word
+ * @param[in] index index <= value_size-2
  * @return big_num_carry_t carry
  */
-static big_num_carry_t _big_uint_add_two_uints(big_uint_t* self, big_num_strg_t x2, big_num_strg_t x1, size_t index)
+big_num_carry_t _big_uint_add_two_uints(big_uint_t* self, big_num_strg_t x2, big_num_strg_t x1, size_t index)
 {
 	size_t i;
 	big_num_carry_t c;
@@ -1341,11 +1335,11 @@ static big_num_carry_t _big_uint_add_two_uints(big_uint_t* self, big_num_strg_t 
  * 		  9                  9
  *  of course the carry is propagated and will be returned from the last item
  *  (this method is used by the Karatsuba multiplication algorithm)
- * @param ss1 
- * @param ss2 
- * @param ss1_size 
- * @param ss2_size 
- * @param result 
+ * @param[in] ss1 
+ * @param[in] ss2 
+ * @param[in] ss1_size 
+ * @param[in] ss2_size 
+ * @param[out] result 
  * @return big_num_carry_t 
  */
 static big_num_carry_t _big_uint_add_vector(const big_num_strg_t* ss1, const big_num_strg_t* ss2, size_t ss1_size, size_t ss2_size, big_num_strg_t * result)
@@ -1364,10 +1358,10 @@ static big_num_carry_t _big_uint_add_vector(const big_num_strg_t* ss1, const big
 
 /**
  * this method subtractes one word from the other
- * @param a 
- * @param b 
- * @param carry carry
- * @param result 
+ * @param[in] a 
+ * @param[in] b 
+ * @param[in] carry carry
+ * @param[out] result 
  * @return big_num_carry_t carry
  */
 static big_num_carry_t _big_uint_sub_two_words(big_num_strg_t a, big_num_strg_t b, big_num_carry_t carry, big_num_strg_t * result)
@@ -1403,11 +1397,11 @@ static big_num_carry_t _big_uint_sub_two_words(big_num_strg_t a, big_num_strg_t 
  * 		table[2] = 5;
  * of course if there was a carry from table[2] it would be returned
  * @param[in, out] self the big num object
- * @param value 
- * @param index 
+ * @param[in] value 
+ * @param[in] index 
  * @return big_num_carry_t carry
  */
-static big_num_carry_t _big_uint_sub_uint(big_uint_t* self, big_num_strg_t value, size_t index)
+big_num_carry_t _big_uint_sub_uint(big_uint_t* self, big_num_strg_t value, size_t index)
 {
 	size_t i;
 	big_num_carry_t c;
@@ -1438,11 +1432,11 @@ static big_num_carry_t _big_uint_sub_uint(big_uint_t* self, big_num_strg_t value
  * 	               	 return (carry): 0
  *  of course the carry (borrow) is propagated and will be returned from the last item
  *  (this method is used by the Karatsuba multiplication algorithm)
- * @param ss1 
- * @param ss2 
- * @param ss1_size 
- * @param ss2_size 
- * @param result 
+ * @param[in] ss1 
+ * @param[in] ss2 
+ * @param[in] ss1_size 
+ * @param[in] ss2_size 
+ * @param[out] result 
  * @return big_num_carry_t 
  */
 static big_num_carry_t _big_uint_sub_vector(const big_num_strg_t* ss1, const big_num_strg_t* ss2, size_t ss1_size, size_t ss2_size, big_num_strg_t * result)
@@ -1471,7 +1465,7 @@ static big_num_carry_t _big_uint_sub_vector(const big_num_strg_t* ss1, const big
  * let self is 001010000
  * after _big_uint_rcl2_one(1) there'll be 010100001 and _big_uint_rcl2_one returns 0
  * @param[in, out] self 
- * @param c carry
+ * @param[in] c carry
  * @return big_num_carry_t carry
  */
 static big_num_carry_t _big_uint_rcl2_one(big_uint_t* self, big_num_carry_t c)
@@ -1503,7 +1497,7 @@ static big_num_carry_t _big_uint_rcl2_one(big_uint_t* self, big_num_carry_t c)
  * let self is 000000010
  * after _big_uint_rcr2_one(1) there'll be 100000001 and _big_uint_rcr2_one returns 0
  * @param[in, out] self 
- * @param c carry
+ * @param[in] c carry
  * @return big_num_carry_t carry
  */
 static big_num_carry_t _big_uint_rcr2_one(big_uint_t* self, big_num_carry_t c)
@@ -1537,8 +1531,8 @@ static big_num_carry_t _big_uint_rcr2_one(big_uint_t* self, big_num_carry_t c)
  * let self is 001010000
  * after _big_uint_rcl2(3, 1) there'll be 010000111 and _big_uint_rcl2 returns 1
  * @param[in, out] self 
- * @param bits 
- * @param c carry
+ * @param[in] bits 
+ * @param[in] c carry
  * @return big_num_carry_t carry
  */
 static big_num_carry_t _big_uint_rcl2(big_uint_t* self, size_t bits, big_num_carry_t c)
@@ -1571,8 +1565,8 @@ static big_num_carry_t _big_uint_rcl2(big_uint_t* self, size_t bits, big_num_car
  * let self is 000000010
  * after _big_uint_rcr2(2, 1) there'll be 110000000 and _big_uint_rcr2 returns 1
  * @param[in, out] self 
- * @param bits 
- * @param c carry
+ * @param[in] bits 
+ * @param[in] c carry
  * @return big_num_carry_t carry
  */
 static big_num_carry_t _big_uint_rcr2(big_uint_t* self, size_t bits, big_num_carry_t c)
@@ -1597,7 +1591,7 @@ static big_num_carry_t _big_uint_rcr2(big_uint_t* self, size_t bits, big_num_car
 
 /**
  * this method returns the number of the highest set bit in x
- * @param x 
+ * @param[in] x 
  * @return big_num_sstrg_t if the 'x' is zero this method returns '-1'
  */
 static big_num_sstrg_t _big_uint_find_leading_bit_in_word(big_num_strg_t x)
@@ -1617,7 +1611,7 @@ static big_num_sstrg_t _big_uint_find_leading_bit_in_word(big_num_strg_t x)
 
 /**
  * this method returns the number of the highest set bit in x
- * @param x 
+ * @param[in] x 
  * @return big_num_sstrg_t if the 'x' is zero this method returns '-1'
  */
 static big_num_sstrg_t _big_uint_find_lowest_bit_in_word(big_num_strg_t x)
@@ -1643,8 +1637,8 @@ static big_num_sstrg_t _big_uint_find_lowest_bit_in_word(big_num_strg_t x)
  * 		uint x = 100;
  * 		uint bit = _big_uint_set_bit_in_word(x, 3);
  * now: x = 108 and bit = 0
- * @param value 
- * @param bit the bit to set, between <0,BIG_NUM_BITS_PER_STRG-1>
+ * @param[in, out] value 
+ * @param[in] bit the bit to set, between <0,BIG_NUM_BITS_PER_STRG-1>
  * @return big_num_strg_t 
  */
 static big_num_strg_t _big_uint_set_bit_in_word(big_num_strg_t * value, size_t bit)
@@ -1668,10 +1662,10 @@ static big_num_strg_t _big_uint_set_bit_in_word(big_num_strg_t * value, size_t b
  * this methos never returns a carry
  * 
  * this method is used in the second version of the multiplication algorithms
- * @param a 
- * @param b 
- * @param result_high 
- * @param result_low 
+ * @param[in] a 
+ * @param[in] b 
+ * @param[out] result_high 
+ * @param[out] result_low 
  */
 static void _big_uint_mul_two_words(big_num_strg_t a, big_num_strg_t b, big_num_strg_t* result_high, big_num_strg_t* result_low)
 {
@@ -1698,18 +1692,16 @@ static void _big_uint_mul_two_words(big_num_strg_t a, big_num_strg_t b, big_num_
  * @warning the c has to be suitably large for the result being keeped in one word,
  * if c is equal zero there'll be a hardware interruption (0)
  * and probably the end of your program
- * @param a 
- * @param b 
- * @param c
- * @param r 
- * @param rest 
+ * @param[in] a 
+ * @param[in] b 
+ * @param[in] c
+ * @param[out] r 
+ * @param[out] rest 
  */
 static void _big_uint_div_two_words(big_num_strg_t a, big_num_strg_t b, big_num_strg_t c, big_num_strg_t* r, big_num_strg_t* rest)
 {
-	union
-	{
-		struct
-		{
+	union {
+		struct {
 			big_num_strg_t low;  // 1 word
 			big_num_strg_t high; // 1 word
 		} u_;
@@ -1730,10 +1722,10 @@ static void _big_uint_div_two_words(big_num_strg_t a, big_num_strg_t b, big_num_
 /**
  * an auxiliary method for moving bits into the left hand side. This method moves only words
  * @param[in, out] self the big num object
- * @param rest_bits 
- * @param last_c 
- * @param bits 
- * @param c carry
+ * @param[out] rest_bits 
+ * @param[out] last_c 
+ * @param[in] bits 
+ * @param[in] c carry
  */
 static void _big_uint_rcl_move_all_words(big_uint_t* self, size_t * rest_bits, big_num_carry_t * last_c, size_t bits, big_num_carry_t c)
 {
@@ -1772,10 +1764,10 @@ static void _big_uint_rcl_move_all_words(big_uint_t* self, size_t * rest_bits, b
 /**
  * an auxiliary method for moving bits into the right hand side. This method moves only words
  * @param[in, out] self the big num object
- * @param rest_bits 
- * @param last_c 
- * @param bits 
- * @param c 
+ * @param[in] rest_bits 
+ * @param[in] last_c 
+ * @param[in] bits 
+ * @param[in] c 
  */
 static void _big_uint_rcr_move_all_words(big_uint_t* self, size_t * rest_bits, big_num_carry_t * last_c, size_t bits, big_num_carry_t c)
 {
@@ -1814,7 +1806,7 @@ static void _big_uint_rcr_move_all_words(big_uint_t* self, size_t * rest_bits, b
 /**
  * multiplication: self = self * ss2
  * @param[in, out] self the big num object
- * @param ss2 the other big num object
+ * @param[in] ss2 the other big num object
  * @return big_num_carry_t carry
  */
 static big_num_carry_t _big_uint_mul1_ref(big_uint_t* self, const big_uint_t ss2)
@@ -1851,7 +1843,7 @@ static big_num_carry_t _big_uint_mul1(big_uint_t* self, const big_uint_t ss2)
 /**
  * multiplication: self = self * ss2
  * @param[in, out] self the big num object
- * @param ss2 the other big num object
+ * @param[in] ss2 the other big num object
  * @return big_num_carry_t 
  */
 static big_num_carry_t _big_uint_mul2(big_uint_t* self, const big_uint_t ss2)
@@ -1880,8 +1872,8 @@ static big_num_carry_t _big_uint_mul2(big_uint_t* self, const big_uint_t ss2)
 /**
  * multiplication: result = self * ss2
  * @param[in, out] self the big num object
- * @param ss2 the other big num object
- * @param result twice bigger than self and ss2
+ * @param[in] ss2 the other big num object
+ * @param[out] result twice bigger than self and ss2
  */
 static void _big_uint_mul2_big(big_uint_t* self, const big_uint_t ss2, _big_big_uint_t * result)
 {
@@ -1891,9 +1883,9 @@ static void _big_uint_mul2_big(big_uint_t* self, const big_uint_t ss2, _big_big_
 /**
  * 
  * @param[in, out] self the big num object
- * @param ss1 
- * @param ss2 
- * @param result 
+ * @param[in] ss1 
+ * @param[in] ss2 
+ * @param[out] result 
  */
 static void _big_uint_mul2_big2(big_uint_t* self, const big_num_strg_t ss1[], const big_num_strg_t ss2[], _big_big_uint_t * result)
 {
@@ -1918,13 +1910,13 @@ static void _big_uint_mul2_big2(big_uint_t* self, const big_num_strg_t ss1[], co
 /**
  * 
  * @param[in, out] self the big num object
- * @param ss1 
- * @param ss2 
- * @param result 
- * @param x1start 
- * @param x1size 
- * @param x2start 
- * @param x2size 
+ * @param[in] ss1 
+ * @param[in] ss2 
+ * @param[in] result 
+ * @param[in] x1start 
+ * @param[in] x1size 
+ * @param[in] x2start 
+ * @param[in] x2size 
  */
 static void	_big_uint_mul2_big3(big_uint_t* self, const big_num_strg_t ss1[], const big_num_strg_t ss2[], _big_big_uint_t * result, size_t x1start, size_t x1size, size_t x2start, size_t x2size)
 {
@@ -1959,9 +1951,9 @@ static void	_big_uint_mul2_big3(big_uint_t* self, const big_num_strg_t ss1[], co
  * 
  * @param[in, out] self the big num object
  * @param[in] divisor 
- * @param m 
- * @param n 
- * @param remainder 
+ * @param[out] m 
+ * @param[out] n 
+ * @param[out] remainder 
  * @return div_std_test_t 
  */
 static div_std_test_t _big_uint_div_standard_test(big_uint_t* self, const big_uint_t divisor, size_t * m, size_t * n, big_uint_t * remainder){
@@ -1994,8 +1986,8 @@ static div_std_test_t _big_uint_div_standard_test(big_uint_t* self, const big_ui
  * 
  * @param[in, out] self the big num object
  * @param[in] divisor
- * @param m 
- * @param n 
+ * @param[out] m 
+ * @param[out] n 
  * @return div_calc_test_t 
  */
 static div_calc_test_t _big_uint_div_calculating_size(big_uint_t* self, const big_uint_t divisor, size_t * m, size_t * n){
@@ -2029,8 +2021,8 @@ static div_calc_test_t _big_uint_div_calculating_size(big_uint_t* self, const bi
 /**
  * 
  * @param[in, out] self the big num object
- * @param divisor the value to divide self by
- * @param remainder the remaining part of the division (whole number)
+ * @param[in] divisor the value to divide self by
+ * @param[out] remainder the remaining part of the division (whole number)
  * @return big_num_div_ret_t 
  */
 static big_num_div_ret_t _big_uint_div1(big_uint_t* self, const big_uint_t divisor, big_uint_t * remainder){
@@ -2056,7 +2048,7 @@ static big_num_div_ret_t _big_uint_div1(big_uint_t* self, const big_uint_t divis
  * 
  * @param[in, out] self the big num object
  * @param[in] divisor the value to divide self by
- * @param rest the remaining part of the division (whole number)
+ * @param[out] rest the remaining part of the division (whole number)
  * @return big_num_div_ret_t 
  */
 static big_num_div_ret_t _big_uint_div1_calculate(big_uint_t* self, const big_uint_t divisor, big_uint_t * rest){
@@ -2067,7 +2059,7 @@ static big_num_div_ret_t _big_uint_div1_calculate(big_uint_t* self, const big_ui
  * 
  * @param[in, out] self the big num object
  * @param[in] divisor the value to divide self by
- * @param rest the remaining part of the division (whole number)
+ * @param[out] rest the remaining part of the division (whole number)
  * @return big_num_div_ret_t 
  */
 static big_num_div_ret_t _big_uint_div1_calculate_ref(big_uint_t* self, const big_uint_t divisor, big_uint_t * rest){
@@ -2131,8 +2123,8 @@ static big_num_div_ret_t _big_uint_div1_calculate_ref(big_uint_t* self, const bi
 /**
  * 
  * @param[in, out] self the big num object
- * @param divisor the value to divide self by
- * @param remainder the remaining part of the division (whole number)
+ * @param[in] divisor the value to divide self by
+ * @param[out] remainder the remaining part of the division (whole number)
  * @return big_num_div_ret_t 
  */
 static big_num_div_ret_t  _big_uint_div2(big_uint_t* self, const big_uint_t divisor, big_uint_t * remainder){
@@ -2142,8 +2134,8 @@ static big_num_div_ret_t  _big_uint_div2(big_uint_t* self, const big_uint_t divi
 /**
  * 
  * @param[in, out] self the big num object
- * @param divisor the value to divide self by
- * @param remainder the remaining part of the division (whole number)
+ * @param[in] divisor the value to divide self by
+ * @param[out] remainder the remaining part of the division (whole number)
  * @return big_num_div_ret_t 
  */
 static big_num_div_ret_t _big_uint_div2_ref(big_uint_t* self, const big_uint_t divisor, big_uint_t * remainder){
@@ -2169,9 +2161,9 @@ static big_num_div_ret_t _big_uint_div2_ref(big_uint_t* self, const big_uint_t d
 /**
  * 
  * @param[in, out] self the big num object
- * @param divisor the value to divide self by
- * @param remainder the remaining part of the division (whole number)
- * @param bits_diff 
+ * @param[in] divisor the value to divide self by
+ * @param[out] remainder the remaining part of the division (whole number)
+ * @param[out] bits_diff 
  * @return big_num_div_ret_t 
  */
 static big_num_div_ret_t _big_uint_div2_calculate(big_uint_t* self, const big_uint_t divisor, big_uint_t * remainder, size_t * bits_diff)
@@ -2208,12 +2200,12 @@ static big_num_div_ret_t _big_uint_div2_calculate(big_uint_t* self, const big_ui
 /**
  * 
  * @param[in, out] self the big num object
- * @param divisor the value to divide self by
- * @param remainder the remaining part of the division (whole number)
- * @param table_id 
- * @param index 
- * @param divisor_table_id 
- * @param divisor_index 
+ * @param[in] divisor the value to divide self by
+ * @param[out] remainder the remaining part of the division (whole number)
+ * @param[out] table_id 
+ * @param[out] index 
+ * @param[out] divisor_table_id 
+ * @param[out] divisor_index 
  * @return big_num_div_ret_t 
  */
 static big_num_div_ret_t _big_uint_div2_find_leading_bits_and_check(big_uint_t* self, const big_uint_t divisor, big_uint_t * remainder, size_t * table_id, size_t * index, size_t * divisor_table_id, size_t * divisor_index)
@@ -2264,11 +2256,11 @@ static big_num_div_ret_t _big_uint_div2_find_leading_bits_and_check(big_uint_t* 
 /**
  * Checks if divisor is greater than self
  * @param[in, out] self the big num object
- * @param divisor the value to divide self by
- * @param remainder the remaining part of the division (whole number), set to self if divisor > self
- * @param table_id 
- * @param index 
- * @param divisor_index 
+ * @param[in] divisor the value to divide self by
+ * @param[out] remainder the remaining part of the division (whole number), set to self if divisor > self
+ * @param[in] table_id 
+ * @param[in] index 
+ * @param[in] divisor_index 
  * @return true divisor is equal or greater than self
  * @return false divisor is less than self
  */

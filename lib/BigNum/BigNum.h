@@ -34,6 +34,9 @@ extern "C" {
 #define BIG_NUM_PREC_INT 	BIG_NUM_PREC_EXP
 #define BIG_NUM_PREC_UINT 	BIG_NUM_PREC_MAN
 
+#define BIG_NUM_MUL_DEF		BIG_NUM_MUL1
+#define BIG_NUM_DIV_DEF		BIG_NUM_DIV1
+
 /**
  * Multiplication algorithm selector and
  * Division algorithm selector
@@ -76,7 +79,7 @@ typedef enum {
 } big_num_div_ret_t;
 
 /**
- * return results for big_uint_div
+ * return results for big_*type*_pow
  */
 typedef enum {
 	/**

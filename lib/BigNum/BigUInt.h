@@ -30,9 +30,9 @@ void 				big_uint_swap(big_uint_t* self, big_uint_t* ss2);
 void 				big_uint_set_from_table(big_uint_t* self, const big_num_strg_t temp_table[], size_t temp_table_len);
 
 
-big_num_strg_t		big_uint_add_one(big_uint_t* self);
+big_num_carry_t		big_uint_add_uint(big_uint_t* self, big_num_strg_t val);
 big_num_carry_t 	big_uint_add(big_uint_t* self, big_uint_t ss2, big_num_carry_t c);
-big_num_strg_t		big_uint_sub_one(big_uint_t* self);
+big_num_carry_t		big_uint_sub_uint(big_uint_t* self, big_num_strg_t val);
 big_num_carry_t 	big_uint_sub(big_uint_t* self, big_uint_t ss2, big_num_carry_t c);
 big_num_strg_t 		big_uint_rcl(big_uint_t* self, size_t bits, big_num_carry_t c);
 big_num_strg_t 		big_uint_rcr(big_uint_t* self, size_t bits, big_num_carry_t c);
@@ -68,7 +68,6 @@ bool 				big_uint_is_zero(big_uint_t self);
 bool 				big_uint_are_first_bits_zero(big_uint_t self, size_t bits);
 
 
-void 				big_uint_init(big_uint_t* self);
 void 				big_uint_init_uint(big_uint_t* self, big_num_strg_t value);
 big_num_carry_t		big_uint_init_ulint(big_uint_t* self, big_num_lstrg_t value);
 void 				big_uint_init_big_uint(big_uint_t* self, const big_uint_t value);
