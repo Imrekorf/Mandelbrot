@@ -16,24 +16,55 @@
 extern "C" {
 #endif
 
-typedef struct {
-	/*!
-		buffer for the integer value
-		  table[0] - the lowest word of the value
-	*/
-	unsigned int table[BIG_NUM_PREC_INT];
-} big_int_t;
+typedef big_uint_t big_int_t;
 
+/**
+ * return results for big_int_change_sign
+ */
+typedef enum {
+	/**
+	 * changed sign
+	 */
+	BIG_INT_SIGN_CHANGE_OK = 0,
+	/**
+	 * returned if impossible to change sign value
+	 */
+	BIG_INT_SIGN_CHANGE_FAILED = 1,
+} big_int_sign_ret_t;
 
-/*!
-	this method converts an big_int_t type to this class
+void 				big_int_set_max(big_int_t* self);
+void 				big_int_set_min(big_int_t* self);
 
-	this operation has mainly sense if the value from p is 
-	equal or smaller than that one which is returned from big_uint_t::SetMax()
+void				big_int_set_sign_one(big_int_t* self);
+big_int_sign_ret_t	big_int_change_sign(big_int_t* self);
+void				big_int_set_sign(big_int_t* self);
+bool				big_int_is_sign(big_int_t self);
+big_num_strg_t		big_int_abs(big_int_t* self);
 
-	it returns a carry if the value 'p' is too big
-*/
-uint32_t big_uint_from_big_int(const big_int_t * p);
+big_num_carry_t 	big_int_add(big_int_t* self, big_int_t ss2);
+big_num_strg_t		big_int_add_int(big_int_t* self, big_num_strg_t value, size_t index);
+big_num_strg_t 		big_int_add_two_ints(big_int_t* self, big_num_strg_t x2, big_num_strg_t x1, size_t index);
+big_num_carry_t 	big_int_sub(big_int_t* self, big_int_t ss2);
+big_num_strg_t		big_int_sub_int(big_int_t* self, big_num_strg_t value, size_t index);
+
+big_num_carry_t		big_int_mul_int(big_int_t* self, big_num_sstrg_t ss2);
+big_num_carry_t		big_int_mul(big_int_t* self, big_int_t ss2);
+
+big_num_div_ret_t 	big_int_div_int(big_int_t* self, big_num_sstrg_t divisor, big_num_sstrg_t * remainder);
+big_num_div_ret_t 	big_int_div(big_int_t* self, big_int_t divisor, big_int_t * remainder);
+
+big_num_pow_ret_t	big_int_pow(big_int_t* self, big_int_t pow);
+
+big_num_carry_t		big_int_init_uint(big_int_t* self, big_num_strg_t value);
+big_num_carry_t		big_int_init_ulint(big_int_t* self, big_num_lstrg_t value);
+big_num_carry_t		big_int_init_big_uint(big_int_t* self, big_uint_t value);
+void				big_int_init_int(big_int_t* self, big_num_sstrg_t value);
+big_num_carry_t		big_int_init_lint(big_int_t* self, big_num_lsstrg_t value);
+big_num_carry_t		big_int_init_big_int(big_int_t* self, big_int_t value);
+big_num_carry_t		big_int_to_uint(big_int_t self, big_num_strg_t * result);
+big_num_carry_t		big_int_to_int(big_int_t self, big_num_sstrg_t * result);
+big_num_carry_t		big_int_to_luint(big_int_t self, big_num_lstrg_t * result);
+big_num_carry_t		big_int_to_lint(big_int_t self, big_num_lsstrg_t * result);
 
 #ifdef __cplusplus
 }
