@@ -11,28 +11,30 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <limits.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define BIG_NUM_MAX_STRG 			(big_num_strg_t  )((1ULL<<( 8ULL*sizeof(big_num_strg_t  )      ))-1ULL)
-#define BIG_NUM_MAX_LSTRG 			(big_num_lstrg_t )((1ULL<<( 8ULL*sizeof(big_num_lstrg_t )      ))-1ULL)
-#define BIG_NUM_MAX_SSTRG 			(big_num_sstrg_t )((1ULL<<((8ULL*sizeof(big_num_sstrg_t ))-1ULL))-1ULL)
-#define BIG_NUM_MAX_LSSTRG 			(big_num_lsstrg_t)((1ULL<<((8ULL*sizeof(big_num_lsstrg_t))-1ULL))-1ULL)
-#define BIG_NUM_MIN_SSTRG 			(big_num_sstrg_t )((1ULL<<((8ULL*sizeof(big_num_sstrg_t ))-1ULL)))
-#define BIG_NUM_MIN_LSSTRG 			(big_num_lsstrg_t)((1ULL<<((8ULL*sizeof(big_num_lsstrg_t))-1ULL)))
-#define BIG_NUM_HIGHEST_BIT			(big_num_strg_t  )((1ULL<<( 8ULL*sizeof(big_num_strg_t  ) -1ULL)))
-#define BIG_NUM_BITS_PER_STRG		(8ULL*sizeof(big_num_strg_t))
-#define BIG_NUM_BITS_PER_LSTRG		(8ULL*sizeof(big_num_lstrg_t))
-#define BIG_NUM_BITS_PER_SSTRG		(8ULL*sizeof(big_num_sstrg_t))
-#define BIG_NUM_BITS_PER_LSSTRG		(8ULL*sizeof(big_num_lsstrg_t))
+#define BIG_NUM_MAX_VALUE 			(big_num_strg_t  )((1ULL<<( CHAR_BIT*sizeof(big_num_strg_t  )      ))-1ULL)
+#define BIG_NUM_HIGHEST_BIT			(big_num_strg_t  )((1ULL<<( CHAR_BIT*sizeof(big_num_strg_t  ) -1ULL)))
+#define BIG_NUM_BITS_PER_UNIT		(CHAR_BIT*sizeof(big_num_strg_t))
 
-#define BIG_NUM_PREC_EXP 	3 // integer part precision
-#define BIG_NUM_PREC_MAN 	3 // floating part precision
+/**
+ * during some kind of calculating when we're making any long formulas
+ * (for example Taylor series)
+ * 
+ * it's used in ExpSurrounding0(...), LnSurrounding1(...), Sin0pi05(...), etc.
+ * 
+ * note! there'll not be so many iterations, iterations are stopped when
+ * there is no sense to continue calculating (for example when the result
+ * still remains unchanged after adding next series and we know that the next
+ * series are smaller than previous ones)
+ */
+#define BIG_NUM_ARITHMETIC_MAX_LOOP	1000
 
-#define BIG_NUM_PREC_INT 	BIG_NUM_PREC_EXP
-#define BIG_NUM_PREC_UINT 	BIG_NUM_PREC_MAN
+#define BIG_NUM_PREC	 	2 // amount of word's to allocate for uint and int, float using 2x this amount
 
 #define BIG_NUM_MUL_DEF		BIG_NUM_MUL1
 #define BIG_NUM_DIV_DEF		BIG_NUM_DIV1
@@ -85,16 +87,26 @@ typedef enum {
 	/**
 	 * ok
 	 */
-	BIG_NUM_POW_OK = 0,
+	BIG_NUM_OK = 0,
 	/**
 	 * carry
 	 */
-	BIG_NUM_POW_CARRY = 1,
+	BIG_NUM_OVERFLOW = 1,
 	/**
-	 * incorrect argument (0^0)
+	 * incorrect argument
+	 * (a^b) 	: a = 0 and b = 0
+	 * log(b) 	: b <= 0
+	 * a / b 	: b = 0
+	 * a % b	: b = 0
 	 */
-	BIG_NUM_POW_INVALID = 2,
-} big_num_pow_ret_t;
+	BIG_NUM_INVALID_ARG = 2,
+	/**
+	 * incorrect base
+	 * log(x, base): (base <= 0 or base = 1)
+	 */
+	BIG_NUM_LOG_INVALID_BASE = 3,
+} big_num_ret_t;
+
 
 /**
  * The type used to store the big num values in

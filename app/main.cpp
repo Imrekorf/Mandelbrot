@@ -17,6 +17,8 @@
 
 #include "ttmath.h"
 #include "BigNum/BigUInt.h"
+#include "BigNum/BigInt.h"
+#include "BigNum/BigFloat.h"
 
 namespace my_window {
     constexpr size_t        height = 800;           // window height
@@ -333,33 +335,44 @@ int main(void)
         << GLFW_VERSION_MAJOR << "." << GLFW_VERSION_MINOR << "." << GLFW_VERSION_REVISION << std::endl;
     #ifdef DEBUG
         std::cout << "[DEBUG BUILD]" << std::endl;
+        #ifdef TEST_ARB_PREC
+        if (1) {
+            std::cout << "TTMATH:" << std::endl;
+            ttmath::Big<3,3> temp, x;
+            temp.FromDouble(9.0);
+            x.FromDouble(0.5);
+            temp.Sqrt();
 
-        // ttmath::Big<1,3> temp;
-        // temp = 1.0;
-        // std::cout << temp << std::endl;
-        // temp *= 0.5;
-        // std::cout << temp << std::endl;
-        // for (int i = 0; i < 20; i++) {
-        //     temp /= 10;
-        //     std::cout << i << ":" << temp << std::endl;
-        // }
+            std::cout << "double: " << temp.ToDouble() << std::endl;
 
-        // big_uint_t temp;
-        // big_uint_init_uint(&temp, 1);
-        // std::cout << "carry: " << big_uint_mul_int(&temp, 2) << std::endl;
-        // big_num_lstrg_t res;
-        // big_num_strg_t remainder;
-        // for (int i = 0; i < 20; i++) {
-        //     std::cout << i << ": mul carry: " << big_uint_mul_int(&temp, 10) << ", ";
-        //     std::cout << "cast carry: " << big_uint_to_luint(temp, &res) << ", "; 
-        //     std::cout << "value: " << res << std::endl;
-        // }
-        // for (int i = 0; i < 20; i++) {
-        //     std::cout << i << ": div carry: " << big_uint_div_int(&temp, 10, &remainder) << ", ";
-        //     std::cout << "cast carry: " << big_uint_to_luint(temp, &res) << ", "; 
-        //     std::cout << "value: " << res << ", remainder: " << remainder << std::endl;
-        // }
-        // return 0;
+            std::cout << std::endl;
+        }
+
+        {
+            std::cout << "BIGNUM:" << std::endl;
+            big_float_t temp;
+            big_float_t x;
+            double res;
+            big_float_init_double(&temp, 9.0);
+            big_float_init_double(&x,   0.5);
+
+            big_float_sqrt(&temp);
+            big_float_to_double(temp, &res);
+            std::cout << "double:" << res << std::endl;
+
+
+            // for (int i = 0; i < 20; i++) {
+            //     big_float_mul(&temp, ten, true);
+            //     big_float_to_double(temp, &res);
+            //     std::cout << i << ": double:" << res << std::endl;
+            // }
+            // for (int i = 0; i < 20; i++) {
+            //     big_float_div(&temp, ten, true);
+            //     big_float_to_double(temp, &res);
+            //     std::cout << i << ": double:" << res << std::endl;
+            // }
+        }
+        #endif
     #endif // DEBUG
 
     for (int i = 0; i < fabs(floorf(zoom_lvl)); i++)

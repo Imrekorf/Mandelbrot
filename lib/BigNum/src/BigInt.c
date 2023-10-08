@@ -8,11 +8,13 @@
 
 #include "BigNum/BigInt.h"
 
+#include "stdio.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define TABLE_SIZE 	BIG_NUM_PREC_UINT
+#define TABLE_SIZE 	BIG_NUM_PREC
 #define BIG_TABLE_SIZE (2*TABLE_SIZE)
 
 // protected import functions from big_uint
@@ -51,6 +53,25 @@ void big_int_set_min(big_int_t* self)
 {
 	big_uint_set_zero(self);
 	self->table[TABLE_SIZE-1] = BIG_NUM_HIGHEST_BIT;
+}
+
+/**
+ * 
+ * @param[in, out] self the big num object
+ */
+void big_int_set_zero(big_int_t* self)
+{
+	big_uint_set_zero(self);
+}
+
+/**
+ * this method swappes self and ss2
+ * @param[in, out] self the big num object
+ * @param[in, out] ss2 the value to swap with self, ss2 contains self after swap
+ */
+void big_int_swap(big_int_t* self, big_int_t* ss2)
+{
+	big_uint_swap(self, ss2);
 }
 
 /**
@@ -168,37 +189,11 @@ big_num_carry_t big_int_add(big_int_t* self, big_int_t ss2)
  * look at a description in UInt<>::AddInt(...)
  * @param[in, out] self the big num object
  * @param[in] value the value to add
- * @param[in] index the index of the table to add the value to
  * @return big_num_strg_t 
  */
-big_num_strg_t big_int_add_int(big_int_t* self, big_num_strg_t value, size_t index)
+big_num_strg_t big_int_add_int(big_int_t* self, big_num_strg_t value)
 {
-	bool p1_is_sign = big_int_is_sign(*self);
-	_big_uint_add_uint(self, value, index);
-	
-	return _big_int_correct_carry_after_adding(self, p1_is_sign, false);
-}
-
-/**
- * this method adds two *unsigned* words to the existing value
- * and these words begin on the 'index' position
- * 
- * index should be equal or smaller than value_size-2 (index <= value_size-2)
- * x1 - lower word, x2 - higher word
- * 
- * look at a description in UInt<>::AddTwoInts(...)
- * @param[in, out] self the big num object
- * @param[in] x2 higher word
- * @param[in] x1 lower word
- * @param[in] index the index of the table to add the value to
- * @return big_num_strg_t 
- */
-big_num_strg_t big_int_add_two_ints(big_int_t* self, big_num_strg_t x2, big_num_strg_t x1, size_t index)
-{
-	bool p1_is_sign = big_int_is_sign(*self);
-	_big_uint_add_two_uints(self, x2, x1, index);
-	
-	return _big_int_correct_carry_after_adding(self, p1_is_sign, false);
+	return _big_int_add_int(self, value, 0);
 }
 
 /**
@@ -228,20 +223,24 @@ big_num_carry_t big_int_sub(big_int_t* self, big_int_t ss2)
 }
 
 /**
- * this method subtracts one *unsigned* word (at a specific position)
- * and returns a carry (if it was)
+ * Subtracts value from self
  * @param[in, out] self the big num object
  * @param[in] value the value to subtract from self
- * @param[in] index the index of the table to sub the value from
- * @return big_num_strg_t 
+ * @return big_num_carry_t 
  */
-big_num_strg_t big_int_sub_int(big_int_t* self, big_num_strg_t value, size_t index)
+big_num_strg_t big_int_sub_int(big_int_t* self, big_num_strg_t value)
 {
-	bool p1_is_sign = big_int_is_sign(*self);
+	return _big_int_sub_int(self, value, 0);
+}
 
-	_big_uint_sub_uint(self, value, index);		
-
-	return _big_int_correct_carry_after_subtracting(self, p1_is_sign, false);
+/**
+ * this method moves all bits into the left side
+ * @param[in, out] self the big num object
+ * @return size_t value how many bits have been moved
+ */
+size_t big_int_compensation_to_left(big_int_t* self)
+{
+	return big_uint_compensation_to_left(self);
 }
 
 /**
@@ -409,9 +408,9 @@ big_num_div_ret_t big_int_div(big_int_t* self, big_int_t divisor, big_int_t * re
  * power this = this ^ pow
  * @param[in, out] self the big num object
  * @param[in] pow the power to raise self to
- * @return big_num_pow_ret_t 
+ * @return big_num_ret_t 
  */
-big_num_pow_ret_t big_int_pow(big_int_t* self, big_int_t pow)
+big_num_ret_t big_int_pow(big_int_t* self, big_int_t pow)
 {
 	bool was_sign = big_int_is_sign(*self);
 	big_num_strg_t c = 0;
@@ -419,7 +418,7 @@ big_num_pow_ret_t big_int_pow(big_int_t* self, big_int_t pow)
 	if( was_sign )
 		c += big_int_abs(self);
 
-	big_num_pow_ret_t c_temp = big_uint_pow(self, pow);
+	big_num_ret_t c_temp = big_uint_pow(self, pow);
 	if( c_temp > 0 )
 		return c_temp; // c_temp can be: 0, 1 or 2
 	
@@ -442,7 +441,7 @@ big_num_carry_t big_int_init_uint(big_int_t* self, big_num_strg_t value)
 		self->table[i] = 0;
 	self->table[0] = value;
 
-	// there can be a carry here when the size of this value is equal one word
+	// there can be a carry here when the size of this value is equal to one word
 	// and the 'value' has the highest bit set
 	if( TABLE_SIZE==1 && (value & BIG_NUM_HIGHEST_BIT)!=0 )
 		return 1;
@@ -476,26 +475,12 @@ big_num_carry_t	big_int_init_ulint(big_int_t* self, big_num_lstrg_t value)
  * big_uint_t constructor
  * @param[in, out] self the big num object
  * @param[in] value the value to set self to
- * @return big_num_carry_t
+ * @return big_num_carry_t 
  */
 big_num_carry_t big_int_init_big_uint(big_int_t* self, big_uint_t value)
 {
-	size_t min_size = TABLE_SIZE;
-	size_t i;
-
-	for(i = 0 ; i < min_size ; ++i)
-		self->table[i] = value.table[i];
-
-	big_num_strg_t test = (self->table[TABLE_SIZE-1] & BIG_NUM_HIGHEST_BIT) ? BIG_NUM_MAX_STRG : 0;
-
-	if( test != 0 )
-		return 1;
-
-	for( ; i < TABLE_SIZE ; ++i)
-		if( self->table[i] != test )
-			return 1;
-
-	return 0;
+	*self = value;
+	return (value.table[TABLE_SIZE-1] & BIG_NUM_HIGHEST_BIT != 0); // check if highest bit set, if so there is a carry
 }
 
 /**
@@ -505,7 +490,7 @@ big_num_carry_t big_int_init_big_uint(big_int_t* self, big_uint_t value)
  */
 void big_int_init_int(big_int_t* self, big_num_sstrg_t value)
 {
-	big_num_strg_t fill = ( value<0 ) ? BIG_NUM_MAX_STRG : 0;
+	big_num_strg_t fill = ( value<0 ) ? BIG_NUM_MAX_VALUE : 0;
 
 	for(size_t i=1 ; i<TABLE_SIZE ; ++i)
 		self->table[i] = fill;
@@ -521,7 +506,7 @@ void big_int_init_int(big_int_t* self, big_num_sstrg_t value)
  */
 big_num_carry_t	big_int_init_lint(big_int_t* self, big_num_lsstrg_t value)
 {
-	big_num_strg_t mask = (value < 0) ? BIG_NUM_MAX_STRG : 0;
+	big_num_strg_t mask = (value < 0) ? BIG_NUM_MAX_VALUE : 0;
 
 	self->table[0] = (big_num_strg_t)(big_num_lstrg_t)value;
 
@@ -545,23 +530,10 @@ big_num_carry_t	big_int_init_lint(big_int_t* self, big_num_lsstrg_t value)
  * big_int_t constructor
  * @param[in, out] self the big num object
  * @param[in] value the value to set self to
- * @return big_num_carry_t
  */
-big_num_carry_t big_int_init_big_int(big_int_t* self, big_int_t value)
+void big_int_init_big_int(big_int_t* self, big_int_t value)
 {
-	size_t min_size = TABLE_SIZE;
-	size_t i;
-
-	for(i = 0 ; i < min_size ; ++i)
-		self->table[i] = value.table[i];
-
-	big_num_strg_t test = (self->table[TABLE_SIZE-1] & BIG_NUM_HIGHEST_BIT) ? BIG_NUM_MAX_STRG : 0;
-
-	for( ; i < TABLE_SIZE ; ++i)
-		if( self->table[i] != test )
-			return 1;
-
-	return 0;
+	*self = value;
 }
 
 /**
@@ -623,9 +595,9 @@ big_num_carry_t	big_int_to_lint(big_int_t self, big_num_lsstrg_t * result)
 		big_num_strg_t high = self.table[1];
 
 		*result = low;
-		*result |= ((big_num_lstrg_t)(high) << BIG_NUM_BITS_PER_STRG);
+		*result |= ((big_num_lstrg_t)(high) << BIG_NUM_BITS_PER_UNIT);
 
-		big_num_strg_t mask = big_int_is_sign(self) ? BIG_NUM_MAX_STRG : 0;
+		big_num_strg_t mask = big_int_is_sign(self) ? BIG_NUM_MAX_VALUE : 0;
 
 		if( (high & BIG_NUM_HIGHEST_BIT) != (mask & BIG_NUM_HIGHEST_BIT) )
 			return 1;
@@ -636,6 +608,148 @@ big_num_carry_t	big_int_to_lint(big_int_t self, big_num_lsstrg_t * result)
 	}
 
 	return 0;
+}
+
+/**
+ * this method returns true if 'self' is smaller than 'l'
+ * 
+ * 'index' is an index of the first word from will be the comparison performed
+ * (note: we start the comparison from back - from the last word, when index is -1 /default/
+ * it is automatically set into the last word)
+ * 
+ * introduced for some optimization in the second division algorithm (Div2)
+ * @param[in, out] self the big num object
+ * @param[in] l the other big num object
+ * @return true 
+ * @return false 
+ */
+bool big_int_cmp_smaller(big_int_t self, big_int_t l)
+{
+	big_num_sstrg_t i = TABLE_SIZE-1;
+
+	big_num_sstrg_t a1 = (big_num_sstrg_t)(self.table[i]);
+	big_num_sstrg_t a2 = (big_num_sstrg_t)(l.table[i]);
+
+	if (a1 != a2)
+		return a1 < a2;
+
+	for (--i ; i >= 0 ; --i) {
+		if (self.table[i] != l.table[i])
+			return self.table[i] < l.table[i];
+	}
+
+	return false;
+}
+
+/**
+ * this method returns true if 'self' is bigger than 'l'
+ * 
+ * 'index' is an index of the first word from will be the comparison performed
+ * (note: we start the comparison from back - from the last word, when index is -1 /default/
+ * it is automatically set into the last word)
+ * 
+ * introduced it for some optimization in the second division algorithm (Div2)
+ * @param[in, out] self the big num object
+ * @param[in] l the other big num object
+ * @return true 
+ * @return false 
+ */
+bool big_int_cmp_bigger(big_int_t self, big_int_t l)
+{
+	big_num_sstrg_t i = TABLE_SIZE-1;
+
+	big_num_sstrg_t a1 = (big_num_sstrg_t)(self.table[i]);
+	big_num_sstrg_t a2 = (big_num_sstrg_t)(l.table[i]);
+
+	if (a1 != a2)
+		return a1 > a2;
+
+	for (--i ; i >= 0 ; --i) {
+		if (self.table[i] != l.table[i])
+			return self.table[i] > l.table[i];
+	}
+
+	return false;
+}
+
+/**
+ * this method returns true if 'self' is equal 'l'
+ * 
+ * 'index' is an index of the first word from will be the comparison performed
+ * (note: we start the comparison from back - from the last word, when index is -1 /default/
+ * it is automatically set into the last word)
+ * @param[in, out] self the big num object
+ * @param[in] l the other big num object
+ * @return true 
+ * @return false 
+ */
+bool big_int_cmp_equal(big_int_t self, big_int_t l)
+{
+	return big_uint_cmp_equal(self, l, -1);
+}
+
+/**
+ * this method returns true if 'self' is smaller than or equal 'l'
+ * 
+ * 'index' is an index of the first word from will be the comparison performed
+ * (note: we start the comparison from back - from the last word, when index is -1 /default/
+ * it is automatically set into the last word)
+ * @param[in, out] self the big num object
+ * @param[in] l the other big num object
+ * @return true 
+ * @return false 
+ */
+bool big_int_cmp_smaller_equal(big_int_t self, big_int_t l)
+{
+	big_num_sstrg_t i = TABLE_SIZE-1;
+
+	big_num_sstrg_t a1 = (big_num_sstrg_t)(self.table[i]);
+	big_num_sstrg_t a2 = (big_num_sstrg_t)(l.table[i]);
+
+	if (a1 != a2)
+		return a1 < a2;
+
+	for (--i ; i >= 0 ; --i) {
+		if (self.table[i] != l.table[i])
+			return self.table[i] < l.table[i];
+	}
+
+	return true;
+}
+
+/**
+ * this method returns true if 'self' is bigger than or equal 'l'
+ * 
+ * 'index' is an index of the first word from will be the comparison performed
+ * (note: we start the comparison from back - from the last word, when index is -1 /default/
+ * it is automatically set into the last word)
+ * @param[in, out] self the big num object
+ * @param[in] l the other big num object
+ * @return true 
+ * @return false 
+ */
+bool big_int_cmp_bigger_equal(big_int_t self, big_int_t l)
+{
+	big_num_sstrg_t i = TABLE_SIZE-1;
+
+	big_num_sstrg_t a1 = (big_num_sstrg_t)(self.table[i]);
+	big_num_sstrg_t a2 = (big_num_sstrg_t)(l.table[i]);
+
+	if (a1 != a2)
+		return a1 > a2;
+
+	for (--i ; i >= 0 ; --i) {
+		if (self.table[i] != l.table[i])
+			return self.table[i] > l.table[i];
+	}
+
+	return true;
+}
+
+void big_int_print(big_int_t self) {
+	big_num_lsstrg_t val;
+	big_int_to_lint(self, &val);
+	printf("%lld", val);
 }
 
 
@@ -782,9 +896,9 @@ static big_num_carry_t _big_int_check_min_carry(big_int_t* self, bool ss1_is_sig
  * pow is >= 0
  * @param[in, out] self the big num object
  * @param[in] pow 
- * @return big_num_pow_ret_t 
+ * @return big_num_ret_t 
  */
-static big_num_pow_ret_t _big_int_pow2(big_int_t* self, const big_int_t pow)
+static big_num_ret_t _big_int_pow2(big_int_t* self, const big_int_t pow)
 {
 	bool was_sign = big_int_is_sign(*self);
 	big_num_carry_t c = 0;
@@ -792,7 +906,7 @@ static big_num_pow_ret_t _big_int_pow2(big_int_t* self, const big_int_t pow)
 	if( was_sign )
 		c += big_int_abs(self);
 
-	big_num_pow_ret_t c_temp = big_uint_pow(self, pow);
+	big_num_ret_t c_temp = big_uint_pow(self, pow);
 	if( c_temp > 0 )
 		return c_temp; // c_temp can be: 0, 1 or 2
 	
