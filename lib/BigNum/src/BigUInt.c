@@ -74,9 +74,7 @@ big_num_sstrg_t  		_big_uint_find_leading_bit_in_word(big_num_strg_t x);
 
 // private functions
 static big_num_carry_t 	_big_uint_add_two_words(big_num_strg_t a, big_num_strg_t b, big_num_strg_t carry, big_num_strg_t * result);
-static big_num_carry_t 	_big_uint_add_vector(const big_num_strg_t* ss1, const big_num_strg_t* ss2, size_t ss1_size, size_t ss2_size, big_num_strg_t * result);
 static big_num_carry_t	_big_uint_sub_two_words(big_num_strg_t a, big_num_strg_t b, big_num_strg_t carry, big_num_strg_t * result);
-static big_num_carry_t 	_big_uint_sub_vector(const big_num_strg_t* ss1, const big_num_strg_t* ss2, size_t ss1_size, size_t ss2_size, big_num_strg_t * result);
 static big_num_carry_t	_big_uint_rcl2_one(big_uint_t* self, big_num_strg_t c);
 static big_num_carry_t 	_big_uint_rcl2_one_big(big_big_uint_t* self, big_num_carry_t c);
 static big_num_carry_t 	_big_uint_rcr2_one(big_uint_t* self, big_num_strg_t c);
@@ -849,7 +847,7 @@ big_num_carry_t big_uint_mul(big_uint_t* self, big_uint_t ss2, big_num_algo_t al
 void big_uint_mul_no_carry(big_uint_t* self, big_uint_t ss2, big_big_uint_t * result, big_num_algo_t algorithm)
 {
 	switch(algorithm) {
-		case BIG_NUM_MUL1: return _big_uint_mul1_no_carry(self, ss2, result); break;
+		case BIG_NUM_MUL1: _big_uint_mul1_no_carry(self, ss2, result); break;
 		default: _big_uint_mul1_no_carry(self, ss2, result); break;
 	}
 }
@@ -1643,45 +1641,6 @@ big_num_carry_t _big_uint_add_two_uints_big(big_big_uint_t* self, big_num_strg_t
 	return c;
 }
 
-
-/**
- * this static method addes one vector to the other
- * 'ss1' is larger in size or equal to 'ss2'
- * -  ss1 points to the first (larger) vector
- * -  ss2 points to the second vector
- * -  ss1_size - size of the ss1 (and size of the result too)
- * -  ss2_size - size of the ss2
- * -  result - is the result vector (which has size the same as ss1: ss1_size)
- * 		Example:  ss1_size is 5, ss2_size is 3
- * 		ss1:      ss2:   result (output):
- * 		  5        1         5+1
- * 		  4        3         4+3
- * 		  2        7         2+7
- * 		  6                  6
- * 		  9                  9
- *  of course the carry is propagated and will be returned from the last item
- *  (this method is used by the Karatsuba multiplication algorithm)
- * @param[in] ss1 
- * @param[in] ss2 
- * @param[in] ss1_size 
- * @param[in] ss2_size 
- * @param[out] result 
- * @return big_num_carry_t 
- */
-static big_num_carry_t _big_uint_add_vector(const big_num_strg_t* ss1, const big_num_strg_t* ss2, size_t ss1_size, size_t ss2_size, big_num_strg_t * result)
-{
-	size_t i;
-	big_num_carry_t c = 0;
-
-	for(i=0 ; i<ss2_size ; ++i)
-		c = _big_uint_add_two_words(ss1[i], ss2[i], c, &result[i]);
-
-	for( ; i<ss1_size ; ++i)
-		c = _big_uint_add_two_words(ss1[i], 0, c, &result[i]);
-
-	return c;
-}
-
 /**
  * this method subtractes one word from the other
  * @param[in] a 
@@ -1736,45 +1695,6 @@ big_num_carry_t _big_uint_sub_uint(big_uint_t* self, big_num_strg_t value, size_
 
 	for(i=index+1 ; i<TABLE_SIZE && c ; ++i)
 		c = _big_uint_sub_two_words(self->table[i], 0, c, &self->table[i]);
-
-	return c;
-}
-
-/**
- * this static method subtractes one vector from the other
- * 'ss1' is larger in size or equal to 'ss2'
- * -  ss1 points to the first (larger) vector
- * -  ss2 points to the second vector
- * -  ss1_size - size of the ss1 (and size of the result too)
- * -  ss2_size - size of the ss2
- * -  result - is the result vector (which has size the same as ss1: ss1_size)
- * 		Example:  ss1_size is 5, ss2_size is 3
- * 		ss1:      ss2:   result (output):
- * 		  5        1         5-1
- * 		  4        3         4-3
- * 		  2        7         2-7
- * 		  6                  6-1  (the borrow from previous item)
- * 		  9                  9
- * 	               	 return (carry): 0
- *  of course the carry (borrow) is propagated and will be returned from the last item
- *  (this method is used by the Karatsuba multiplication algorithm)
- * @param[in] ss1 
- * @param[in] ss2 
- * @param[in] ss1_size 
- * @param[in] ss2_size 
- * @param[out] result 
- * @return big_num_carry_t 
- */
-static big_num_carry_t _big_uint_sub_vector(const big_num_strg_t* ss1, const big_num_strg_t* ss2, size_t ss1_size, size_t ss2_size, big_num_strg_t * result)
-{
-	size_t i;
-	big_num_carry_t c = 0;
-
-	for(i=0 ; i<ss2_size ; ++i)
-			c = _big_uint_sub_two_words(ss1[i], ss2[i], c, &result[i]);
-
-	for( ; i<ss1_size ; ++i)
-		c = _big_uint_sub_two_words(ss1[i], 0, c, &result[i]);
 
 	return c;
 }
