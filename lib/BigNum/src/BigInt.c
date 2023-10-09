@@ -480,7 +480,7 @@ big_num_carry_t	big_int_init_ulint(big_int_t* self, big_num_lstrg_t value)
 big_num_carry_t big_int_init_big_uint(big_int_t* self, big_uint_t value)
 {
 	*self = value;
-	return (value.table[TABLE_SIZE-1] & BIG_NUM_HIGHEST_BIT != 0); // check if highest bit set, if so there is a carry
+	return (value.table[TABLE_SIZE-1] & BIG_NUM_HIGHEST_BIT) != 0; // check if highest bit set, if so there is a carry
 }
 
 /**
@@ -595,7 +595,7 @@ big_num_carry_t	big_int_to_lint(big_int_t self, big_num_lsstrg_t * result)
 		big_num_strg_t high = self.table[1];
 
 		*result = low;
-		*result |= ((big_num_lstrg_t)(high) << BIG_NUM_BITS_PER_UNIT);
+		*result |= ((big_num_lsstrg_t)(high) << BIG_NUM_BITS_PER_UNIT);
 
 		big_num_strg_t mask = big_int_is_sign(self) ? BIG_NUM_MAX_VALUE : 0;
 
