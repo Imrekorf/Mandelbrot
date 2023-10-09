@@ -7,7 +7,7 @@
 
 ## Build instructions
 ```bash
-git clone https://github.com/Imrekorf/Mandelbrot
+git clone --recurse-submodules https://github.com/Imrekorf/Mandelbrot
 cd mandelbrot
 cmake --preset Release
 cmake --build Release

@@ -19,7 +19,7 @@ extern "C" {
 
 typedef unsigned char big_float_info_t;
 
-typedef struct {
+typedef struct big_float_s{
 	big_int_t exponent;
 	big_uint_t mantissa;
 	big_float_info_t info;

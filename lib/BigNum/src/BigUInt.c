@@ -606,12 +606,11 @@ size_t big_uint_compensation_to_left_big(big_big_uint_t* self)
  */
 bool big_uint_find_leading_bit(big_uint_t self, size_t * table_id, size_t * index)
 {
-	for(*table_id=TABLE_SIZE-1 ; *table_id!=0 && self.table[*table_id]==0 ; --(*table_id));
+	for(*table_id=TABLE_SIZE-1 ; (*table_id)!=0 && self.table[*table_id]==0 ; --(*table_id));
 
-	if( *table_id==0 && self.table[*table_id]==0 )
-	{
+	if( *table_id==0 && self.table[*table_id]==0 ) {
 		// is zero
-		index = 0;
+		*index = 0;
 
 		return false;
 	}
@@ -2062,7 +2061,7 @@ big_num_sstrg_t _big_uint_find_leading_bit_in_word(big_num_strg_t x)
 	if( x == 0 )
 		return -1;
 
-	big_num_sstrg_t bit = BIG_NUM_BITS_PER_UNIT - 1;
+	big_num_strg_t bit = BIG_NUM_BITS_PER_UNIT - 1;
 	
 	while( (x & BIG_NUM_HIGHEST_BIT) == 0 ) {
 		x = x << 1;

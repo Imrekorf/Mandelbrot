@@ -1,0 +1,3 @@
+[submodule "lib/ttmath"]
+	path = lib/ttmath
+	url = https://gitea.ttmath.org/tomasz.sowa/ttmath.git

@@ -17,7 +17,7 @@
 extern "C" {
 #endif
 
-typedef struct {
+typedef struct big_uint_s {
 	big_num_strg_t table[BIG_NUM_PREC];
 } big_uint_t;
 
