@@ -31,9 +31,9 @@ static bool				_big_float_is_info_bit(big_float_t self, big_float_info_t bit);
 
 static big_num_carry_t 	_big_float_round_half_to_even(big_float_t * self, bool is_half, bool rounding_up);
 static void 			_big_float_add_check_exponents(big_float_t* ss2, big_int_t exp_offset, bool * last_bit_set, bool * rest_zero, bool * do_adding, bool * do_rounding);
-static big_num_carry_t 	_big_float_add_mantissas(big_float_t* self, big_float_t* ss2, bool * last_bit_set, bool * rest_zero);
+static big_num_carry_t 	_big_float_add_mantissas(big_float_t* self, big_float_t ss2, bool * last_bit_set, bool * rest_zero);
 big_num_carry_t 		_big_float_add(big_float_t * self, big_float_t ss2, bool round, bool adding);
-bool 					_big_float_check_greater_or_equal_half(big_float_t * self, big_num_strg_t * tab, big_num_strg_t len);
+bool 					_big_float_check_greater_or_equal_half(big_float_t * self, big_num_strg_t tab[], big_num_strg_t len);
 big_num_ret_t 			_big_float_pow_big_float_uint(big_float_t * self, big_float_t pow);
 big_num_ret_t 			_big_float_pow_big_float_int(big_float_t * self, big_float_t pow);
 static void 			_big_float_exp_surrounding_0(big_float_t * self, big_float_t x, size_t * steps);
@@ -1816,15 +1816,15 @@ static void _big_float_add_check_exponents(big_float_t* ss2, big_int_t exp_offse
  * @param[in] rest_zero 
  * @return big_num_carry_t 
  */
-static big_num_carry_t _big_float_add_mantissas(big_float_t* self, big_float_t* ss2, bool * last_bit_set, bool * rest_zero)
+static big_num_carry_t _big_float_add_mantissas(big_float_t* self, big_float_t ss2, bool * last_bit_set, bool * rest_zero)
 {
 	big_num_carry_t c = 0;
-	if (big_float_is_sign(*self) == big_float_is_sign(*ss2)) {
+	if (big_float_is_sign(*self) == big_float_is_sign(ss2)) {
 		// values have the same signs
-		if (big_uint_add(&self->mantissa, ss2->mantissa, 0)) {
+		if (big_uint_add(&self->mantissa, ss2.mantissa, 0)) {
 			// we have one bit more from addition (carry)
 			// now rest_zero means the old rest_zero with the old last_bit_set
-			*rest_zero    = (!last_bit_set && rest_zero);
+			*rest_zero    = (!*last_bit_set && *rest_zero);
 			*last_bit_set = big_uint_rcr(&self->mantissa, 1,1);
 			c += big_int_add_int(&self->exponent, 1);
 		}
@@ -1834,7 +1834,7 @@ static big_num_carry_t _big_float_add_mantissas(big_float_t* self, big_float_t* 
 		// (1) (2) guarantee that the mantissa of this
 		// is greater than or equal to the mantissa of the ss2
 
-		big_uint_sub(&self->mantissa, ss2->mantissa, 0);
+		big_uint_sub(&self->mantissa, ss2.mantissa, 0);
 	}
 
 	return c;
@@ -1882,7 +1882,7 @@ big_num_carry_t _big_float_add(big_float_t * self, big_float_t ss2, bool round, 
 		_big_float_add_check_exponents(&ss2, exp_offset, &last_bit_set, &rest_zero, &do_adding, &do_rounding);
 		
 		if( do_adding )
-			c += _big_float_add_mantissas(self, &ss2, &last_bit_set, &rest_zero);
+			c += _big_float_add_mantissas(self, ss2, &last_bit_set, &rest_zero);
 
 		if( !round || !last_bit_set )
 			do_rounding = false;
@@ -1908,7 +1908,7 @@ big_num_carry_t _big_float_add(big_float_t * self, big_float_t ss2, bool round, 
  * @return true tab was equal the half (0.5 decimal)
  * @return false tab was greater than a half (greater than 0.5 decimal)
  */
-bool _big_float_check_greater_or_equal_half(big_float_t * self, big_num_strg_t * tab, big_num_strg_t len)
+bool _big_float_check_greater_or_equal_half(big_float_t * self, big_num_strg_t tab[], big_num_strg_t len)
 {
 	size_t i;
 
