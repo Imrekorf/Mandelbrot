@@ -335,43 +335,34 @@ int main(void)
         << GLFW_VERSION_MAJOR << "." << GLFW_VERSION_MINOR << "." << GLFW_VERSION_REVISION << std::endl;
     #ifdef DEBUG
         std::cout << "[DEBUG BUILD]" << std::endl;
+        // #define TEST_ARB_PREC
         #ifdef TEST_ARB_PREC
-        if (1) {
-            std::cout << "TTMATH:" << std::endl;
-            ttmath::Big<3,3> temp, x;
-            temp.FromDouble(9.0);
-            x.FromDouble(0.5);
-            temp.Sqrt();
-
-            std::cout << "double: " << temp.ToDouble() << std::endl;
+        if (0) {
+            std::cout << "TTMATH TESTS:" << std::endl;
+            ttmath::Big<2, 2> temp;
+            temp.FromDouble(5);
 
             std::cout << std::endl;
         }
 
         {
-            std::cout << "BIGNUM:" << std::endl;
+            std::cout << "BIGNUM TESTS:" << std::endl;
             big_float_t temp;
-            big_float_t x;
+            big_float_init_double(&temp, 5.0);
+            
             double res;
-            big_float_init_double(&temp, 9.0);
-            big_float_init_double(&x,   0.5);
-
-            big_float_sqrt(&temp);
             big_float_to_double(temp, &res);
-            std::cout << "double:" << res << std::endl;
 
+            big_num_sstrg_t e_correction = big_num_sstrg_t(BIG_NUM_PREC*BIG_NUM_BITS_PER_UNIT) - 1;
+            big_int_t _e_correction;
+            big_int_init_int(&_e_correction, 1024 - e_correction);
 
-            // for (int i = 0; i < 20; i++) {
-            //     big_float_mul(&temp, ten, true);
-            //     big_float_to_double(temp, &res);
-            //     std::cout << i << ": double:" << res << std::endl;
-            // }
-            // for (int i = 0; i < 20; i++) {
-            //     big_float_div(&temp, ten, true);
-            //     big_float_to_double(temp, &res);
-            //     std::cout << i << ": double:" << res << std::endl;
-            // }
+            char buffer[128];
+            big_float_to_string(&temp, buffer, 128, 10, false, 15, -1, true, '.');
+            std::cout << "val:" << (uint32_t)(1u<<32u)-1u << std::endl;
         }
+
+        // return 0;
         #endif
     #endif // DEBUG
 
@@ -467,14 +458,14 @@ int main(void)
     }
 
     // create biguint shader & compile
-    unsigned int bigUIntShader;
-    bigUIntShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(bigUIntShader, 1, &GSV::bignum_uint, NULL);
-    glCompileShader(bigUIntShader);
+    unsigned int bigNumShader;
+    bigNumShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(bigNumShader, 1, &GSV::bignum, NULL);
+    glCompileShader(bigNumShader);
 
-    glGetShaderiv(bigUIntShader, GL_COMPILE_STATUS, &success); // check compile output
+    glGetShaderiv(bigNumShader, GL_COMPILE_STATUS, &success); // check compile output
     if(!success) {
-        glGetShaderInfoLog(bigUIntShader, 512, NULL, infoLog);
+        glGetShaderInfoLog(bigNumShader, 512, NULL, infoLog);
         std::cout << "[GL] [ERR]: \"Failed to compile fragment shader\", " << infoLog << std::endl;
         glfwTerminate();
         return -1;
@@ -487,7 +478,7 @@ int main(void)
     // link fragment and vertex shader to shader program
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
-    glAttachShader(shaderProgram, bigUIntShader);
+    glAttachShader(shaderProgram, bigNumShader);
     glLinkProgram(shaderProgram);
 
     glGetShaderiv(shaderProgram, GL_COMPILE_STATUS, &success); // check link output

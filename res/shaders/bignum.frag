@@ -29,8 +29,8 @@
 // defines from BigNum.h
 //===============
 
-#define BIG_NUM_MAX_VALUE 			((1<<( 32     ))-1)
-#define BIG_NUM_HIGHEST_BIT			((1<<( 32 - 1 )))
+#define BIG_NUM_MAX_VALUE 			(uint((1UL<<( 32UL       ))-1UL))
+#define BIG_NUM_HIGHEST_BIT			(uint((1UL<<( 32UL - 1UL ))    ))
 #define BIG_NUM_BITS_PER_UNIT		(32)
 
 #define BIG_NUM_MUL1 				0
