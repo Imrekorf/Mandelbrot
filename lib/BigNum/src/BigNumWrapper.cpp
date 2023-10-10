@@ -5,7 +5,10 @@
 
 #include "BigNum/BigNumWrapper.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-result"
 #include "ttmath.h"
+#pragma GCC diagnostic pop
 
 #include <cstring>
 #include <string>

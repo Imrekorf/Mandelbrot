@@ -22,7 +22,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 
 target_include_directories(${PROJECT_NAME} PUBLIC 	
 	${CMAKE_SOURCE_DIR}/lib/
-	${CMAKE_SOURCE_DIR}/lib/ttmath/ttmath/
 	${CMAKE_SOURCE_DIR}/app/inc/ 
 	${CMAKE_SOURCE_DIR}/app/generated/
 )
