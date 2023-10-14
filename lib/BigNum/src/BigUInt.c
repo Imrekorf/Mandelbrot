@@ -8,17 +8,13 @@
 
 #include "BigNum/BigUInt.h"
 
-#include "stdio.h"
+#include <assert.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define UINT_PREC 	BIG_NUM_PREC
-#define BIG_UINT_PREC (2*UINT_PREC)
-
-#define BIG_NUM_KARATSUBA_MULTIPLICATION_FROM_SIZE 3
-
+#ifndef GL_core_profile
 /**
  * return results for _big_uint_div_standard_test
  */
@@ -64,55 +60,59 @@ typedef enum {
 	BIG_NUM_CALC_SELF_EQ   = 4,
 } div_calc_test_t;
 
+#else
+
+#define BIG_NUM_STD_DIV_NONE	0
+#define BIG_NUM_STD_DIV_ZERO	1
+#define BIG_NUM_STD_DIV			2
+#define div_std_test_t			uint
+
+#define BIG_NUM_CALC_DIV_OK    	0
+#define BIG_NUM_CALC_DIV_ZERO	1
+#define BIG_NUM_CALC_SELF_ZERO	2
+#define BIG_NUM_CALC_SELF_LST	3
+#define BIG_NUM_CALC_SELF_EQ 	4
+#define div_calc_test_t			uint
+
+#endif
+
 // protected functions
-big_num_carry_t			_big_uint_sub_uint(big_uint_t* self, big_num_strg_t value, size_t index);
-big_num_carry_t			_big_uint_add_uint(big_uint_t* self, big_num_strg_t value, size_t index);
-big_num_carry_t 		_big_uint_add_uint_big(big_big_uint_t* self, big_num_strg_t value, size_t index);
-big_num_carry_t 		_big_uint_add_two_uints(big_uint_t* self, big_num_strg_t x2, big_num_strg_t x1, size_t index);
-big_num_carry_t 		_big_uint_add_two_uints_big(big_big_uint_t* self, big_num_strg_t x2, big_num_strg_t x1, size_t index);
+big_num_carry_t			_big_uint_sub_uint(_big_num_inout(big_uint_t, self), big_num_strg_t value, size_t index);
+big_num_carry_t			_big_uint_add_uint(_big_num_inout(big_uint_t, self), big_num_strg_t value, size_t index);
+big_num_carry_t 		_big_uint_add_two_uints(_big_num_inout(big_uint_t, self), big_num_strg_t x2, big_num_strg_t x1, size_t index);
 big_num_sstrg_t  		_big_uint_find_leading_bit_in_word(big_num_strg_t x);
 
 // private functions
-static big_num_carry_t 	_big_uint_add_two_words(big_num_strg_t a, big_num_strg_t b, big_num_strg_t carry, big_num_strg_t * result);
-static big_num_carry_t	_big_uint_sub_two_words(big_num_strg_t a, big_num_strg_t b, big_num_strg_t carry, big_num_strg_t * result);
-static big_num_carry_t	_big_uint_rcl2_one(big_uint_t* self, big_num_strg_t c);
-static big_num_carry_t 	_big_uint_rcl2_one_big(big_big_uint_t* self, big_num_carry_t c);
-static big_num_carry_t 	_big_uint_rcr2_one(big_uint_t* self, big_num_strg_t c);
-static big_num_carry_t 	_big_uint_rcr2_one_big(big_big_uint_t* self, big_num_carry_t c);
-static big_num_carry_t	_big_uint_rcl2(big_uint_t* self, size_t bits, big_num_strg_t c);
-static big_num_carry_t	_big_uint_rcl2_big(big_big_uint_t* self, size_t bits, big_num_strg_t c);
-static big_num_carry_t	_big_uint_rcr2(big_uint_t* self, size_t bits, big_num_strg_t c);
-static big_num_carry_t 	_big_uint_rcr2_big(big_big_uint_t* self, size_t bits, big_num_carry_t c);
-static big_num_sstrg_t 	_big_uint_find_lowest_bit_in_word(big_num_strg_t x);
-static big_num_strg_t 	_big_uint_set_bit_in_word(big_num_strg_t * value, size_t bit);
-static void 			_big_uint_mul_two_words(big_num_strg_t a, big_num_strg_t b, big_num_strg_t* result_high, big_num_strg_t* result_low);
-static void				_big_uint_div_two_words(big_num_strg_t a, big_num_strg_t b, big_num_strg_t c, big_num_strg_t* r, big_num_strg_t* rest);
+_big_num_static big_num_carry_t _big_uint_add_two_words(big_num_strg_t a, big_num_strg_t b, big_num_strg_t carry, _big_num_out(big_num_strg_t, result));
+_big_num_static big_num_carry_t	_big_uint_sub_two_words(big_num_strg_t a, big_num_strg_t b, big_num_strg_t carry, _big_num_out(big_num_strg_t, result));
+_big_num_static big_num_carry_t	_big_uint_rcl2_one(_big_num_inout(big_uint_t, self), big_num_strg_t c);
+_big_num_static big_num_carry_t _big_uint_rcr2_one(_big_num_inout(big_uint_t, self), big_num_strg_t c);
+_big_num_static big_num_carry_t	_big_uint_rcl2(_big_num_inout(big_uint_t, self), size_t bits, big_num_strg_t c);
+_big_num_static big_num_carry_t	_big_uint_rcr2(_big_num_inout(big_uint_t, self), size_t bits, big_num_strg_t c);
+_big_num_static big_num_sstrg_t _big_uint_find_lowest_bit_in_word(big_num_strg_t x);
+_big_num_static big_num_strg_t 	_big_uint_set_bit_in_word(_big_num_out(big_num_strg_t , value), size_t bit);
+_big_num_static void 			_big_uint_mul_two_words(big_num_strg_t a, big_num_strg_t b, _big_num_out(big_num_strg_t, result_high), _big_num_out(big_num_strg_t, result_low));
+_big_num_static void			_big_uint_div_two_words(big_num_strg_t a, big_num_strg_t b, big_num_strg_t c, _big_num_out(big_num_strg_t, r), _big_num_out(big_num_strg_t, rest));
 
 
-static void 			_big_uint_rcl_move_all_words(big_uint_t* self, size_t * rest_bits, big_num_carry_t * last_c, size_t bits, big_num_strg_t c);
-static void 			_big_uint_rcr_move_all_words(big_uint_t* self, size_t * rest_bits, big_num_carry_t * last_c, size_t bits, big_num_strg_t c);
-static void 			_big_uint_rcl_move_all_words_big(big_big_uint_t* self, size_t * rest_bits, big_num_carry_t * last_c, size_t bits, big_num_carry_t c);
-static void 			_big_uint_rcr_move_all_words_big(big_big_uint_t* self, size_t * rest_bits, big_num_carry_t * last_c, size_t bits, big_num_strg_t c);
+_big_num_static void 			_big_uint_rcl_move_all_words(_big_num_inout(big_uint_t, self), _big_num_out(size_t, rest_bits), _big_num_out(big_num_carry_t, last_c), size_t bits, big_num_strg_t c);
+_big_num_static void 			_big_uint_rcr_move_all_words(_big_num_inout(big_uint_t, self), _big_num_out(size_t, rest_bits), _big_num_out(big_num_carry_t, last_c), size_t bits, big_num_strg_t c);
 
-static big_num_carry_t 	_big_uint_mul1(big_uint_t* self, big_uint_t ss2);
-static void 			_big_uint_mul1_no_carry(big_uint_t* self, big_uint_t ss2_, big_big_uint_t * result);
-static big_num_carry_t 	_big_uint_mul2(big_uint_t* self, big_uint_t ss2);
-static void 			_big_uint_mul2_no_carry(big_uint_t* self, big_uint_t ss2, big_big_uint_t * result);
-static void 			_big_uint_mul2_no_carry2(big_uint_t* self, const big_num_strg_t ss1[], const big_num_strg_t ss2[], big_big_uint_t * result);
-static void				_big_uint_mul2_no_carry3(big_uint_t* self, const big_num_strg_t ss1[], const big_num_strg_t ss2[], big_big_uint_t * result, size_t x1start, size_t x1size, size_t x2start, size_t x2size);
+_big_num_static big_num_carry_t _big_uint_mul1(_big_num_inout(big_uint_t, self), big_uint_t ss2);
+_big_num_static void 			_big_uint_mul1_no_carry(_big_num_inout(big_uint_t, self), big_uint_t ss2_, _big_num_out(big_uint_t, result));
+_big_num_static big_num_carry_t _big_uint_mul2(_big_num_inout(big_uint_t, self), big_uint_t ss2);
+_big_num_static void 			_big_uint_mul2_no_carry(_big_num_inout(big_uint_t, self), big_uint_t ss2, _big_num_out(big_uint_t, result));
+_big_num_static void 			_big_uint_mul2_no_carry2(_big_num_inout(big_uint_t, self), _big_num_const_param big_num_strg_t ss1[2*UINT_PREC], _big_num_const_param big_num_strg_t ss2[2*UINT_PREC], _big_num_out(big_uint_t, result));
+_big_num_static void			_big_uint_mul2_no_carry3(_big_num_inout(big_uint_t, self), _big_num_const_param big_num_strg_t ss1[2*UINT_PREC], _big_num_const_param big_num_strg_t ss2[2*UINT_PREC], _big_num_out(big_uint_t, result), size_t x1start, size_t x1size, size_t x2start, size_t x2size);
 
-static div_std_test_t	_big_uint_div_standard_test(big_uint_t* self, big_uint_t divisor, size_t * m, size_t * n, big_uint_t * remainder);
-static div_std_test_t 	_big_uint_div_standard_test_big(big_big_uint_t* self, big_big_uint_t divisor, size_t * m, size_t * n, big_big_uint_t * remainder);
-static div_calc_test_t	_big_uint_div_calculating_size(big_uint_t* self, big_uint_t divisor, size_t * m, size_t * n);
-static div_calc_test_t 	_big_uint_div_calculating_size_big(big_big_uint_t* self, big_big_uint_t divisor, size_t * m, size_t * n);
-static big_num_div_ret_t 	_big_uint_div1(big_uint_t* self, big_uint_t divisor, big_uint_t * remainder);
-static big_num_div_ret_t 	_big_uint_div1_big(big_big_uint_t* self, big_big_uint_t divisor, big_big_uint_t * remainder);
-static big_num_div_ret_t	_big_uint_div1_calculate(big_uint_t* self, big_uint_t divisor, big_uint_t * rest);
-static big_num_div_ret_t 	_big_uint_div1_calculate_big(big_big_uint_t* self, big_big_uint_t divisor, big_big_uint_t * rest);
-static big_num_div_ret_t 	_big_uint_div2(big_uint_t* self, big_uint_t divisor, big_uint_t * remainder);
-static big_num_div_ret_t	_big_uint_div2_calculate(big_uint_t* self, big_uint_t divisor, big_uint_t * remainder, size_t * bits_diff);
-static big_num_div_ret_t	_big_uint_div2_find_leading_bits_and_check(big_uint_t* self, big_uint_t divisor, big_uint_t * remainder,size_t * table_id, size_t * index, size_t * divisor_table_id, size_t * divisor_index);
-static bool 			_big_uint_div2_divisor_greater_or_equal(big_uint_t* self, big_uint_t divisor, big_uint_t * remainder, size_t table_id, size_t index, size_t divisor_index);
+_big_num_static div_std_test_t	_big_uint_div_standard_test(_big_num_inout(big_uint_t, self), big_uint_t divisor, _big_num_out(size_t, m), _big_num_out(size_t, n), _big_num_out(big_uint_t, remainder));
+_big_num_static div_calc_test_t	_big_uint_div_calculating_size(_big_num_inout(big_uint_t, self), big_uint_t divisor, _big_num_out(size_t, m), _big_num_out(size_t, n));
+_big_num_static big_num_div_ret_t 	_big_uint_div1(_big_num_inout(big_uint_t, self), big_uint_t divisor, _big_num_out(big_uint_t, remainder));
+_big_num_static big_num_div_ret_t	_big_uint_div1_calculate(_big_num_inout(big_uint_t, self), big_uint_t divisor, _big_num_out(big_uint_t, rest));
+_big_num_static big_num_div_ret_t 	_big_uint_div2(_big_num_inout(big_uint_t, self), big_uint_t divisor, _big_num_out(big_uint_t, remainder));
+_big_num_static big_num_div_ret_t	_big_uint_div2_calculate(_big_num_inout(big_uint_t, self), big_uint_t divisor, _big_num_out(big_uint_t, remainder), _big_num_out(size_t, bits_diff));
+_big_num_static big_num_div_ret_t	_big_uint_div2_find_leading_bits_and_check(_big_num_inout(big_uint_t, self), big_uint_t divisor, _big_num_out(big_uint_t, remainder),_big_num_out(size_t, table_id), _big_num_out(size_t, index), _big_num_out(size_t, divisor_table_id), _big_num_out(size_t, divisor_index));
+_big_num_static bool 			_big_uint_div2_divisor_greater_or_equal(_big_num_inout(big_uint_t, self), big_uint_t divisor, _big_num_out(big_uint_t, remainder), size_t table_id, size_t index, size_t divisor_index);
 
 
 /**
@@ -120,28 +120,18 @@ static bool 			_big_uint_div2_divisor_greater_or_equal(big_uint_t* self, big_uin
  * @param[in, out] self the big num object
  * @return size_t the size of the table
  */
-size_t big_uint_size(big_uint_t* self)
+size_t big_uint_size(_big_num_inout(big_uint_t, self))
 {
-	return UINT_PREC;
+	return self->size;
 }
 
 /**
  * this method sets zero
  * @param[in, out] self the big num object
  */
-void big_uint_set_zero(big_uint_t* self)
+void big_uint_set_zero(_big_num_inout(big_uint_t, self))
 {
-	for(size_t i=0 ; i < UINT_PREC ; ++i)
-		self->table[i] = 0;
-}
-
-/**
- * this method sets zero
- * @param[in, out] self the big num object
- */
-void big_uint_set_zero_big(big_big_uint_t* self)
-{
-	for(size_t i=0 ; i < BIG_UINT_PREC ; ++i)
+	for(size_t i=0 ; i < self->size ; ++i)
 		self->table[i] = 0;
 }
 
@@ -149,19 +139,9 @@ void big_uint_set_zero_big(big_big_uint_t* self)
  * this method sets one
  * @param[in, out] self the big num object
  */
-void big_uint_set_one(big_uint_t* self)
+void big_uint_set_one(_big_num_inout(big_uint_t, self))
 {
 	big_uint_set_zero(self);
-	self->table[0] = 1;
-}
-
-/**
- * this method sets one
- * @param[in, out] self the big num object
- */
-void big_uint_set_one_big(big_big_uint_t* self)
-{
-	big_uint_set_zero_big(self);
 	self->table[0] = 1;
 }
 
@@ -169,9 +149,9 @@ void big_uint_set_one_big(big_big_uint_t* self)
  * this method sets the max value which self class can hold
  * @param[in, out] self the big num object
  */
-void big_uint_set_max(big_uint_t* self)
+void big_uint_set_max(_big_num_inout(big_uint_t, self))
 {
-	for(size_t i=0 ; i < UINT_PREC; ++i)
+	for(size_t i=0 ; i < self->size; ++i)
 		self->table[i] = BIG_NUM_MAX_VALUE;
 }
 
@@ -180,7 +160,7 @@ void big_uint_set_max(big_uint_t* self)
  * (for an unsigned integer value the zero is the smallest value)
  * @param[in, out] self the big num object
  */
-void big_uint_set_min(big_uint_t* self)
+void big_uint_set_min(_big_num_inout(big_uint_t, self))
 {
 	big_uint_set_zero(self);
 }
@@ -190,9 +170,9 @@ void big_uint_set_min(big_uint_t* self)
  * @param[in, out] self the big num object
  * @param[in, out] ss2 the value to swap with self, ss2 contains self after swap
  */
-void big_uint_swap(big_uint_t* self, big_uint_t* ss2)
+void big_uint_swap(_big_num_inout(big_uint_t, self), _big_num_inout(big_uint_t, ss2))
 {
-	for(size_t i=0 ; i < UINT_PREC ; ++i) {
+	for(size_t i=0 ; i < self->size ; ++i) {
 		big_num_strg_t temp = self->table[i];
 		self->table[i] = ss2->table[i];
 		ss2->table[i] = temp;
@@ -215,12 +195,12 @@ void big_uint_swap(big_uint_t* self, big_uint_t* ss2)
  * @param[in] temp_table 
  * @param[in] temp_table_len 
  */
-void big_uint_set_from_table(big_uint_t* self, const big_num_strg_t temp_table[], size_t temp_table_len)
+void big_uint_set_from_table(_big_num_inout(big_uint_t, self), _big_num_const_param big_num_strg_t temp_table[2*UINT_PREC], size_t temp_table_len)
 {
 	size_t temp_table_index = 0;
 	ssize_t i; // 'i' with a sign
 
-	for(i=UINT_PREC-1 ; i>=0 && temp_table_index<temp_table_len; --i, ++temp_table_index)
+	for(i=_big_num_ssize_t(self->size)-1 ; i>=0 && temp_table_index<temp_table_len; --i, ++temp_table_index)
 		self->table[i] = temp_table[ temp_table_index ];
 
 
@@ -259,7 +239,7 @@ void big_uint_set_from_table(big_uint_t* self, const big_num_strg_t temp_table[]
  * @param[in] val the value to add to the existing vlaue
  * @return big_num_carry_t the carry, if there was one
  */
-big_num_carry_t big_uint_add_uint(big_uint_t* self, big_num_strg_t val)
+big_num_carry_t big_uint_add_uint(_big_num_inout(big_uint_t, self), big_num_strg_t val)
 {
 	return _big_uint_add_uint(self, val, 0);
 }
@@ -271,29 +251,12 @@ big_num_carry_t big_uint_add_uint(big_uint_t* self, big_num_strg_t val)
  * @param[in] c    must be zero or one (might be a bigger value than 1), set to 1 if previous operation resulted in a carry
  * @return big_num_carry_t carry
  */
-big_num_carry_t big_uint_add(big_uint_t* self, big_uint_t ss2, big_num_carry_t c)
+big_num_carry_t big_uint_add(_big_num_inout(big_uint_t, self), big_uint_t ss2, big_num_carry_t c)
 {
 	size_t i;	
 
-	for(i=0 ; i<UINT_PREC ; ++i)
-		c = _big_uint_add_two_words(self->table[i], ss2.table[i], c, &self->table[i]);
-
-	return c;
-}
-
-/**
- * this method adding ss2 to the this and adding carry if it's defined. (this = this + ss2 + c)
- * @param[in, out] self the big num object
- * @param[in] ss2  the big num object to add to self
- * @param[in] c    must be zero or one (might be a bigger value than 1), set to 1 if previous operation resulted in a carry
- * @return big_num_carry_t carry
- */
-big_num_carry_t big_uint_add_big(big_big_uint_t* self, big_big_uint_t ss2, big_num_carry_t c)
-{
-	size_t i;	
-
-	for(i=0 ; i<BIG_UINT_PREC ; ++i)
-		c = _big_uint_add_two_words(self->table[i], ss2.table[i], c, &self->table[i]);
+	for(i=0 ; i<self->size ; ++i)
+		c = _big_uint_add_two_words(self->table[i], ss2.table[i], c, _big_num_ref(self->table[i]));
 
 	return c;
 }
@@ -304,7 +267,7 @@ big_num_carry_t big_uint_add_big(big_big_uint_t* self, big_big_uint_t ss2, big_n
  * @param[in] val the value to subtract from self
  * @return big_num_carry_t the carry, if there was one
  */
-big_num_carry_t	big_uint_sub_uint(big_uint_t* self, big_num_strg_t val)
+big_num_carry_t	big_uint_sub_uint(_big_num_inout(big_uint_t, self), big_num_strg_t val)
 {
 	return _big_uint_sub_uint(self, val, 0);
 }
@@ -321,32 +284,11 @@ big_num_carry_t	big_uint_sub_uint(big_uint_t* self, big_num_strg_t val)
  * @param[in] c    must be zero or one (might be a bigger value than 1), set to 1 if previous operation resulted in a carry
  * @return big_num_carry_t 
  */
-big_num_carry_t big_uint_sub(big_uint_t* self, big_uint_t ss2, big_num_carry_t c)
+big_num_carry_t big_uint_sub(_big_num_inout(big_uint_t, self), big_uint_t ss2, big_num_carry_t c)
 {
 	size_t i;
-	for(i=0 ; i<UINT_PREC ; ++i)
-		c = _big_uint_sub_two_words(self->table[i], ss2.table[i], c, &self->table[i]);
-
-	return c;
-}
-
-/**
- * this method's subtracting ss2 from the 'this' and subtracting
- * carry if it has been defined
- * (this = this - ss2 - c)
- * 
- * c must be zero or one (might be a bigger value than 1)
- * function returns carry (1) (if it was)
- * @param[in, out] self the big num object
- * @param[in] ss2  the big num object to subtracte from self
- * @param[in] c    must be zero or one (might be a bigger value than 1), set to 1 if previous operation resulted in a carry
- * @return big_num_carry_t 
- */
-big_num_carry_t big_uint_sub_big(big_big_uint_t* self, big_big_uint_t ss2, big_num_carry_t c)
-{
-	size_t i;
-	for(i=0 ; i<BIG_UINT_PREC ; ++i)
-		c = _big_uint_sub_two_words(self->table[i], ss2.table[i], c, &self->table[i]);
+	for(i=0 ; i<self->size ; ++i)
+		c = _big_uint_sub_two_words(self->table[i], ss2.table[i], c, _big_num_ref(self->table[i]));
 
 	return c;
 }
@@ -365,7 +307,7 @@ big_num_carry_t big_uint_sub_big(big_big_uint_t* self, big_big_uint_t ss2, big_n
  * @param[in] c 
  * @return big_num_strg_t 
  */
-big_num_strg_t big_uint_rcl(big_uint_t* self, size_t bits, big_num_carry_t c)
+big_num_strg_t big_uint_rcl(_big_num_inout(big_uint_t, self), size_t bits, big_num_carry_t c)
 {
 	big_num_strg_t last_c   = 0;
 	size_t rest_bits 		= bits;
@@ -374,7 +316,7 @@ big_num_strg_t big_uint_rcl(big_uint_t* self, size_t bits, big_num_carry_t c)
 		return 0;
 
 	if( bits >= BIG_NUM_BITS_PER_UNIT )
-		_big_uint_rcl_move_all_words(self, &rest_bits, &last_c, bits, c);
+		_big_uint_rcl_move_all_words(self, _big_num_ref(rest_bits), _big_num_ref(last_c), bits, c);
 
 	if( rest_bits == 0 ) {
 		return last_c;
@@ -396,50 +338,6 @@ big_num_strg_t big_uint_rcl(big_uint_t* self, size_t bits, big_num_carry_t c)
 }
 
 /**
- * moving all bits into the left side 'bits' times
- * return value <- self <- C
- * 
- * bits is from a range of <0, man * BIG_NUM_BITS_PER_UNIT>
- * or it can be even bigger then all bits will be set to 'c'
- * 
- * the value c will be set into the lowest bits
- * and the method returns state of the last moved bit
- * @param[in, out] self the big num object
- * @param[in] bits 
- * @param[in] c 
- * @return big_num_strg_t 
- */
-big_num_strg_t big_uint_rcl_big(big_big_uint_t* self, size_t bits, big_num_carry_t c)
-{
-	big_num_strg_t last_c   = 0;
-	size_t rest_bits 		= bits;
-
-	if( bits == 0 )
-		return 0;
-
-	if( bits >= BIG_NUM_BITS_PER_UNIT )
-		_big_uint_rcl_move_all_words_big(self, &rest_bits, &last_c, bits, c);
-
-	if( rest_bits == 0 ) {
-		return last_c;
-	}
-
-	// rest_bits is from 1 to BIG_NUM_BITS_PER_UNIT-1 now
-	if( rest_bits == 1 ) {
-		last_c = _big_uint_rcl2_one_big(self, c);
-	} else if( rest_bits == 2 ) {
-		// performance tests showed that for rest_bits==2 it's better to use _big_uint_rcl2_one twice instead of _big_uint_rcl2(2,c)
-		_big_uint_rcl2_one_big(self, c);
-		last_c = _big_uint_rcl2_one_big(self, c);
-	}
-	else {
-		last_c = _big_uint_rcl2_big(self, rest_bits, c);
-	}
-	
-	return last_c;
-}
-
-/**
  * moving all bits into the right side 'bits' times
  * c -> self -> return value
  * 
@@ -448,7 +346,7 @@ big_num_strg_t big_uint_rcl_big(big_big_uint_t* self, size_t bits, big_num_carry
  * @param[in] c bit to insert in MSb
  * @return big_num_strg_t state of the last moved bit
  */
-big_num_strg_t big_uint_rcr(big_uint_t* self, size_t bits, big_num_carry_t c)
+big_num_strg_t big_uint_rcr(_big_num_inout(big_uint_t, self), size_t bits, big_num_carry_t c)
 {
 	big_num_carry_t last_c  	= 0;
 	size_t rest_bits 			= bits;
@@ -457,7 +355,7 @@ big_num_strg_t big_uint_rcr(big_uint_t* self, size_t bits, big_num_carry_t c)
 		return 0;
 
 	if( bits >= BIG_NUM_BITS_PER_UNIT )
-		_big_uint_rcr_move_all_words(self, &rest_bits, &last_c, bits, c);
+		_big_uint_rcr_move_all_words(self, _big_num_ref(rest_bits), _big_num_ref(last_c), bits, c);
 
 	if( rest_bits == 0 ) {
 		return last_c;
@@ -478,65 +376,27 @@ big_num_strg_t big_uint_rcr(big_uint_t* self, size_t bits, big_num_carry_t c)
 }
 
 /**
- * moving all bits into the right side 'bits' times
- * c -> self -> return value
- * 
- * @param[in, out] self the big num object
- * @param[in] bits number of bits to shift, range of <0, man * BIG_NUM_BITS_PER_UNIT>, or it can be even bigger then all bits will be set to 'c'
- * @param[in] c bit to insert in MSb
- * @return big_num_strg_t state of the last moved bit
- */
-big_num_strg_t big_uint_rcr_big(big_big_uint_t* self, size_t bits, big_num_carry_t c)
-{
-	big_num_carry_t last_c    = 0;
-	size_t rest_bits = bits;
-	
-	if( bits == 0 )
-		return 0;
-
-	if( bits >= BIG_NUM_BITS_PER_UNIT )
-		_big_uint_rcr_move_all_words_big(self, &rest_bits, &last_c, bits, c);
-
-	if( rest_bits == 0 ) {
-		return last_c;
-	}
-
-	// rest_bits is from 1 to TTMATH_BITS_PER_UINT-1 now
-	if( rest_bits == 1 ) {
-		last_c = _big_uint_rcr2_one_big(self, c);
-	} else if( rest_bits == 2 ) {
-		// performance tests showed that for rest_bits==2 it's better to use Rcr2_one twice instead of Rcr2(2,c)
-		_big_uint_rcr2_one_big(self, c);
-		last_c = _big_uint_rcr2_one_big(self, c);
-	} else {
-		last_c = _big_uint_rcr2_big(self, rest_bits, c);
-	}
-
-	return last_c;
-}
-
-/**
  * this method moves all bits into the left side
  * @param[in, out] self the big num object
  * @return size_t value how many bits have been moved
  */
-size_t big_uint_compensation_to_left(big_uint_t* self)
+size_t big_uint_compensation_to_left(_big_num_inout(big_uint_t, self))
 {
 	size_t moving = 0;
 
 	// a - index a last word which is different from zero
 	ssize_t a;
-	for(a=UINT_PREC-1 ; a>=0 && self->table[a]==0 ; --a);
+	for(a=_big_num_ssize_t(self->size)-1 ; a>=0 && self->table[a]==0 ; --a);
 
 	if( a < 0 )
 		return moving; // all words in table have zero
 
-	if( a != UINT_PREC-1 ) {
-		moving += ( UINT_PREC-1 - a ) * BIG_NUM_BITS_PER_UNIT;
+	if( a != self->size-1 ) {
+		moving += ( self->size-1 - a ) * BIG_NUM_BITS_PER_UNIT;
 
 		// moving all words
 		ssize_t i;
-		for(i=UINT_PREC-1 ; a>=0 ; --i, --a)
+		for(i=_big_num_ssize_t(self->size)-1 ; a>=0 ; --i, --a)
 			self->table[i] = self->table[a];
 
 		// setting the rest word to zero
@@ -544,52 +404,12 @@ size_t big_uint_compensation_to_left(big_uint_t* self)
 			self->table[i] = 0;
 	}
 
-	size_t moving2 = _big_uint_find_leading_bit_in_word( self->table[UINT_PREC-1] );
-	// moving2 is different from -1 because the value table[UINT_PREC-1]
+	size_t moving2 = _big_uint_find_leading_bit_in_word( self->table[self->size-1] );
+	// moving2 is different from -1 because the value table[self->size-1]
 	// is not zero
 
 	moving2 = BIG_NUM_BITS_PER_UNIT - moving2 - 1;
 	big_uint_rcl(self, moving2, 0);
-
-	return moving + moving2;
-}
-
-/**
- * this method moves all bits into the left side
- * @param[in, out] self the big num object
- * @return size_t value how many bits have been moved
- */
-size_t big_uint_compensation_to_left_big(big_big_uint_t* self)
-{
-	size_t moving = 0;
-
-	// a - index a last word which is different from zero
-	ssize_t a;
-	for(a=BIG_UINT_PREC-1 ; a>=0 && self->table[a]==0 ; --a);
-
-	if( a < 0 )
-		return moving; // all words in table have zero
-
-	if( a != BIG_UINT_PREC-1 )
-	{
-		moving += ( BIG_UINT_PREC-1 - a ) * BIG_NUM_BITS_PER_UNIT;
-
-		// moving all words
-		ssize_t i;
-		for(i=BIG_UINT_PREC-1 ; a>=0 ; --i, --a)
-			self->table[i] = self->table[a];
-
-		// setting the rest word to zero
-		for(; i>=0 ; --i)
-			self->table[i] = 0;
-	}
-
-	size_t moving2 = _big_uint_find_leading_bit_in_word( self->table[BIG_UINT_PREC-1] );
-	// moving2 is different from -1 because the value table[BIG_UINT_PREC-1]
-	// is not zero
-
-	moving2 = BIG_NUM_BITS_PER_UNIT - moving2 - 1;
-	big_uint_rcl_big(self, moving2, 0);
 
 	return moving + moving2;
 }
@@ -602,19 +422,19 @@ size_t big_uint_compensation_to_left_big(big_big_uint_t* self)
  * @return true: 	'self' is not zero
  * @return false: 	'self' is zero, both 'table_id' and 'index' are zero
  */
-bool big_uint_find_leading_bit(big_uint_t self, size_t * table_id, size_t * index)
+bool big_uint_find_leading_bit(big_uint_t self, _big_num_out(size_t, table_id), _big_num_out(size_t, index))
 {
-	for(*table_id=UINT_PREC-1 ; (*table_id)!=0 && self.table[*table_id]==0 ; --(*table_id));
+	for(_big_num_deref(table_id)=self.size-1 ; (_big_num_deref(table_id))!=0 && self.table[_big_num_deref(table_id)]==0 ; --(_big_num_deref(table_id)));
 
-	if( *table_id==0 && self.table[*table_id]==0 ) {
+	if( _big_num_deref(table_id)==0 && self.table[_big_num_deref(table_id)]==0 ) {
 		// is zero
-		*index = 0;
+		_big_num_deref(index) = 0;
 
 		return false;
 	}
 	
 	// table[table_id] is different from 0
-	*index = _big_uint_find_leading_bit_in_word( self.table[*table_id] );
+	_big_num_deref(index) = _big_uint_find_leading_bit_in_word( self.table[_big_num_deref(table_id)] );
 
 	return true;
 }
@@ -627,21 +447,21 @@ bool big_uint_find_leading_bit(big_uint_t self, size_t * table_id, size_t * inde
  * @return true: self' is not zero
  * @return false: both 'table_id' and 'index' are zero
  */
-bool big_uint_find_lowest_bit(big_uint_t self, size_t * table_id, size_t * index)
+bool big_uint_find_lowest_bit(big_uint_t self, _big_num_out(size_t, table_id), _big_num_out(size_t, index))
 {
-	for(*table_id=0 ; *table_id<UINT_PREC && self.table[*table_id]==0 ; ++(*table_id));
+	for(_big_num_deref(table_id)=0 ; _big_num_deref(table_id)<self.size && self.table[_big_num_deref(table_id)]==0 ; ++(_big_num_deref(table_id)));
 
-		if( *table_id >= UINT_PREC )
+		if( _big_num_deref(table_id) >= self.size )
 		{
 			// is zero
-			*index    = 0;
-			*table_id = 0;
+			_big_num_deref(index)    = 0;
+			_big_num_deref(table_id) = 0;
 
 			return false;
 		}
 		
 		// table[table_id] is different from 0
-		*index = _big_uint_find_lowest_bit_in_word( self.table[*table_id] );
+		_big_num_deref(index) = _big_uint_find_lowest_bit_in_word( self.table[_big_num_deref(table_id)] );
 
 	return true;
 }
@@ -659,9 +479,9 @@ bool big_uint_get_bit(big_uint_t self, size_t bit_index)
 	size_t bit   = bit_index % BIG_NUM_BITS_PER_UNIT;
 
 	big_num_strg_t temp = self.table[index];
-	big_num_strg_t res  = _big_uint_set_bit_in_word(&temp, bit);
+	big_num_strg_t res  = _big_uint_set_bit_in_word(_big_num_ref(temp), bit);
 
-	return res;
+	return res != 0;
 }
 
 /**
@@ -670,15 +490,15 @@ bool big_uint_get_bit(big_uint_t self, size_t bit_index)
  * @param[in] bit_index bigger or equal zero
  * @return bool the last state of the bit 
  */
-bool big_uint_set_bit(big_uint_t* self, size_t bit_index)
+bool big_uint_set_bit(_big_num_inout(big_uint_t, self), size_t bit_index)
 {
 	size_t index = bit_index / BIG_NUM_BITS_PER_UNIT;
 	size_t bit   = bit_index % BIG_NUM_BITS_PER_UNIT;
 
 	big_num_strg_t temp = self->table[index];
-	big_num_strg_t res  = _big_uint_set_bit_in_word(&temp, bit);
+	big_num_strg_t res  = _big_uint_set_bit_in_word(_big_num_ref(temp), bit);
 
-	return res;
+	return res != 0;
 }
 
 /**
@@ -686,9 +506,9 @@ bool big_uint_set_bit(big_uint_t* self, size_t bit_index)
  * @param[in, out] self the big num object
  * @param[in] ss2 the other big num object
  */
-void big_uint_bit_and(big_uint_t* self, big_uint_t ss2)
+void big_uint_bit_and(_big_num_inout(big_uint_t, self), big_uint_t ss2)
 {
-	for(size_t x=0 ; x<UINT_PREC ; ++x)
+	for(size_t x=0 ; x<self->size ; ++x)
 		self->table[x] &= ss2.table[x];
 }
 
@@ -697,9 +517,9 @@ void big_uint_bit_and(big_uint_t* self, big_uint_t ss2)
  * @param[in, out] self the big num object
  * @param[in] ss2 the other big num object
  */
-void big_uint_bit_or(big_uint_t* self, big_uint_t ss2)
+void big_uint_bit_or(_big_num_inout(big_uint_t, self), big_uint_t ss2)
 {
-	for(size_t x=0 ; x<UINT_PREC ; ++x)
+	for(size_t x=0 ; x<self->size ; ++x)
 		self->table[x] |= ss2.table[x];
 }
 
@@ -708,9 +528,9 @@ void big_uint_bit_or(big_uint_t* self, big_uint_t ss2)
  * @param[in, out] self the big num object
  * @param[in] ss2 the other big num object
  */
-void big_uint_bit_xor(big_uint_t* self, big_uint_t ss2)
+void big_uint_bit_xor(_big_num_inout(big_uint_t, self), big_uint_t ss2)
 {
-	for(size_t x=0 ; x<UINT_PREC ; ++x)
+	for(size_t x=0 ; x<self->size ; ++x)
 		self->table[x] ^= ss2.table[x];
 }
 
@@ -718,9 +538,9 @@ void big_uint_bit_xor(big_uint_t* self, big_uint_t ss2)
  * this method performs a bitwise operation NOT
  * @param[in, out] self the big num object
  */
-void big_uint_bit_not(big_uint_t* self)
+void big_uint_bit_not(_big_num_inout(big_uint_t, self))
 {
-	for(size_t x=0 ; x<UINT_PREC ; ++x)
+	for(size_t x=0 ; x<self->size ; ++x)
 		self->table[x] = ~self->table[x];
 }
 
@@ -732,18 +552,18 @@ void big_uint_bit_not(big_uint_t* self)
  * 		BitNot2(8) = BitNot2( 1000(bin) ) = 111(bin) = 7
  * @param[in, out] self the big num object
  */
-void big_uint_bit_not2(big_uint_t* self)
+void big_uint_bit_not2(_big_num_inout(big_uint_t, self))
 {
 	size_t table_id, index;
 
-	if( big_uint_find_leading_bit(*self, &table_id, &index) ) {
+	if( big_uint_find_leading_bit(_big_num_deref(self), _big_num_ref(table_id), _big_num_ref(index)) ) {
 		for(size_t x=0 ; x<table_id ; ++x)
 			self->table[x] = ~(self->table[x]);
 
 		big_num_strg_t mask  = BIG_NUM_MAX_VALUE;
 		size_t shift = BIG_NUM_BITS_PER_UNIT - index - 1;
 
-		if(shift)
+		if(shift != 0)
 			mask >>= shift;
 
 		self->table[table_id] ^= mask;
@@ -767,62 +587,28 @@ void big_uint_bit_not2(big_uint_t* self)
  * @param[in] ss2 number to multiply by
  * @return big_num_carry_t carry
  */
-big_num_carry_t big_uint_mul_int(big_uint_t* self, big_num_strg_t ss2)
+big_num_carry_t big_uint_mul_int(_big_num_inout(big_uint_t, self), big_num_strg_t ss2)
 {
 	big_num_strg_t r1, r2;
 	size_t x1;
 	big_num_carry_t c = 0;
 
-	big_uint_t u = *self;
+	big_uint_t u = _big_num_deref(self);
 	big_uint_set_zero(self);
 
 	if( ss2 == 0 ) {
 		return 0;
 	}
 
-	for(x1=0 ; x1<UINT_PREC-1 ; ++x1) {
-		_big_uint_mul_two_words(u.table[x1], ss2, &r2, &r1);
+	for(x1=0 ; x1<self->size-1 ; ++x1) {
+		_big_uint_mul_two_words(u.table[x1], ss2, _big_num_ref(r2), _big_num_ref(r1));
 		c += _big_uint_add_two_uints(self, r2,r1,x1);
 	}
 
 	// x1 = value_size-1  (last word)
-	_big_uint_mul_two_words(u.table[x1], ss2, &r2, &r1);
+	_big_uint_mul_two_words(u.table[x1], ss2, _big_num_ref(r2), _big_num_ref(r1));
 	c += (r2!=0) ? 1 : 0;
 	c += _big_uint_add_uint(self, r1, x1);
-
-	return (c==0)? 0 : 1;
-}
-
-/**
- * multiplication: self = self * ss2
- * 
- * it can return a carry
- * @param[in, out] self the big num object
- * @param[in] ss2 number to multiply by
- * @return big_num_carry_t carry
- */
-big_num_carry_t big_uint_mul_int_big(big_big_uint_t* self, big_num_strg_t ss2)
-{
-	big_num_strg_t r1, r2;
-	size_t x1;
-	big_num_carry_t c = 0;
-
-	big_big_uint_t u = *self;
-	big_uint_set_zero_big(self);
-
-	if( ss2 == 0 ) {
-		return 0;
-	}
-
-	for(x1=0 ; x1<BIG_UINT_PREC-1 ; ++x1) {
-		_big_uint_mul_two_words(u.table[x1], ss2, &r2, &r1);
-		c += _big_uint_add_two_uints_big(self, r2, r1, x1);
-	}
-
-	// x1 = BIG_UINT_PREC-1  (last word)
-	_big_uint_mul_two_words(u.table[x1], ss2, &r2, &r1);
-	c += (r2!=0) ? 1 : 0;
-	c += _big_uint_add_uint_big(self, r1, x1);
 
 	return (c==0)? 0 : 1;
 }
@@ -835,20 +621,12 @@ big_num_carry_t big_uint_mul_int_big(big_big_uint_t* self, big_num_strg_t ss2)
  * @param[in] algorithm the algorithm to use for multiplication
  * @return big_num_carry_t carry
  */
-big_num_carry_t big_uint_mul(big_uint_t* self, big_uint_t ss2, big_num_algo_t algorithm)
+big_num_carry_t big_uint_mul(_big_num_inout(big_uint_t, self), big_uint_t ss2, big_num_algo_t algorithm)
 {
 	switch (algorithm) {
 		case BIG_NUM_MUL1: return _big_uint_mul1(self, ss2); break;
 		case BIG_NUM_MUL2: return _big_uint_mul2(self, ss2); break;
 		default: _big_uint_mul1(self, ss2); break;
-	}
-}
-
-void big_uint_mul_no_carry(big_uint_t* self, big_uint_t ss2, big_big_uint_t * result, big_num_algo_t algorithm)
-{
-	switch(algorithm) {
-		case BIG_NUM_MUL1: _big_uint_mul1_no_carry(self, ss2, result); break;
-		default: _big_uint_mul1_no_carry(self, ss2, result); break;
 	}
 }
 
@@ -867,36 +645,42 @@ void big_uint_mul_no_carry(big_uint_t* self, big_uint_t ss2, big_big_uint_t * re
  * @param[out] remainder 
  * @return big_num_div_ret_t 
  */
-big_num_div_ret_t big_uint_div_int(big_uint_t* self, big_num_strg_t divisor, big_num_strg_t * remainder)
+big_num_div_ret_t big_uint_div_int(_big_num_inout(big_uint_t, self), big_num_strg_t divisor, _big_num_out(big_num_strg_t, remainder))
 {
 	if( divisor == 0 ) {
+		#ifndef GL_core_profile 
 		if( remainder )
-			*remainder = 0; // this is for convenience, without it the compiler can report that 'remainder' is uninitialized
+		#endif
+			_big_num_deref(remainder) = 0; // this is for convenience, without it the compiler can report that 'remainder' is uninitialized
 
 		return 1;
 	}
 
 	if( divisor == 1 ) {
+		#ifndef GL_core_profile 
 		if( remainder )
-			*remainder = 0;
+		#endif
+			_big_num_deref(remainder) = 0;
 
 		return 0;
 	}
 
-	big_uint_t dividend = *self;
+	big_uint_t dividend = _big_num_deref(self);
 	big_uint_set_zero(self);
 	
 	big_num_sstrg_t i;  // i must be with a sign
 	big_num_strg_t r = 0;
 
 	// we're looking for the last word in ss1
-	for(i=UINT_PREC-1 ; i>0 && dividend.table[i]==0 ; --i);
+	for(i=_big_num_ssize_t(self->size)-1 ; i>0 && dividend.table[i]==0 ; --i);
 
 	for( ; i>=0 ; --i)
-		_big_uint_div_two_words(r, dividend.table[i], divisor, &self->table[i], &r);
+		_big_uint_div_two_words(r, dividend.table[i], divisor, _big_num_ref(self->table[i]), _big_num_ref(r));
 
+	#ifndef GL_core_profile 
 	if( remainder )
-		*remainder = r;
+	#endif
+		_big_num_deref(remainder) = r;
 
 	return 0;
 }
@@ -910,7 +694,7 @@ big_num_div_ret_t big_uint_div_int(big_uint_t* self, big_num_strg_t divisor, big
  * @param[in] algorithm 
  * @return big_num_div_ret_t 
  */
-big_num_div_ret_t big_uint_div(big_uint_t* self, big_uint_t divisor, big_uint_t * remainder, big_num_algo_t algorithm)
+big_num_div_ret_t big_uint_div(_big_num_inout(big_uint_t, self), big_uint_t divisor, _big_num_out(big_uint_t, remainder), big_num_algo_t algorithm)
 {
 	switch( algorithm ){
 		default:
@@ -923,55 +707,37 @@ big_num_div_ret_t big_uint_div(big_uint_t* self, big_uint_t divisor, big_uint_t 
 }
 
 /**
- * division self = self / ss2
- * 
- * @param[in, out] self the big num object
- * @param[in] divisor 
- * @param[out] remainder 
- * @param[in] algorithm 
- * @return big_num_div_ret_t 
- */
-big_num_div_ret_t big_uint_div_big(big_big_uint_t* self, big_big_uint_t divisor, big_big_uint_t * remainder, big_num_algo_t algorithm)
-{
-	switch( algorithm ){
-		default:
-		case 1:
-			return _big_uint_div1_big(self, divisor, remainder);
-	}
-}
-
-/**
  * power self = self ^ pow
  * binary algorithm (r-to-l)
  * 
  * @param[in, out] self the big num object
- * @param[in] pow The power to raise self to
+ * @param[in] _pow The power to raise self to
  * @return big_num_ret_t 
  */
-big_num_ret_t big_uint_pow(big_uint_t* self, big_uint_t pow)
+big_num_ret_t big_uint_pow(_big_num_inout(big_uint_t, self), big_uint_t _pow)
 {
-	if(big_uint_is_zero(pow) && big_uint_is_zero(*self))
+	if(big_uint_is_zero(_pow) && big_uint_is_zero(_big_num_deref(self)))
 		// we don't define zero^zero
 		return BIG_NUM_INVALID_ARG;
 
-	big_uint_t start = *self;
+	big_uint_t start = _big_num_deref(self);
 	big_uint_t result;
-	big_uint_set_one(&result);
+	big_uint_set_one(_big_num_ref(result));
 	big_num_carry_t c = 0;
 
-	while( !c )
+	while( c == 0)
 	{
-		if( pow.table[0] & 1 )
-			c += big_uint_mul(&result, start, BIG_NUM_MUL_DEF);
+		if( (_pow.table[0] & 1) != 0)
+			c += big_uint_mul(_big_num_ref(result), start, BIG_NUM_MUL_DEF);
 
-		_big_uint_rcr2_one(&pow, 0);
-		if( big_uint_is_zero(pow) )
+		_big_uint_rcr2_one(_big_num_ref(_pow), 0);
+		if( big_uint_is_zero(_pow) )
 			break;
 
-		c += big_uint_mul(&start, start, BIG_NUM_MUL_DEF);
+		c += big_uint_mul(_big_num_ref(start), start, BIG_NUM_MUL_DEF);
 	}
 
-	*self = result;
+	_big_num_deref(self) = result;
 
 	return (c==0)? 0 : 1;
 }
@@ -982,28 +748,28 @@ big_num_ret_t big_uint_pow(big_uint_t* self, big_uint_t pow)
  * ('digit-by-digit' algorithm)
  * @param[in, out] self the big num object
  */
-void big_uint_sqrt(big_uint_t* self)
+void big_uint_sqrt(_big_num_inout(big_uint_t, self))
 {
 	big_uint_t bit, temp;
 
-	if( big_uint_is_zero(*self) )
+	if( big_uint_is_zero(_big_num_deref(self)) )
 		return;
 
-	big_uint_t value = *self;
+	big_uint_t value = _big_num_deref(self);
 
 	big_uint_set_zero(self);
-	big_uint_set_zero(&bit);
-	bit.table[UINT_PREC-1] = (BIG_NUM_HIGHEST_BIT >> 1);
+	big_uint_set_zero(_big_num_ref(bit));
+	bit.table[self->size-1] = (BIG_NUM_HIGHEST_BIT >> 1);
 	
 	while( big_uint_cmp_bigger(bit, value, -1))
-		big_uint_rcr(&bit, 2, 0);
+		big_uint_rcr(_big_num_ref(bit), 2, 0);
 
 	while( !big_uint_is_zero(bit) ) {
-		temp = *self;
-		big_uint_add(&temp, bit, 0);
+		temp = _big_num_deref(self);
+		big_uint_add(_big_num_ref(temp), bit, 0);
 
 		if( big_uint_cmp_bigger_equal(value, temp, -1) ) {
-			big_uint_sub(&value, temp, 0);
+			big_uint_sub(_big_num_ref(value), temp, 0);
 			big_uint_rcr(self, 1, 0);
 			big_uint_add(self, bit, 0);
 		}
@@ -1011,7 +777,7 @@ void big_uint_sqrt(big_uint_t* self)
 			big_uint_rcr(self, 1, 0);
 		}
 
-		big_uint_rcr(&bit, 2, 0);
+		big_uint_rcr(_big_num_ref(bit), 2, 0);
 	}
 }
 
@@ -1023,18 +789,18 @@ void big_uint_sqrt(big_uint_t* self)
  * @param[in, out] self the big num object
  * @param[in] n 
  */
-void big_uint_clear_first_bits(big_uint_t* self, size_t n)
+void big_uint_clear_first_bits(_big_num_inout(big_uint_t, self), size_t n)
 {
-	if( n >= UINT_PREC*BIG_NUM_BITS_PER_UNIT ) {
+	if( n >= self->size*BIG_NUM_BITS_PER_UNIT ) {
 		big_uint_set_zero(self);
 		return;
 	}
 
-	big_num_strg_t * p = self->table;
+	size_t p = 0;
 
 	// first we're clearing the whole words
 	while( n >= BIG_NUM_BITS_PER_UNIT ) {
-		*p++ = 0;
+		self->table[p++] = 0;
 		n   -= BIG_NUM_BITS_PER_UNIT;
 	}
 
@@ -1048,7 +814,7 @@ void big_uint_clear_first_bits(big_uint_t* self, size_t n)
 
 	mask = mask << n;
 
-	(*p) &= mask;
+	(self->table[p]) &= mask;
 }
 
 /**
@@ -1059,7 +825,7 @@ void big_uint_clear_first_bits(big_uint_t* self, size_t n)
  */
 bool big_uint_is_the_highest_bit_set(big_uint_t self)
 {
-	return (self.table[UINT_PREC-1] & BIG_NUM_HIGHEST_BIT) != 0;
+	return (self.table[self.size-1] & BIG_NUM_HIGHEST_BIT) != 0;
 }
 
 /**
@@ -1081,11 +847,11 @@ bool big_uint_is_the_lowest_bit_set(big_uint_t self)
  */
 bool big_uint_is_only_the_highest_bit_set(big_uint_t self)
 {
-	for(size_t i=0 ; i<UINT_PREC-1 ; ++i)
+	for(size_t i=0 ; i<self.size-1 ; ++i)
 		if( self.table[i] != 0 )
 			return false;
 	
-	if( self.table[UINT_PREC-1] != BIG_NUM_HIGHEST_BIT )
+	if( self.table[self.size-1] != BIG_NUM_HIGHEST_BIT )
 		return false;
 	
 	return true;
@@ -1102,7 +868,7 @@ bool big_uint_is_only_the_lowest_bit_set(big_uint_t self)
 	if( self.table[0] != 1 )
 		return false;
 
-	for(size_t i=1 ; i<UINT_PREC ; ++i)
+	for(size_t i=1 ; i<self.size ; ++i)
 		if( self.table[i] != 0 )
 			return false;
 
@@ -1117,7 +883,7 @@ bool big_uint_is_only_the_lowest_bit_set(big_uint_t self)
  */
 bool big_uint_is_zero(big_uint_t self)
 {
-	for(size_t i=0 ; i<UINT_PREC ; ++i)
+	for(size_t i=0 ; i<self.size ; ++i)
 		if(self.table[i] != 0)
 			return false;
 
@@ -1156,13 +922,30 @@ bool big_uint_are_first_bits_zero(big_uint_t self, size_t bits)
  */
 
 /**
+ * default constructor big_uint_t
+ * @param[in, out] self the big num object
+ * @param[in] size the size for this big uint
+ */
+void big_uint_init(_big_num_inout(big_uint_t, self), size_t size)
+{
+	#ifndef GL_core_profile
+	assert(size <= 2*UINT_PREC);
+	#endif
+	self->size = size > 2*UINT_PREC ? 2*UINT_PREC : size;
+}
+
+/**
  * a constructor for converting the big_num_strg_t big_uint_t
  * @param[in, out] self the big num object
  * @param[in] value
  */
-void big_uint_init_uint(big_uint_t* self, big_num_strg_t value)
+void big_uint_init_uint(_big_num_inout(big_uint_t, self), size_t size, big_num_strg_t value)
 {
-	for(size_t i=1 ; i<UINT_PREC ; ++i)
+	#ifndef GL_core_profile
+	assert(size <= 2*UINT_PREC);
+	#endif
+	self->size = size;
+	for(size_t i=1 ; i<self->size ; ++i)
 		self->table[i] = 0;
 
 	self->table[0] = value;
@@ -1174,20 +957,24 @@ void big_uint_init_uint(big_uint_t* self, big_num_strg_t value)
  * @param[in] value
  * @return big_num_carry_t
  */
-big_num_carry_t big_uint_init_ulint(big_uint_t* self, big_num_lstrg_t value)
+big_num_carry_t big_uint_init_ulint(_big_num_inout(big_uint_t, self), size_t size, big_num_lstrg_t value)
 {
-	self->table[0] = (big_num_strg_t)value;
+	#ifndef GL_core_profile
+	assert(size <= 2*UINT_PREC);
+	#endif
+	self->size = size;
+	self->table[0] = _big_num_strg_t(value);
 
-	if( UINT_PREC == 1 )
+	if( self->size == 1 )
 	{
 		big_num_carry_t c = ((value >> BIG_NUM_BITS_PER_UNIT) == 0) ? 0 : 1;
 
 		return c;
 	}
 
-	self->table[1] = (big_num_strg_t)(value >> BIG_NUM_BITS_PER_UNIT);
+	self->table[1] = _big_num_strg_t(value >> BIG_NUM_BITS_PER_UNIT);
 
-	for(size_t i=2 ; i<UINT_PREC ; ++i)
+	for(size_t i=2 ; i<self->size ; ++i)
 		self->table[i] = 0;
 
 	return 0;
@@ -1198,10 +985,26 @@ big_num_carry_t big_uint_init_ulint(big_uint_t* self, big_num_lstrg_t value)
  * @param[in, out] self the big num object
  * @param[in] u the other big num object
  */
-void big_uint_init_big_uint(big_uint_t* self, big_uint_t value)
+big_num_carry_t big_uint_init_big_uint(_big_num_inout(big_uint_t, self), size_t size, big_uint_t value)
 {
-	for(size_t i=0 ; i<UINT_PREC ; ++i)
+	#ifndef GL_core_profile
+	assert(size <= 2*UINT_PREC);
+	#endif
+	self->size = size;
+	size_t min_size = (self->size < value.size) ? self->size : value.size;
+	size_t i;
+	for( i = 0; i<min_size ; ++i)
 		self->table[i] = value.table[i];
+	if (self->size > value.size) {
+		for ( ; i < self->size ; ++i)
+			self->table[i] = 0;
+	} else {
+		for( ; i<value.size ; ++i)
+			if (value.table[i] != 0)
+				return 1;
+	}
+
+	return 0;
 }
 
 /**
@@ -1211,9 +1014,9 @@ void big_uint_init_big_uint(big_uint_t* self, big_uint_t value)
  * @param[in] value
  * @return big_num_carry_t
  */
-big_num_carry_t big_uint_init_int(big_uint_t* self, big_num_sstrg_t value)
+big_num_carry_t big_uint_init_int(_big_num_inout(big_uint_t, self), size_t size, big_num_sstrg_t value)
 {
-	big_uint_init_uint(self, (big_num_strg_t)value);
+	big_uint_init_uint(self, size, _big_num_strg_t(value));
 	if (value < 0)
 		return 1;
 	return 0;
@@ -1225,10 +1028,10 @@ big_num_carry_t big_uint_init_int(big_uint_t* self, big_num_sstrg_t value)
  * @param[in] value
  * @return big_num_carry_t
  */
-big_num_carry_t big_uint_init_lint(big_uint_t* self, big_num_lsstrg_t value)
+big_num_carry_t big_uint_init_lint(_big_num_inout(big_uint_t, self), size_t size, big_num_lsstrg_t value)
 {
-	big_num_carry_t c = big_uint_init_ulint(self, (big_num_lstrg_t)value);
-	if (c || value < 0)
+	big_num_carry_t c = big_uint_init_ulint(self, size, _big_num_lstrg_t(value));
+	if (c != 0 || value < 0)
 		return 1;
 	return 0;
 }
@@ -1240,11 +1043,11 @@ big_num_carry_t big_uint_init_lint(big_uint_t* self, big_num_lsstrg_t value)
  * @param[out] result 
  * @return big_num_carry_t
  */
-big_num_carry_t big_uint_to_uint(big_uint_t self, big_num_strg_t * result)
+big_num_carry_t big_uint_to_uint(big_uint_t self, _big_num_out(big_num_strg_t, result))
 {
-	*result = self.table[0];
+	_big_num_deref(result) = self.table[0];
 
-	for(size_t i=1 ; i<UINT_PREC ; ++i)
+	for(size_t i=1 ; i<self.size ; ++i)
 		if( self.table[i] != 0 )
 			return 1;
 
@@ -1258,9 +1061,12 @@ big_num_carry_t big_uint_to_uint(big_uint_t self, big_num_strg_t * result)
  * @param[out] result 
  * @return big_num_carry_t
  */
-big_num_carry_t big_uint_to_int(big_uint_t self, big_num_sstrg_t * result)
+big_num_carry_t big_uint_to_int(big_uint_t self, _big_num_out(big_num_sstrg_t, result))
 {
-	return big_uint_to_uint(self, result);
+	big_num_strg_t _result;
+	big_num_carry_t c = big_uint_to_uint(self, _big_num_ref(_result));
+	_big_num_deref(result) = _big_num_sstrg_t(_result);
+	return c;
 }
 
 /**
@@ -1270,12 +1076,12 @@ big_num_carry_t big_uint_to_int(big_uint_t self, big_num_sstrg_t * result)
  * @param[out] result 
  * @return big_num_carry_t 
  */
-big_num_carry_t	big_uint_to_luint(big_uint_t self, big_num_lstrg_t * result)
+big_num_carry_t	big_uint_to_luint(big_uint_t self, _big_num_out(big_num_lstrg_t, result))
 {
-	*result = self.table[0];
-	*result += ((big_num_lstrg_t)self.table[1]) << BIG_NUM_BITS_PER_UNIT;
+	_big_num_deref(result) = self.table[0];
+	_big_num_deref(result) += (_big_num_lstrg_t(self.table[1])) << BIG_NUM_BITS_PER_UNIT;
 
-	for(size_t i=2 ; i<UINT_PREC ; ++i)
+	for(size_t i=2 ; i<self.size ; ++i)
 		if( self.table[i] != 0 )
 			return 1;
 
@@ -1289,9 +1095,12 @@ big_num_carry_t	big_uint_to_luint(big_uint_t self, big_num_lstrg_t * result)
  * @param[out] result 
  * @return big_num_carry_t 
  */
-big_num_carry_t	big_uint_to_lint(big_uint_t self, big_num_lsstrg_t * result)
+big_num_carry_t	big_uint_to_lint(big_uint_t self, _big_num_out(big_num_lsstrg_t, result))
 {
-	return big_uint_to_luint(self, result);
+	big_num_lstrg_t _result;
+	big_num_carry_t c = big_uint_to_luint(self, _big_num_ref(_result));
+	_big_num_deref(result) = _big_num_lsstrg_t(_result);
+	return c;
 }
 
 /*!
@@ -1318,8 +1127,8 @@ bool big_uint_cmp_smaller(big_uint_t self, big_uint_t l, ssize_t index)
 {
 	big_num_sstrg_t i;
 
-	if( index==-1 || index >= (big_num_sstrg_t)UINT_PREC )
-		i = UINT_PREC - 1;
+	if( index==-1 || index >= _big_num_sstrg_t(self.size) )
+		i = _big_num_sstrg_t(self.size) - 1;
 	else
 		i = index;
 
@@ -1352,8 +1161,8 @@ bool big_uint_cmp_bigger(big_uint_t self, big_uint_t l, ssize_t index)
 {
 	big_num_sstrg_t i;
 
-	if( index==-1 || index>=(big_num_sstrg_t)UINT_PREC )
-		i = UINT_PREC - 1;
+	if( index==-1 || index>= _big_num_sstrg_t(self.size) )
+		i = _big_num_sstrg_t(self.size) - 1;
 	else
 		i = index;
 
@@ -1384,8 +1193,8 @@ bool big_uint_cmp_equal(big_uint_t self, big_uint_t l, ssize_t index)
 {
 	big_num_sstrg_t i;
 
-	if( index==-1 || index>=(big_num_sstrg_t)UINT_PREC )
-		i = UINT_PREC - 1;
+	if( index==-1 || index>= _big_num_sstrg_t(self.size) )
+		i = _big_num_sstrg_t(self.size) - 1;
 	else
 		i = index;
 
@@ -1412,8 +1221,8 @@ bool big_uint_cmp_smaller_equal(big_uint_t self, big_uint_t l, ssize_t index)
 {
 	big_num_sstrg_t i;
 
-	if( index==-1 || index>=(big_num_sstrg_t)UINT_PREC )
-		i = UINT_PREC - 1;
+	if( index==-1 || index>= _big_num_sstrg_t(self.size) )
+		i = _big_num_sstrg_t(self.size) - 1;
 	else
 		i = index;
 
@@ -1440,8 +1249,8 @@ bool big_uint_cmp_bigger_equal(big_uint_t self, big_uint_t l, ssize_t index)
 {
 	big_num_sstrg_t i;
 
-	if( index==-1 || index>=(big_num_sstrg_t)UINT_PREC )
-		i = UINT_PREC - 1;
+	if( index==-1 || index>= _big_num_sstrg_t(self.size) )
+		i = _big_num_sstrg_t(self.size) - 1;
 	else
 		i = index;
 
@@ -1450,12 +1259,6 @@ bool big_uint_cmp_bigger_equal(big_uint_t self, big_uint_t l, ssize_t index)
 			return self.table[i] > l.table[i];
 	
 	return true;
-}
-
-void big_uint_print(big_uint_t self) {
-	big_num_lstrg_t val;
-	big_uint_to_luint(self, &val);
-	printf("%llu", val);
 }
 
 
@@ -1467,7 +1270,7 @@ void big_uint_print(big_uint_t self) {
  * @param[out] result 
  * @return big_num_carry_t carry
  */
-static big_num_carry_t _big_uint_add_two_words(big_num_strg_t a, big_num_strg_t b, big_num_carry_t carry, big_num_strg_t * result)
+_big_num_static big_num_carry_t _big_uint_add_two_words(big_num_strg_t a, big_num_strg_t b, big_num_carry_t carry, _big_num_out(big_num_strg_t, result))
 {
 	big_num_strg_t temp;
 
@@ -1484,7 +1287,7 @@ static big_num_carry_t _big_uint_add_two_words(big_num_strg_t a, big_num_strg_t 
 			carry = 0;
 	}
 
-	*result = temp;
+	_big_num_deref(result) = temp;
 
 	return carry;
 }
@@ -1508,47 +1311,15 @@ static big_num_carry_t _big_uint_add_two_words(big_num_strg_t a, big_num_strg_t 
  * @param[in] index 
  * @return big_num_carry_t carry
  */
-big_num_carry_t _big_uint_add_uint(big_uint_t* self, big_num_strg_t value, size_t index)
+big_num_carry_t _big_uint_add_uint(_big_num_inout(big_uint_t, self), big_num_strg_t value, size_t index)
 {
 	size_t i;
 	big_num_carry_t c;
 
-	c = _big_uint_add_two_words(self->table[index], value, 0, &self->table[index]);
+	c = _big_uint_add_two_words(self->table[index], value, 0, _big_num_ref(self->table[index]));
 
-	for(i=index+1 ; i < UINT_PREC && c ; ++i)
-		c = _big_uint_add_two_words(self->table[i], 0, c, &self->table[i]);
-	
-	return c;
-}
-
-/**
- * this method adds one word (at a specific position)
- * and returns a carry (if it was)
- * if we've got (value_size=3):
- * 		table[0] = 10;
- * 		table[1] = 30;
- * 		table[2] = 5;
- * and we call:
- * 		AddInt(2,1)
- * then it'll be:
- * 		table[0] = 10;
- * 		table[1] = 30 + 2;
- * 		table[2] = 5;
- * of course if there was a carry from table[2] it would be returned
- * @param[in, out] self the big num object
- * @param[in] value 
- * @param[in] index 
- * @return big_num_carry_t carry
- */
-big_num_carry_t _big_uint_add_uint_big(big_big_uint_t* self, big_num_strg_t value, size_t index)
-{
-	size_t i;
-	big_num_carry_t c;
-
-	c = _big_uint_add_two_words(self->table[index], value, 0, &self->table[index]);
-
-	for(i=index+1 ; i < BIG_UINT_PREC && c ; ++i)
-		c = _big_uint_add_two_words(self->table[i], 0, c, &self->table[i]);
+	for(i=index+1 ; i < self->size && c != 0 ; ++i)
+		c = _big_uint_add_two_words(self->table[i], 0, c, _big_num_ref(self->table[i]));
 	
 	return c;
 }
@@ -1583,60 +1354,16 @@ big_num_carry_t _big_uint_add_uint_big(big_big_uint_t* self, big_num_strg_t valu
  * @param[in] index index <= value_size-2
  * @return big_num_carry_t carry
  */
-big_num_carry_t _big_uint_add_two_uints(big_uint_t* self, big_num_strg_t x2, big_num_strg_t x1, size_t index)
+big_num_carry_t _big_uint_add_two_uints(_big_num_inout(big_uint_t, self), big_num_strg_t x2, big_num_strg_t x1, size_t index)
 {
 	size_t i;
 	big_num_carry_t c;
 
-	c = _big_uint_add_two_words(self->table[index],   x1, 0, &self->table[index]);
-	c = _big_uint_add_two_words(self->table[index+1], x2, c, &self->table[index+1]);
+	c = _big_uint_add_two_words(self->table[index],   x1, 0, _big_num_ref(self->table[index]));
+	c = _big_uint_add_two_words(self->table[index+1], x2, c, _big_num_ref(self->table[index+1]));
 
-	for(i=index+2 ; i<UINT_PREC && c ; ++i)
-		c = _big_uint_add_two_words(self->table[i], 0, c, &self->table[i]);
-	
-	return c;
-}
-
-/**
- * this method adds only two unsigned words to the existing value
- * and these words begin on the 'index' position
- * (it's used in the multiplication algorithm 2)
- * index should be equal or smaller than value_size-2 (index <= value_size-2)
- * x1 - lower word, x2 - higher word
- * for example if we've got value_size equal 4 and:
- * 		table[0] = 3
- * 		table[1] = 4
- * 		table[2] = 5
- * 		table[3] = 6
- * then let
- * 		x1 = 10
- * 		x2 = 20
- * and
- * 		index = 1
- * the result of this method will be:
- * 		table[0] = 3
- * 		table[1] = 4 + x1 = 14
- * 		table[2] = 5 + x2 = 25
- * 		table[3] = 6
- * and no carry at the end of table[3]
- * (of course if there was a carry in table[2](5+20) then 
- * this carry would be passed to the table[3] etc.)
- * @param[in, out] self the big num object
- * @param[in] x1 lower word
- * @param[in] x2 higher word
- * @param[in] index index <= value_size-2
- * @return big_num_carry_t carry
- */
-big_num_carry_t _big_uint_add_two_uints_big(big_big_uint_t* self, big_num_strg_t x2, big_num_strg_t x1, size_t index)
-{
-	size_t i;
-	big_num_carry_t c;
-
-	c = _big_uint_add_two_words(self->table[index],   x1, 0, &self->table[index]);
-	c = _big_uint_add_two_words(self->table[index+1], x2, c, &self->table[index+1]);
-
-	for(i=index+2 ; i<BIG_UINT_PREC && c ; ++i)
-		c = _big_uint_add_two_words(self->table[i], 0, c, &self->table[i]);
+	for(i=index+2 ; i<self->size && c != 0; ++i)
+		c = _big_uint_add_two_words(self->table[i], 0, c, _big_num_ref(self->table[i]));
 	
 	return c;
 }
@@ -1649,16 +1376,16 @@ big_num_carry_t _big_uint_add_two_uints_big(big_big_uint_t* self, big_num_strg_t
  * @param[out] result 
  * @return big_num_carry_t carry
  */
-static big_num_carry_t _big_uint_sub_two_words(big_num_strg_t a, big_num_strg_t b, big_num_carry_t carry, big_num_strg_t * result)
+_big_num_static big_num_carry_t _big_uint_sub_two_words(big_num_strg_t a, big_num_strg_t b, big_num_carry_t carry, _big_num_out(big_num_strg_t, result))
 {
 	if( carry == 0 ) {
-		*result = a - b;
+		_big_num_deref(result) = a - b;
 
 		if( a < b )
 			carry = 1;
 	} else {
 		carry   = 1;
-		*result = a - b - carry;
+		_big_num_deref(result) = a - b - carry;
 
 		if( a > b ) // !(a <= b )
 			carry = 0;
@@ -1686,47 +1413,15 @@ static big_num_carry_t _big_uint_sub_two_words(big_num_strg_t a, big_num_strg_t 
  * @param[in] index 
  * @return big_num_carry_t carry
  */
-big_num_carry_t _big_uint_sub_uint(big_uint_t* self, big_num_strg_t value, size_t index)
+big_num_carry_t _big_uint_sub_uint(_big_num_inout(big_uint_t, self), big_num_strg_t value, size_t index)
 {
 	size_t i;
 	big_num_carry_t c;
 
-	c = _big_uint_sub_two_words(self->table[index], value, 0, &self->table[index]);
+	c = _big_uint_sub_two_words(self->table[index], value, 0, _big_num_ref(self->table[index]));
 
-	for(i=index+1 ; i<UINT_PREC && c ; ++i)
-		c = _big_uint_sub_two_words(self->table[i], 0, c, &self->table[i]);
-
-	return c;
-}
-
-/**
- * this method moves all bits into the left hand side
- * return value <- self <- c
- * 
- * the lowest *bit* will be held the 'c' and
- * the state of one additional bit (on the left hand side)
- * will be returned
- * 
- * for example:
- * let self is 001010000
- * after _big_uint_rcl2_one(1) there'll be 010100001 and _big_uint_rcl2_one returns 0
- * @param[in, out] self 
- * @param[in] c carry
- * @return big_num_carry_t carry
- */
-static big_num_carry_t _big_uint_rcl2_one(big_uint_t* self, big_num_carry_t c)
-{
-	size_t i;
-	big_num_carry_t new_c;
-
-	if( c != 0 )
-		c = 1;
-
-	for(i=0 ; i<UINT_PREC ; ++i) {
-		new_c    		= (self->table[i] & BIG_NUM_HIGHEST_BIT) ? 1 : 0;
-		self->table[i] 	= (self->table[i] << 1) | c;
-		c        		= new_c;
-	}
+	for(i=index+1 ; i<self->size && c != 0; ++i)
+		c = _big_uint_sub_two_words(self->table[i], 0, c, _big_num_ref(self->table[i]));
 
 	return c;
 }
@@ -1746,7 +1441,7 @@ static big_num_carry_t _big_uint_rcl2_one(big_uint_t* self, big_num_carry_t c)
  * @param[in] c carry
  * @return big_num_carry_t carry
  */
-static big_num_carry_t _big_uint_rcl2_one_big(big_big_uint_t* self, big_num_carry_t c)
+_big_num_static big_num_carry_t _big_uint_rcl2_one(_big_num_inout(big_uint_t, self), big_num_carry_t c)
 {
 	size_t i;
 	big_num_carry_t new_c;
@@ -1754,8 +1449,8 @@ static big_num_carry_t _big_uint_rcl2_one_big(big_big_uint_t* self, big_num_carr
 	if( c != 0 )
 		c = 1;
 
-	for(i=0 ; i<BIG_UINT_PREC ; ++i) {
-		new_c    		= (self->table[i] & BIG_NUM_HIGHEST_BIT) ? 1 : 0;
+	for(i=0 ; i<self->size ; ++i) {
+		new_c    		= (self->table[i] & BIG_NUM_HIGHEST_BIT) != 0 ? 1 : 0;
 		self->table[i] 	= (self->table[i] << 1) | c;
 		c        		= new_c;
 	}
@@ -1778,7 +1473,7 @@ static big_num_carry_t _big_uint_rcl2_one_big(big_big_uint_t* self, big_num_carr
  * @param[in] c carry
  * @return big_num_carry_t carry
  */
-static big_num_carry_t _big_uint_rcr2_one(big_uint_t* self, big_num_carry_t c)
+_big_num_static big_num_carry_t _big_uint_rcr2_one(_big_num_inout(big_uint_t, self), big_num_carry_t c)
 {
 	big_num_sstrg_t i; // signed i
 	big_num_carry_t new_c;
@@ -1786,42 +1481,8 @@ static big_num_carry_t _big_uint_rcr2_one(big_uint_t* self, big_num_carry_t c)
 	if( c != 0 )
 		c = BIG_NUM_HIGHEST_BIT;
 
-	for(i=(big_num_sstrg_t)UINT_PREC-1 ; i>=0 ; --i) {
-		new_c    		= (self->table[i] & 1) ? BIG_NUM_HIGHEST_BIT : 0;
-		self->table[i] 	= (self->table[i] >> 1) | c;
-		c        		= new_c;
-	}
-
-	c = (c != 0)? 1 : 0;
-
-	return c;
-}
-
-/**
- * this method moves all bits into the right hand side
- * c -> self -> return value
- * 
- * the highest *bit* will be held the 'c' and
- * the state of one additional bit (on the right hand side)
- * will be returned
- * 
- * for example:
- * let self is 000000010
- * after _big_uint_rcr2_one(1) there'll be 100000001 and _big_uint_rcr2_one returns 0
- * @param[in, out] self 
- * @param[in] c carry
- * @return big_num_carry_t carry
- */
-static big_num_carry_t _big_uint_rcr2_one_big(big_big_uint_t* self, big_num_carry_t c)
-{
-	big_num_sstrg_t i; // signed i
-	big_num_carry_t new_c;
-
-	if( c != 0 )
-		c = BIG_NUM_HIGHEST_BIT;
-
-	for(i=(big_num_sstrg_t)BIG_UINT_PREC-1 ; i>=0 ; --i) {
-		new_c    		= (self->table[i] & 1) ? BIG_NUM_HIGHEST_BIT : 0;
+	for(i= _big_num_sstrg_t(self->size-1) ; i>=0 ; --i) {
+		new_c    		= (self->table[i] & 1) != 0 ? BIG_NUM_HIGHEST_BIT : 0;
 		self->table[i] 	= (self->table[i] >> 1) | c;
 		c        		= new_c;
 	}
@@ -1847,7 +1508,7 @@ static big_num_carry_t _big_uint_rcr2_one_big(big_big_uint_t* self, big_num_carr
  * @param[in] c carry
  * @return big_num_carry_t carry
  */
-static big_num_carry_t _big_uint_rcl2(big_uint_t* self, size_t bits, big_num_carry_t c)
+_big_num_static big_num_carry_t _big_uint_rcl2(_big_num_inout(big_uint_t, self), size_t bits, big_num_carry_t c)
 {
 	size_t move = BIG_NUM_BITS_PER_UNIT - bits;
 	size_t i;
@@ -1856,41 +1517,7 @@ static big_num_carry_t _big_uint_rcl2(big_uint_t* self, size_t bits, big_num_car
 	if( c != 0 )
 		c = BIG_NUM_MAX_VALUE >> move;
 
-	for(i=0 ; i<UINT_PREC ; ++i) {
-		new_c    		= self->table[i] >> move;
-		self->table[i] 	= (self->table[i] << bits) | c;
-		c        		= new_c;
-	}
-
-	return (c & 1);
-}
-
-/**
- * this method moves all bits into the left hand side
- * return value <- self <- c
- * 
- * the lowest *bits* will be held the 'c' and
- * the state of one additional bit (on the left hand side)
- * will be returned
- * 
- * for example:
- * let self is 001010000
- * after _big_uint_rcl2(3, 1) there'll be 010000111 and _big_uint_rcl2 returns 1
- * @param[in, out] self 
- * @param[in] bits 
- * @param[in] c carry
- * @return big_num_carry_t carry
- */
-static big_num_carry_t _big_uint_rcl2_big(big_big_uint_t* self, size_t bits, big_num_carry_t c)
-{
-	size_t move = BIG_NUM_BITS_PER_UNIT - bits;
-	size_t i;
-	big_num_carry_t new_c;
-
-	if( c != 0 )
-		c = BIG_NUM_MAX_VALUE >> move;
-
-	for(i=0 ; i<BIG_UINT_PREC ; ++i) {
+	for(i=0 ; i<self->size ; ++i) {
 		new_c    		= self->table[i] >> move;
 		self->table[i] 	= (self->table[i] << bits) | c;
 		c        		= new_c;
@@ -1915,7 +1542,7 @@ static big_num_carry_t _big_uint_rcl2_big(big_big_uint_t* self, size_t bits, big
  * @param[in] c carry
  * @return big_num_carry_t carry
  */
-static big_num_carry_t _big_uint_rcr2(big_uint_t* self, size_t bits, big_num_carry_t c)
+_big_num_static big_num_carry_t _big_uint_rcr2(_big_num_inout(big_uint_t, self), size_t bits, big_num_carry_t c)
 {
 	size_t move = BIG_NUM_BITS_PER_UNIT - bits;
 	ssize_t i; // signed
@@ -1924,49 +1551,13 @@ static big_num_carry_t _big_uint_rcr2(big_uint_t* self, size_t bits, big_num_car
 	if( c != 0 )
 		c = BIG_NUM_MAX_VALUE << move;
 
-	for(i=UINT_PREC-1 ; i>=0 ; --i) {
+	for(i=_big_num_ssize_t(self->size)-1 ; i>=0 ; --i) {
 		new_c    		= self->table[i] << move;
 		self->table[i] 	= (self->table[i] >> bits) | c;
 		c        		= new_c;
 	}
 
-	c = (c & BIG_NUM_HIGHEST_BIT) ? 1 : 0;
-
-	return c;
-}
-
-/**
- * this method moves all bits into the right hand side
- * C -> self -> return value
- * 
- * the highest *bits* will be held the 'c' and
- * the state of one additional bit (on the right hand side)
- * will be returned
- * 
- * for example:
- * let self is 000000010
- * after _big_uint_rcr2(2, 1) there'll be 110000000 and _big_uint_rcr2 returns 1
- * @param[in, out] self 
- * @param[in] bits 
- * @param[in] c carry
- * @return big_num_carry_t carry
- */
-static big_num_carry_t _big_uint_rcr2_big(big_big_uint_t* self, size_t bits, big_num_carry_t c)
-{
-	size_t move = BIG_NUM_BITS_PER_UNIT - bits;
-	ssize_t i; // signed
-	big_num_carry_t new_c;
-
-	if( c != 0 )
-		c = BIG_NUM_MAX_VALUE << move;
-
-	for(i=BIG_UINT_PREC-1 ; i>=0 ; --i) {
-		new_c    		= self->table[i] << move;
-		self->table[i] 	= (self->table[i] >> bits) | c;
-		c        		= new_c;
-	}
-
-	c = (c & BIG_NUM_HIGHEST_BIT) ? 1 : 0;
+	c = (c & BIG_NUM_HIGHEST_BIT) != 0 ? 1 : 0;
 
 	return c;
 }
@@ -1988,7 +1579,7 @@ big_num_sstrg_t _big_uint_find_leading_bit_in_word(big_num_strg_t x)
 		--bit;
 	}
 
-	return bit;
+	return _big_num_sstrg_t(bit);
 }
 
 /**
@@ -1996,7 +1587,7 @@ big_num_sstrg_t _big_uint_find_leading_bit_in_word(big_num_strg_t x)
  * @param[in] x 
  * @return big_num_sstrg_t if the 'x' is zero this method returns '-1'
  */
-static big_num_sstrg_t _big_uint_find_lowest_bit_in_word(big_num_strg_t x)
+_big_num_static big_num_sstrg_t _big_uint_find_lowest_bit_in_word(big_num_strg_t x)
 {
 	if( x == 0 )
 		return -1;
@@ -2023,15 +1614,15 @@ static big_num_sstrg_t _big_uint_find_lowest_bit_in_word(big_num_strg_t x)
  * @param[in] bit the bit to set, between <0,BIG_NUM_BITS_PER_UNIT-1>
  * @return big_num_strg_t 
  */
-static big_num_strg_t _big_uint_set_bit_in_word(big_num_strg_t * value, size_t bit)
+_big_num_static big_num_strg_t _big_uint_set_bit_in_word(_big_num_out(big_num_strg_t , value), size_t bit)
 {
 	big_num_strg_t mask = 1;
 
 	if( bit > 0 )
 		mask = mask << bit;
 
-	big_num_strg_t last = *value & mask;
-	*value     	 	    = *value | mask;
+	big_num_strg_t last = _big_num_deref(value) & mask;
+	_big_num_deref(value)= _big_num_deref(value) | mask;
 
 	return (last != 0) ? 1 : 0;
 }
@@ -2049,8 +1640,9 @@ static big_num_strg_t _big_uint_set_bit_in_word(big_num_strg_t * value, size_t b
  * @param[out] result_high 
  * @param[out] result_low 
  */
-static void _big_uint_mul_two_words(big_num_strg_t a, big_num_strg_t b, big_num_strg_t* result_high, big_num_strg_t* result_low)
+_big_num_static void _big_uint_mul_two_words(big_num_strg_t a, big_num_strg_t b, _big_num_out(big_num_strg_t, result_high), _big_num_out(big_num_strg_t, result_low))
 {
+#ifndef GL_core_profile
 	union uint_
 	{
 		struct
@@ -2064,9 +1656,16 @@ static void _big_uint_mul_two_words(big_num_strg_t a, big_num_strg_t b, big_num_
 
 	res.u = (big_num_lstrg_t)a * (big_num_lstrg_t)b;     // multiply two 32bit words, the result has 64 bits
 
-	*result_high = res.u_.high;
-	*result_low  = res.u_.low;
+	_big_num_deref(result_high) = res.u_.high;
+	_big_num_deref(result_low)  = res.u_.low;
+#else
+	uvec2 res = unpackUint2x32(big_num_lstrg_t(a) * big_num_lstrg_t(b));     // multiply two 32bit words, the result has 64 bits
+
+	result_high = res.y;
+	result_low  = res.x;
+#endif
 }
+
 
 /**
  * this method calculates big_num_lstrg_t a / big_num_strg_t c (a higher, b lower word)
@@ -2080,22 +1679,12 @@ static void _big_uint_mul_two_words(big_num_strg_t a, big_num_strg_t b, big_num_
  * @param[out] r 
  * @param[out] rest 
  */
-static void _big_uint_div_two_words(big_num_strg_t a, big_num_strg_t b, big_num_strg_t c, big_num_strg_t* r, big_num_strg_t* rest)
+_big_num_static void _big_uint_div_two_words(big_num_strg_t a, big_num_strg_t b, big_num_strg_t c, _big_num_out(big_num_strg_t, r), _big_num_out(big_num_strg_t, rest))
 {
-	union {
-		struct {
-			big_num_strg_t low;  // 1 word
-			big_num_strg_t high; // 1 word
-		} u_;
+	big_num_lstrg_t ab_u = (_big_num_lstrg_t(a) << BIG_NUM_BITS_PER_UNIT) | _big_num_lstrg_t(b);
 
-		big_num_lstrg_t u;       // 2 words
-	} ab;
-
-	ab.u_.high = a;
-	ab.u_.low  = b;
-
-	*r    = (big_num_strg_t)(ab.u / c);
-	*rest = (big_num_strg_t)(ab.u % c);
+	_big_num_deref(r)    = _big_num_strg_t(ab_u / c);
+	_big_num_deref(rest) = _big_num_strg_t(ab_u % c);
 }
 
 
@@ -2109,74 +1698,30 @@ static void _big_uint_div_two_words(big_num_strg_t a, big_num_strg_t b, big_num_
  * @param[in] bits 
  * @param[in] c carry
  */
-static void _big_uint_rcl_move_all_words(big_uint_t* self, size_t * rest_bits, big_num_carry_t * last_c, size_t bits, big_num_carry_t c)
+_big_num_static void _big_uint_rcl_move_all_words(_big_num_inout(big_uint_t, self), _big_num_out(size_t, rest_bits), _big_num_out(big_num_carry_t, last_c), size_t bits, big_num_carry_t c)
 {
-	*rest_bits      	= bits % BIG_NUM_BITS_PER_UNIT;
-	size_t all_words 	= bits / BIG_NUM_BITS_PER_UNIT;
-	big_num_strg_t mask = ( c ) ? BIG_NUM_MAX_VALUE : 0;
+	_big_num_deref(rest_bits) 	= bits % BIG_NUM_BITS_PER_UNIT;
+	ssize_t all_words 			= _big_num_ssize_t(bits / BIG_NUM_BITS_PER_UNIT);
+	big_num_strg_t mask 		= ( c != 0 ) ? BIG_NUM_MAX_VALUE : 0;
 
 
-	if( all_words >= UINT_PREC ) {
-		if( all_words == UINT_PREC && *rest_bits == 0 )
-			*last_c = self->table[0] & 1;
+	if( all_words >= self->size ) {
+		if( all_words == self->size && _big_num_deref(rest_bits) == 0 )
+			_big_num_deref(last_c) = self->table[0] & 1;
 		// else: last_c is default set to 0
 
 		// clearing
-		for(size_t i = 0 ; i<UINT_PREC ; ++i)
+		for(size_t i = 0 ; i<self->size ; ++i)
 			self->table[i] = mask;
 
-		*rest_bits = 0;
-	}
-	else
-	if( all_words > 0 ) {
-		// 0 < all_words < UINT_PREC
+		_big_num_deref(rest_bits) = 0;
+	} else if( all_words > 0 ) {
+		// 0 < all_words < self->size
 		ssize_t first, second;
-		*last_c = self->table[UINT_PREC - all_words] & 1; // all_words is greater than 0
+		_big_num_deref(last_c) = self->table[self->size - all_words] & 1; // all_words is greater than 0
 
 		// copying the first part of the value
-		for(first = UINT_PREC-1, second=first-all_words ; second>=0 ; --first, --second)
-			self->table[first] = self->table[second];
-
-		// setting the rest to 'c'
-		for( ; first>=0 ; --first )
-			self->table[first] = mask;
-	}
-}
-
-/**
- * an auxiliary method for moving bits into the left hand side. This method moves only words
- * @param[in, out] self the big num object
- * @param[out] rest_bits 
- * @param[out] last_c 
- * @param[in] bits 
- * @param[in] c carry
- */
-static void _big_uint_rcl_move_all_words_big(big_big_uint_t* self, size_t * rest_bits, big_num_carry_t * last_c, size_t bits, big_num_carry_t c)
-{
-	*rest_bits      	= bits % BIG_NUM_BITS_PER_UNIT;
-	size_t all_words 	= bits / BIG_NUM_BITS_PER_UNIT;
-	big_num_strg_t mask = ( c ) ? BIG_NUM_MAX_VALUE : 0;
-
-
-	if( all_words >= BIG_UINT_PREC ) {
-		if( all_words == BIG_UINT_PREC && *rest_bits == 0 )
-			*last_c = self->table[0] & 1;
-		// else: last_c is default set to 0
-
-		// clearing
-		for(size_t i = 0 ; i<BIG_UINT_PREC ; ++i)
-			self->table[i] = mask;
-
-		*rest_bits = 0;
-	}
-	else
-	if( all_words > 0 ) {
-		// 0 < all_words < BIG_UINT_PREC
-		ssize_t first, second;
-		*last_c = self->table[BIG_UINT_PREC- all_words] & 1; // all_words is greater than 0
-
-		// copying the first part of the value
-		for(first = BIG_UINT_PREC-1, second=first-all_words ; second>=0 ; --first, --second)
+		for(first = _big_num_ssize_t(self->size)-1, second=first-all_words ; second>=0 ; --first, --second)
 			self->table[first] = self->table[second];
 
 		// setting the rest to 'c'
@@ -2193,76 +1738,35 @@ static void _big_uint_rcl_move_all_words_big(big_big_uint_t* self, size_t * rest
  * @param[in] bits 
  * @param[in] c 
  */
-static void _big_uint_rcr_move_all_words(big_uint_t* self, size_t * rest_bits, big_num_carry_t * last_c, size_t bits, big_num_carry_t c)
+_big_num_static void _big_uint_rcr_move_all_words(_big_num_inout(big_uint_t, self), _big_num_out(size_t, rest_bits), _big_num_out(big_num_carry_t, last_c), size_t bits, big_num_carry_t c)
 {
-	*rest_bits      		= bits % BIG_NUM_BITS_PER_UNIT;
-	size_t all_words 	= bits / BIG_NUM_BITS_PER_UNIT;
-	big_num_strg_t mask = ( c ) ? BIG_NUM_MAX_VALUE : 0;
+	_big_num_deref(rest_bits)   = bits % BIG_NUM_BITS_PER_UNIT;
+	ssize_t all_words 			= _big_num_ssize_t(bits / BIG_NUM_BITS_PER_UNIT);
+	big_num_strg_t mask 		= ( c != 0) ? BIG_NUM_MAX_VALUE : 0;
 
 
-	if( all_words >= UINT_PREC ) {
-		if( all_words == UINT_PREC && *rest_bits == 0 )
-			*last_c = (self->table[UINT_PREC-1] & BIG_NUM_HIGHEST_BIT) ? 1 : 0;
+	if( all_words >= self->size ) {
+		if( all_words == self->size && _big_num_deref(rest_bits) == 0 )
+			_big_num_deref(last_c) = (self->table[self->size-1] & BIG_NUM_HIGHEST_BIT) != 0 ? 1 : 0;
 		// else: last_c is default set to 0
 
 		// clearing
-		for(size_t i = 0 ; i<UINT_PREC ; ++i)
+		for(size_t i = 0 ; i<self->size ; ++i)
 			self->table[i] = mask;
 
-		*rest_bits = 0;
+		_big_num_deref(rest_bits) = 0;
 	} else if( all_words > 0 ) {
-		// 0 < all_words < UINT_PREC
+		// 0 < all_words < self->size
 
 		ssize_t first, second;
-		*last_c = (self->table[all_words - 1] & BIG_NUM_HIGHEST_BIT) ? 1 : 0; // all_words is > 0
+		_big_num_deref(last_c) = (self->table[all_words - 1] & BIG_NUM_HIGHEST_BIT) != 0 ? 1 : 0; // all_words is > 0
 
 		// copying the first part of the value
-		for(first=0, second=all_words ; second<UINT_PREC ; ++first, ++second)
+		for(first=0, second=all_words ; second<self->size ; ++first, ++second)
 			self->table[first] = self->table[second];
 
 		// setting the rest to 'c'
-		for( ; first<UINT_PREC ; ++first )
-			self->table[first] = mask;
-	}
-}
-
-/**
- * an auxiliary method for moving bits into the right hand side. This method moves only words
- * @param[in, out] self the big num object
- * @param[in] rest_bits 
- * @param[in] last_c 
- * @param[in] bits 
- * @param[in] c 
- */
-static void _big_uint_rcr_move_all_words_big(big_big_uint_t* self, size_t * rest_bits, big_num_carry_t * last_c, size_t bits, big_num_carry_t c)
-{
-	*rest_bits      	= bits % BIG_NUM_BITS_PER_UNIT;
-	size_t all_words 	= bits / BIG_NUM_BITS_PER_UNIT;
-	big_num_strg_t mask = ( c ) ? BIG_NUM_MAX_VALUE : 0;
-
-
-	if( all_words >= BIG_UINT_PREC ) {
-		if( all_words == BIG_UINT_PREC && *rest_bits == 0 )
-			*last_c = (self->table[BIG_UINT_PREC-1] & BIG_NUM_HIGHEST_BIT) ? 1 : 0;
-		// else: last_c is default set to 0
-
-		// clearing
-		for(size_t i = 0 ; i<BIG_UINT_PREC ; ++i)
-			self->table[i] = mask;
-
-		*rest_bits = 0;
-	} else if( all_words > 0 ) {
-		// 0 < all_words < BIG_UINT_PREC
-
-		ssize_t first, second;
-		*last_c = (self->table[all_words - 1] & BIG_NUM_HIGHEST_BIT) ? 1 : 0; // all_words is > 0
-
-		// copying the first part of the value
-		for(first=0, second=all_words ; second<BIG_UINT_PREC ; ++first, ++second)
-			self->table[first] = self->table[second];
-
-		// setting the rest to 'c'
-		for( ; first<BIG_UINT_PREC ; ++first )
+		for( ; first<self->size ; ++first )
 			self->table[first] = mask;
 	}
 }
@@ -2273,18 +1777,18 @@ static void _big_uint_rcr_move_all_words_big(big_big_uint_t* self, size_t * rest
  * @param[in] ss2 the other big num object
  * @return big_num_carry_t carry
  */
-static big_num_carry_t _big_uint_mul1(big_uint_t* self, big_uint_t ss2)
+_big_num_static big_num_carry_t _big_uint_mul1(_big_num_inout(big_uint_t, self), big_uint_t ss2)
 {
-	big_uint_t ss1 = *self;
+	big_uint_t ss1 = _big_num_deref(self);
 	big_uint_set_zero(self);
 
-	for(size_t i=0; i < UINT_PREC*BIG_NUM_BITS_PER_UNIT ; ++i) {
-		if( big_uint_add(self, *self, 0) ) {
+	for(size_t i=0; i < self->size*BIG_NUM_BITS_PER_UNIT ; ++i) {
+		if( big_uint_add(self, _big_num_deref(self), 0) != 0 ) {
 			return 1;
 		}
 
-		if( big_uint_rcl(&ss1, 1, 0) ) {
-			if( big_uint_add(self, ss2, 0) ) {
+		if( big_uint_rcl(_big_num_ref(ss1), 1, 0) != 0 ) {
+			if( big_uint_add(self, ss2, 0) != 0 ) {
 				return 1;
 			}
 		}
@@ -2301,41 +1805,26 @@ static big_num_carry_t _big_uint_mul1(big_uint_t* self, big_uint_t ss2)
  * @param[in] ss2_ 
  * @param[in] result 
  */
-static void _big_uint_mul1_no_carry(big_uint_t* self, big_uint_t ss2_, big_big_uint_t * result)
+_big_num_static void _big_uint_mul1_no_carry(_big_num_inout(big_uint_t, self), big_uint_t ss2_, _big_num_out(big_uint_t, result))
 {
-	big_big_uint_t ss2;
+	big_uint_t ss2;
+	big_uint_init(_big_num_ref(ss2), 2*self->size);
 	size_t i;
 
-	// copying *this into result and ss2_ into ss2
-	for(i=0 ; i<UINT_PREC ; ++i)
-	{
+	// copying _big_num_deref(self) into result and ss2_ into ss2
+	for(i=0 ; i<self->size ; ++i) {
 		result->table[i] = self->table[i];
 		ss2.table[i]    = ss2_.table[i];
 	}
 
 	// cleaning the highest bytes in result and ss2
-	for( ; i < BIG_UINT_PREC ; ++i)
-	{
+	for( ; i < ss2.size ; ++i) {
 		result->table[i] = 0;
 		ss2.table[i]    = 0;
 	}
 
 	// multiply
-	// (there will not be a carry)
-	big_big_uint_t ss1 = *result;
-	big_uint_set_zero_big(result);
-
-	for(size_t i=0; i < BIG_UINT_PREC*BIG_NUM_BITS_PER_UNIT ; ++i) {
-		if( big_uint_add_big(result, *result, 0) ) {
-			return;
-		}
-
-		if( big_uint_rcl_big(&ss1, 1, 0) ) {
-			if( big_uint_add_big(result, ss2, 0) ) {
-				return;
-			}
-		}
-	}
+	_big_uint_mul1(result, ss2);
 
 	return;
 }
@@ -2346,20 +1835,21 @@ static void _big_uint_mul1_no_carry(big_uint_t* self, big_uint_t ss2_, big_big_u
  * @param[in] ss2 the other big num object
  * @return big_num_carry_t 
  */
-static big_num_carry_t _big_uint_mul2(big_uint_t* self, big_uint_t ss2)
+_big_num_static big_num_carry_t _big_uint_mul2(_big_num_inout(big_uint_t, self), big_uint_t ss2)
 {
-	big_big_uint_t result;
+	big_uint_t result;
+	big_uint_init(_big_num_ref(result), 2*UINT_PREC);
 	size_t i;
 	big_num_carry_t c = 0;
 
-	_big_uint_mul2_no_carry(self, ss2, &result);
+	_big_uint_mul2_no_carry(self, ss2, _big_num_ref(result));
 
 	// copying result
 	for(i=0 ; i<UINT_PREC ; ++i)
 		self->table[i] = result.table[i];
 
 	// testing carry
-	for( ; i<BIG_UINT_PREC ; ++i) {
+	for( ; i<result.size ; ++i) {
 		if( result.table[i] != 0 ) {
 			c = 1;
 			break;
@@ -2375,7 +1865,7 @@ static big_num_carry_t _big_uint_mul2(big_uint_t* self, big_uint_t ss2)
  * @param[in] ss2 the other big num object
  * @param[out] result twice bigger than self and ss2
  */
-static void _big_uint_mul2_no_carry(big_uint_t* self, big_uint_t ss2, big_big_uint_t * result)
+_big_num_static void _big_uint_mul2_no_carry(_big_num_inout(big_uint_t, self), big_uint_t ss2, _big_num_out(big_uint_t, result))
 {
 	_big_uint_mul2_no_carry2(self, self->table, ss2.table, result);
 }
@@ -2387,17 +1877,17 @@ static void _big_uint_mul2_no_carry(big_uint_t* self, big_uint_t ss2, big_big_ui
  * @param[in] ss2 
  * @param[out] result 
  */
-static void _big_uint_mul2_no_carry2(big_uint_t* self, const big_num_strg_t ss1[], const big_num_strg_t ss2[], big_big_uint_t * result)
+_big_num_static void _big_uint_mul2_no_carry2(_big_num_inout(big_uint_t, self), _big_num_const_param big_num_strg_t ss1[2*UINT_PREC], _big_num_const_param big_num_strg_t ss2[2*UINT_PREC], _big_num_out(big_uint_t, result))
 {
-	size_t x1size  = BIG_UINT_PREC, 	x2size  = BIG_UINT_PREC;
-	size_t x1start = 0,       			x2start = 0;
+	size_t x1size  = self->size, 	x2size  = self->size;
+	size_t x1start = 0,       		x2start = 0;
 
-	if( BIG_UINT_PREC > 2 ) {	
+	if( self->size > 2 ) {	
 		// if the ss_size is smaller than or equal to 2
 		// there is no sense to set x1size (and others) to another values
 
-		for(x1size=BIG_UINT_PREC ; x1size>0 && ss1[x1size-1]==0 ; --x1size);
-		for(x2size=BIG_UINT_PREC ; x2size>0 && ss2[x2size-1]==0 ; --x2size);
+		for(x1size=self->size ; x1size>0 && ss1[x1size-1]==0 ; --x1size);
+		for(x2size=self->size ; x2size>0 && ss2[x2size-1]==0 ; --x2size);
 
 		for(x1start=0 ; x1start<x1size && ss1[x1start]==0 ; ++x1start);
 		for(x2start=0 ; x2start<x2size && ss2[x2start]==0 ; ++x2start);
@@ -2417,12 +1907,11 @@ static void _big_uint_mul2_no_carry2(big_uint_t* self, const big_num_strg_t ss1[
  * @param[in] x2start 
  * @param[in] x2size 
  */
-static void	_big_uint_mul2_no_carry3(big_uint_t* self, const big_num_strg_t ss1[], const big_num_strg_t ss2[], big_big_uint_t * result, size_t x1start, size_t x1size, size_t x2start, size_t x2size)
+_big_num_static void	_big_uint_mul2_no_carry3(_big_num_inout(big_uint_t, self), _big_num_const_param big_num_strg_t ss1[2*UINT_PREC], _big_num_const_param big_num_strg_t ss2[2*UINT_PREC], _big_num_out(big_uint_t, result), size_t x1start, size_t x1size, size_t x2start, size_t x2size)
 {
 	big_num_strg_t r2, r1;
 
-	for(size_t i=0 ; i < BIG_UINT_PREC; ++i)
-		result->table[i] = 0;
+	big_uint_set_zero(self);
 
 	if( x1size==0 || x2size==0 )
 		return;
@@ -2431,16 +1920,8 @@ static void	_big_uint_mul2_no_carry3(big_uint_t* self, const big_num_strg_t ss1[
 	{
 		for(size_t x2=x2start ; x2<x2size ; ++x2)
 		{
-			_big_uint_mul_two_words(ss1[x1], ss2[x2], &r2, &r1);
-			size_t i;
-			big_num_carry_t c;
-
-			c = _big_uint_add_two_words(result->table[x2+x1],   r1, 0, &result->table[x2+x1]);
-			c = _big_uint_add_two_words(result->table[x2+x1+1], r2, c, &result->table[x2+x1+1]);
-
-			for(i=x2+x1+2 ; i<BIG_UINT_PREC && c ; ++i)
-				c = _big_uint_add_two_words(result->table[i], 0, c, &result->table[i]);
-			// here will never be a carry
+			_big_uint_mul_two_words(ss1[x1], ss2[x2], _big_num_ref(r2), _big_num_ref(r1));
+			_big_uint_add_two_uints(result, r2, r1, x2+x1);
 		}
 	}
 }
@@ -2455,23 +1936,29 @@ static void	_big_uint_mul2_no_carry3(big_uint_t* self, const big_num_strg_t ss1[
  * @param[out] remainder 
  * @return div_std_test_t 
  */
-static div_std_test_t _big_uint_div_standard_test(big_uint_t* self, big_uint_t divisor, size_t * m, size_t * n, big_uint_t * remainder)
+_big_num_static div_std_test_t _big_uint_div_standard_test(_big_num_inout(big_uint_t, self), big_uint_t divisor, _big_num_out(size_t, m), _big_num_out(size_t, n), _big_num_out(big_uint_t, remainder))
 {
 	switch( _big_uint_div_calculating_size(self, divisor, m, n) ) {
 	case 4: // 'this' is equal divisor
+		#ifndef GL_core_profile 
 		if( remainder )
+		#endif
 			big_uint_set_zero(remainder);
 
 		big_uint_set_one(self);
 		return BIG_NUM_STD_DIV_NONE;
 	case 3: // 'this' is smaller than divisor
+		#ifndef GL_core_profile 
 		if( remainder )
-			*remainder = *self; // copy
+		#endif
+			_big_num_deref(remainder) = _big_num_deref(self); // copy
 
 		big_uint_set_zero(self);
 		return BIG_NUM_STD_DIV_NONE;
 	case 2: // 'this' is zero
+		#ifndef GL_core_profile 
 		if( remainder )
+		#endif
 			big_uint_set_zero(remainder);
 
 		big_uint_set_zero(self);
@@ -2485,103 +1972,30 @@ static div_std_test_t _big_uint_div_standard_test(big_uint_t* self, big_uint_t d
 /**
  * 
  * @param[in, out] self the big num object
- * @param[in] divisor 
- * @param[out] m 
- * @param[out] n 
- * @param[out] remainder 
- * @return div_std_test_t 
- */
-static div_std_test_t _big_uint_div_standard_test_big(big_big_uint_t* self, big_big_uint_t divisor, size_t * m, size_t * n, big_big_uint_t * remainder)
-{
-	switch( _big_uint_div_calculating_size_big(self, divisor, m, n) ) {
-	case 4: // 'this' is equal divisor
-		if( remainder )
-			big_uint_set_zero_big(remainder);
-
-		big_uint_set_one_big(self);
-		return BIG_NUM_STD_DIV_NONE;
-	case 3: // 'this' is smaller than divisor
-		if( remainder )
-			*remainder = *self; // copy
-
-		big_uint_set_zero_big(self);
-		return BIG_NUM_STD_DIV_NONE;
-	case 2: // 'this' is zero
-		if( remainder )
-			big_uint_set_zero_big(remainder);
-
-		big_uint_set_zero_big(self);
-		return BIG_NUM_STD_DIV_NONE;
-	case 1: // divisor is zero
-		return BIG_NUM_STD_DIV_ZERO;
-	}
-	return BIG_NUM_STD_DIV;
-}
-
-/**
- * 
- * @param[in, out] self the big num object
  * @param[in] divisor
  * @param[out] m 
  * @param[out] n 
  * @return div_calc_test_t 
  */
-static div_calc_test_t _big_uint_div_calculating_size(big_uint_t* self, big_uint_t divisor, size_t * m, size_t * n)
+_big_num_static div_calc_test_t _big_uint_div_calculating_size(_big_num_inout(big_uint_t, self), big_uint_t divisor, _big_num_out(size_t, m), _big_num_out(size_t, n))
 {
-	*m = *n = UINT_PREC-1;
+	_big_num_deref(m) = _big_num_deref(n) = self->size-1;
 
-	for( ; *n!=0 && divisor.table[*n]==0 ; --*n);
+	for( ; _big_num_deref(n)!=0 && divisor.table[_big_num_deref(n)]==0 ; --_big_num_deref(n));
 
-	if( *n==0 && divisor.table[*n]==0 )
+	if( _big_num_deref(n)==0 && divisor.table[_big_num_deref(n)]==0 )
 		return BIG_NUM_CALC_DIV_ZERO;
 
-	for( ; *m!=0 && self->table[*m]==0 ; --*m);
+	for( ; _big_num_deref(m)!=0 && self->table[_big_num_deref(m)]==0 ; --_big_num_deref(m));
 
-	if( *m==0 && self->table[*m]==0 )
+	if( _big_num_deref(m)==0 && self->table[_big_num_deref(m)]==0 )
 		return BIG_NUM_CALC_SELF_ZERO;
 
-	if( *m < *n )
+	if( _big_num_deref(m) < _big_num_deref(n) )
 		return BIG_NUM_CALC_SELF_LST;
-	else if( *m == *n ) {
+	else if( _big_num_deref(m) == _big_num_deref(n) ) {
 		ssize_t i;
-		for(i = *n ; i!=0 && self->table[i]==divisor.table[i] ; --i);
-		
-		if( self->table[i] < divisor.table[i] )
-			return BIG_NUM_CALC_SELF_LST;
-		else if (self->table[i] == divisor.table[i] )
-			return BIG_NUM_CALC_SELF_EQ;
-	}
-
-	return BIG_NUM_CALC_DIV_OK;
-}
-
-/**
- * 
- * @param[in, out] self the big num object
- * @param[in] divisor
- * @param[out] m 
- * @param[out] n 
- * @return div_calc_test_t 
- */
-static div_calc_test_t _big_uint_div_calculating_size_big(big_big_uint_t* self, big_big_uint_t divisor, size_t * m, size_t * n)
-{
-	*m = *n = BIG_UINT_PREC-1;
-
-	for( ; *n!=0 && divisor.table[*n]==0 ; --*n);
-
-	if( *n==0 && divisor.table[*n]==0 )
-		return BIG_NUM_CALC_DIV_ZERO;
-
-	for( ; *m!=0 && self->table[*m]==0 ; --*m);
-
-	if( *m==0 && self->table[*m]==0 )
-		return BIG_NUM_CALC_SELF_ZERO;
-
-	if( *m < *n )
-		return BIG_NUM_CALC_SELF_LST;
-	else if( *m == *n ) {
-		size_t i;
-		for(i = *n ; i!=0 && self->table[i]==divisor.table[i] ; --i);
+		for(i = _big_num_ssize_t(_big_num_deref(n)) ; i!=0 && self->table[i]==divisor.table[i] ; --i);
 		
 		if( self->table[i] < divisor.table[i] )
 			return BIG_NUM_CALC_SELF_LST;
@@ -2599,51 +2013,26 @@ static div_calc_test_t _big_uint_div_calculating_size_big(big_big_uint_t* self, 
  * @param[out] remainder the remaining part of the division (whole number)
  * @return big_num_div_ret_t 
  */
-static big_num_div_ret_t _big_uint_div1(big_uint_t* self, big_uint_t divisor, big_uint_t * remainder)
+_big_num_static big_num_div_ret_t _big_uint_div1(_big_num_inout(big_uint_t, self), big_uint_t divisor, _big_num_out(big_uint_t, remainder))
 {
 	size_t m,n;
 	div_std_test_t test;
 
-	test = _big_uint_div_standard_test(self, divisor, &m, &n, remainder);
+	test = _big_uint_div_standard_test(self, divisor, _big_num_ref(m), _big_num_ref(n), remainder);
 	switch (test) {
 		case BIG_NUM_STD_DIV_NONE: return BIG_NUM_DIV_OK;
 		case BIG_NUM_STD_DIV_ZERO: return BIG_NUM_DIV_ZERO;
 		default: break;
 	}
 
+	#ifndef GL_core_profile
 	if( !remainder ) {
 		big_uint_t rem;
-		return _big_uint_div1_calculate(self, divisor, &rem);
+		return _big_uint_div1_calculate(self, divisor, _big_num_ref(rem));
 	}
+	#endif
 
 	return _big_uint_div1_calculate(self, divisor, remainder);
-}
-
-/**
- * 
- * @param[in, out] self the big num object
- * @param[in] divisor the value to divide self by
- * @param[out] remainder the remaining part of the division (whole number)
- * @return big_num_div_ret_t 
- */
-static big_num_div_ret_t _big_uint_div1_big(big_big_uint_t* self, big_big_uint_t divisor, big_big_uint_t * remainder)
-{
-	size_t m,n;
-	div_std_test_t test;
-
-	test = _big_uint_div_standard_test_big(self, divisor, &m, &n, remainder);
-	switch (test) {
-		case BIG_NUM_STD_DIV_NONE: return BIG_NUM_DIV_OK;
-		case BIG_NUM_STD_DIV_ZERO: return BIG_NUM_DIV_ZERO;
-		default: break;
-	}
-
-	if( !remainder ) {
-		big_big_uint_t rem;
-		return _big_uint_div1_calculate_big(self, divisor, &rem);
-	}
-
-	return _big_uint_div1_calculate_big(self, divisor, remainder);
 }
 
 /**
@@ -2653,24 +2042,24 @@ static big_num_div_ret_t _big_uint_div1_big(big_big_uint_t* self, big_big_uint_t
  * @param[out] rest the remaining part of the division (whole number)
  * @return big_num_div_ret_t 
  */
-static big_num_div_ret_t _big_uint_div1_calculate(big_uint_t* self, big_uint_t divisor, big_uint_t * rest)
+_big_num_static big_num_div_ret_t _big_uint_div1_calculate(_big_num_inout(big_uint_t, self), big_uint_t divisor, _big_num_out(big_uint_t, rest))
 {
 	big_num_sstrg_t loop;
 	big_num_carry_t c;
 
 	big_uint_set_zero(rest);
-	loop = UINT_PREC * BIG_NUM_BITS_PER_UNIT;
+	loop = _big_num_sstrg_t(self->size * BIG_NUM_BITS_PER_UNIT);
 	c = 0;
 
 	for ( ;; ) {
 		for ( ;; ) {
 			// div_a
 			c = big_uint_rcl(self, 1, c);
-			c = big_uint_add(rest, *rest, c);
+			c = big_uint_add(rest, _big_num_deref(rest), c);
 			c = big_uint_sub(rest, divisor,c);
 
-			c = !c;
-			if (!c)
+			c = c == 0 ? 1 : 0;
+			if (c == 0)
 				break; // goto div_d
 			
 			// div_b
@@ -2685,13 +2074,13 @@ static big_num_div_ret_t _big_uint_div1_calculate(big_uint_t* self, big_uint_t d
 		for ( ;; ) {
 			// div_d
 			--loop;
-			if (loop) {
+			if (loop != 0) {
 				// div_c
 				c = big_uint_rcl(self, 1, c);
-				c = big_uint_add(rest, *rest, c);
+				c = big_uint_add(rest, _big_num_deref(rest), c);
 				c = big_uint_add(rest, divisor, 0);
 
-				if (c) {
+				if (c != 0) {
 					// "goto" div_b
 					--loop;
 					if (loop > 0)
@@ -2716,88 +2105,24 @@ static big_num_div_ret_t _big_uint_div1_calculate(big_uint_t* self, big_uint_t d
  * 
  * @param[in, out] self the big num object
  * @param[in] divisor the value to divide self by
- * @param[out] rest the remaining part of the division (whole number)
- * @return big_num_div_ret_t 
- */
-static big_num_div_ret_t _big_uint_div1_calculate_big(big_big_uint_t* self, big_big_uint_t divisor, big_big_uint_t * rest)
-{
-	big_num_sstrg_t loop;
-	big_num_carry_t c;
-
-	big_uint_set_zero_big(rest);
-	loop = BIG_UINT_PREC * BIG_NUM_BITS_PER_UNIT;
-	c = 0;
-
-	for ( ;; ) {
-		for ( ;; ) {
-			// div_a
-			c = big_uint_rcl_big(self, 1, c);
-			c = big_uint_add_big(rest, *rest, c);
-			c = big_uint_sub_big(rest, divisor,c);
-
-			c = !c;
-			if (!c)
-				break; // goto div_d
-			
-			// div_b
-			--loop;
-			if (loop > 0)
-				continue; // goto div_a
-
-			c = big_uint_rcl_big(self, 1, c);
-			return BIG_NUM_DIV_OK;
-		}
-
-		for ( ;; ) {
-			// div_d
-			--loop;
-			if (loop) {
-				// div_c
-				c = big_uint_rcl_big(self, 1, c);
-				c = big_uint_add_big(rest, *rest, c);
-				c = big_uint_add_big(rest, divisor, 0);
-
-				if (c) {
-					// "goto" div_b
-					--loop;
-					if (loop > 0)
-						break; // goto div_a
-						
-					c = big_uint_rcl_big(self, 1, c);
-					return 0;
-				}
-				else
-					continue; // goto div_d
-			}
-
-			c = big_uint_rcl_big(self, 1, c);
-			c = big_uint_add_big(rest, divisor, 0);
-
-			return BIG_NUM_DIV_OK;
-		}
-	}
-}
-
-/**
- * 
- * @param[in, out] self the big num object
- * @param[in] divisor the value to divide self by
  * @param[out] remainder the remaining part of the division (whole number)
  * @return big_num_div_ret_t 
  */
-static big_num_div_ret_t  _big_uint_div2(big_uint_t* self, big_uint_t divisor, big_uint_t * remainder)
+_big_num_static big_num_div_ret_t  _big_uint_div2(_big_num_inout(big_uint_t, self), big_uint_t divisor, _big_num_out(big_uint_t, remainder))
 {
 	size_t bits_diff;
-	big_num_div_ret_t status = _big_uint_div2_calculate(self, divisor, remainder, &bits_diff);
+	big_num_div_ret_t status = _big_uint_div2_calculate(self, divisor, remainder, _big_num_ref(bits_diff));
 	if( status < BIG_NUM_DIV_BUSY )
 		return status;
 
-	if( big_uint_cmp_bigger_equal(*self, divisor, -1) ) {
+	if( big_uint_cmp_bigger_equal(_big_num_deref(self), divisor, -1) ) {
 		_big_uint_div2(self, divisor, remainder);
 		big_uint_set_bit(self, bits_diff);
 	} else {
+		#ifndef GL_core_profile
 		if( remainder )
-			*remainder = *self;
+		#endif
+			_big_num_deref(remainder) = _big_num_deref(self);
 
 		big_uint_set_zero(self);
 		big_uint_set_bit(self, bits_diff);
@@ -2814,30 +2139,30 @@ static big_num_div_ret_t  _big_uint_div2(big_uint_t* self, big_uint_t divisor, b
  * @param[out] bits_diff 
  * @return big_num_div_ret_t 
  */
-static big_num_div_ret_t _big_uint_div2_calculate(big_uint_t* self, big_uint_t divisor, big_uint_t * remainder, size_t * bits_diff)
+_big_num_static big_num_div_ret_t _big_uint_div2_calculate(_big_num_inout(big_uint_t, self), big_uint_t divisor, _big_num_out(big_uint_t, remainder), _big_num_out(size_t, bits_diff))
 {
 	size_t table_id, index;
 	size_t divisor_table_id, divisor_index;
 
 	big_num_div_ret_t status = _big_uint_div2_find_leading_bits_and_check(self,
 									divisor, remainder,
-									&table_id, &index,
-									&divisor_table_id, &divisor_index);
+									_big_num_ref(table_id), _big_num_ref(index),
+									_big_num_ref(divisor_table_id), _big_num_ref(divisor_index));
 
 	if( status < BIG_NUM_DIV_BUSY )
 		return status;
 	
 	// here we know that 'this' is greater than divisor
 	// then 'index' is greater or equal 'divisor_index'
-	*bits_diff = index - divisor_index;
+	_big_num_deref(bits_diff) = index - divisor_index;
 
 	big_uint_t divisor_copy = divisor;
-	big_uint_rcl(&divisor_copy, *bits_diff, 0);
+	big_uint_rcl(_big_num_ref(divisor_copy), _big_num_deref(bits_diff), 0);
 
-	if( big_uint_cmp_smaller(*self, divisor_copy, table_id) )
+	if( big_uint_cmp_smaller(_big_num_deref(self), divisor_copy, _big_num_ssize_t(table_id)) )
 	{
-		big_uint_rcr(&divisor_copy, 1, 0);
-		--(*bits_diff);
+		big_uint_rcr(_big_num_ref(divisor_copy), 1, 0);
+		--(_big_num_deref(bits_diff));
 	}
 
 	big_uint_sub(self, divisor_copy, 0);
@@ -2856,33 +2181,38 @@ static big_num_div_ret_t _big_uint_div2_calculate(big_uint_t* self, big_uint_t d
  * @param[out] divisor_index 
  * @return big_num_div_ret_t 
  */
-static big_num_div_ret_t _big_uint_div2_find_leading_bits_and_check(big_uint_t* self, big_uint_t divisor, big_uint_t * remainder, size_t * table_id, size_t * index, size_t * divisor_table_id, size_t * divisor_index)
+_big_num_static big_num_div_ret_t _big_uint_div2_find_leading_bits_and_check(_big_num_inout(big_uint_t, self), big_uint_t divisor, _big_num_out(big_uint_t, remainder), _big_num_out(size_t, table_id), _big_num_out(size_t, index), _big_num_out(size_t, divisor_table_id), _big_num_out(size_t, divisor_index))
 {
-	if(0 == big_uint_find_leading_bit(divisor, divisor_table_id, divisor_index) ) {
+	if(false == big_uint_find_leading_bit(divisor, divisor_table_id, divisor_index) ) {
 		// division by zero
 		return BIG_NUM_DIV_ZERO;
 	}
 
-	if(	!big_uint_find_leading_bit(*self, table_id, index) ) {
+	if(	!big_uint_find_leading_bit(_big_num_deref(self), table_id, index) ) {
 		// zero is divided by something
 		big_uint_set_zero(self);
 
+		#ifndef GL_core_profile
 		if( remainder )
+		#endif
 			big_uint_set_zero(remainder);
 
 		return BIG_NUM_DIV_OK;
 	}
 
-	*divisor_index += *divisor_table_id * BIG_NUM_BITS_PER_UNIT;
-	*index         += *table_id         * BIG_NUM_BITS_PER_UNIT;
+	_big_num_deref(divisor_index) += _big_num_deref(divisor_table_id) * BIG_NUM_BITS_PER_UNIT;
+	_big_num_deref(index)         += _big_num_deref(table_id)         * BIG_NUM_BITS_PER_UNIT;
 
 	if( divisor_table_id == 0 ) {
 		// dividor has only one 32-bit word
 
 		big_num_strg_t r;
-		big_uint_div_int(self, divisor.table[0], &r);
+		big_uint_div_int(self, divisor.table[0], _big_num_ref(r));
 
-		if( remainder ) {
+		#ifndef GL_core_profile
+		if( remainder ) 
+		#endif
+		{
 			big_uint_set_zero(remainder);
 			remainder->table[0] = r;
 		}
@@ -2893,8 +2223,8 @@ static big_num_div_ret_t _big_uint_div2_find_leading_bits_and_check(big_uint_t* 
 
 	if( _big_uint_div2_divisor_greater_or_equal(self,
 			divisor, remainder,
-			*table_id, *index,
-			*divisor_index) ) {
+			_big_num_deref(table_id), _big_num_deref(index),
+			_big_num_deref(divisor_index)) ) {
 		return BIG_NUM_DIV_OK;
 	}
 
@@ -2912,13 +2242,15 @@ static big_num_div_ret_t _big_uint_div2_find_leading_bits_and_check(big_uint_t* 
  * @return true divisor is equal or greater than self
  * @return false divisor is less than self
  */
-static bool _big_uint_div2_divisor_greater_or_equal(big_uint_t* self, big_uint_t divisor, big_uint_t * remainder, size_t table_id, size_t index, size_t divisor_index)
+_big_num_static bool _big_uint_div2_divisor_greater_or_equal(_big_num_inout(big_uint_t, self), big_uint_t divisor, _big_num_out(big_uint_t, remainder), size_t table_id, size_t index, size_t divisor_index)
 {
 	if( divisor_index > index ) {
 		// divisor is greater than self
 
+		#ifndef GL_core_profile
 		if( remainder )
-			*remainder = *self;
+		#endif
+			_big_num_deref(remainder) = _big_num_deref(self);
 
 		big_uint_set_zero(self);
 
@@ -2929,14 +2261,16 @@ static bool _big_uint_div2_divisor_greater_or_equal(big_uint_t* self, big_uint_t
 		// table_id == divisor_table_id as well
 
 		ssize_t i;
-		for(i = table_id ; i!=0 && self->table[i]==divisor.table[i] ; --i);
+		for(i = _big_num_ssize_t(table_id) ; i!=0 && self->table[i]==divisor.table[i] ; --i);
 		
 		if( self->table[i] < divisor.table[i] )
 		{
 			// divisor is greater than 'this'
 
+			#ifndef GL_core_profile
 			if( remainder )
-				*remainder = *self;
+			#endif
+				_big_num_deref(remainder) = _big_num_deref(self);
 
 			big_uint_set_zero(self);
 
@@ -2944,7 +2278,9 @@ static bool _big_uint_div2_divisor_greater_or_equal(big_uint_t* self, big_uint_t
 		} else if( self->table[i] == divisor.table[i] ) {
 			// divisor is equal 'this'
 
+			#ifndef GL_core_profile
 			if( remainder )
+			#endif
 				big_uint_set_zero(remainder);
 
 			big_uint_set_one(self);
