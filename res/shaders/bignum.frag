@@ -147,8 +147,8 @@ bool 				big_uint_cmp_bigger_equal(big_uint_t self, big_uint_t l, ssize_t index)
 // BigUint.c
 //===============
 
-#define TABLE_SIZE 			BIG_NUM_PREC
-#define BIG_TABLE_SIZE 		(2*TABLE_SIZE)
+#define UINT_PREC 			BIG_NUM_PREC
+#define BIG_UINT_PREC 		(2*UINT_PREC)
 
 #define BIG_NUM_STD_DIV_NONE	0
 #define BIG_NUM_STD_DIV_ZERO	1
@@ -221,7 +221,7 @@ bool 					_big_uint_div2_divisor_greater_or_equal(inout big_uint_t self, big_uin
  */
 size_t big_uint_size(inout big_uint_t self)
 {
-	return TABLE_SIZE;
+	return UINT_PREC;
 }
 
 /**
@@ -230,7 +230,7 @@ size_t big_uint_size(inout big_uint_t self)
  */
 void big_uint_set_zero(inout big_uint_t self)
 {
-	for(size_t i=0 ; i < TABLE_SIZE ; ++i)
+	for(size_t i=0 ; i < UINT_PREC ; ++i)
 		self.table[i] = 0;
 }
 
@@ -240,7 +240,7 @@ void big_uint_set_zero(inout big_uint_t self)
  */
 void big_uint_set_zero_big(inout big_big_uint_t self)
 {
-	for(size_t i=0 ; i < BIG_TABLE_SIZE ; ++i)
+	for(size_t i=0 ; i < BIG_UINT_PREC ; ++i)
 		self.table[i] = 0;
 }
 
@@ -270,7 +270,7 @@ void big_uint_set_one_big(inout big_big_uint_t self)
  */
 void big_uint_set_max(inout big_uint_t self)
 {
-	for(size_t i=0 ; i < TABLE_SIZE; ++i)
+	for(size_t i=0 ; i < UINT_PREC; ++i)
 		self.table[i] = BIG_NUM_MAX_VALUE;
 }
 
@@ -291,7 +291,7 @@ void big_uint_set_min(inout big_uint_t self)
  */
 void big_uint_swap(inout big_uint_t self, inout big_uint_t ss2)
 {
-	for(size_t i=0 ; i < TABLE_SIZE ; ++i) {
+	for(size_t i=0 ; i < UINT_PREC ; ++i) {
 		big_num_strg_t temp = self.table[i];
 		self.table[i] = ss2.table[i];
 		ss2.table[i] = temp;
@@ -319,7 +319,7 @@ void big_uint_set_from_table(inout big_uint_t self, big_num_strg_t temp_table[BI
 	size_t temp_table_index = 0;
 	ssize_t i; // 'i' with a sign
 
-	for(i=TABLE_SIZE-1 ; i>=0 && temp_table_index<temp_table_len; --i, ++temp_table_index)
+	for(i=UINT_PREC-1 ; i>=0 && temp_table_index<temp_table_len; --i, ++temp_table_index)
 		self.table[i] = temp_table[ temp_table_index ];
 
 
@@ -374,7 +374,7 @@ big_num_carry_t big_uint_add(inout big_uint_t self, big_uint_t ss2, big_num_carr
 {
 	size_t i;	
 
-	for(i=0 ; i<TABLE_SIZE ; ++i)
+	for(i=0 ; i<UINT_PREC ; ++i)
 		c = _big_uint_add_two_words(self.table[i], ss2.table[i], c, self.table[i]);
 
 	return c;
@@ -391,7 +391,7 @@ big_num_carry_t big_uint_add_big(inout big_big_uint_t self, big_big_uint_t ss2, 
 {
 	size_t i;	
 
-	for(i=0 ; i<BIG_TABLE_SIZE ; ++i)
+	for(i=0 ; i<BIG_UINT_PREC ; ++i)
 		c = _big_uint_add_two_words(self.table[i], ss2.table[i], c, self.table[i]);
 
 	return c;
@@ -423,7 +423,7 @@ big_num_carry_t	big_uint_sub_uint(inout big_uint_t self, big_num_strg_t val)
 big_num_carry_t big_uint_sub(inout big_uint_t self, big_uint_t ss2, big_num_carry_t c)
 {
 	size_t i;
-	for(i=0 ; i<TABLE_SIZE ; ++i)
+	for(i=0 ; i<UINT_PREC ; ++i)
 		c = _big_uint_sub_two_words(self.table[i], ss2.table[i], c, self.table[i]);
 
 	return c;
@@ -444,7 +444,7 @@ big_num_carry_t big_uint_sub(inout big_uint_t self, big_uint_t ss2, big_num_carr
 big_num_carry_t big_uint_sub_big(inout big_big_uint_t self, big_big_uint_t ss2, big_num_carry_t c)
 {
 	size_t i;
-	for(i=0 ; i<BIG_TABLE_SIZE ; ++i)
+	for(i=0 ; i<BIG_UINT_PREC ; ++i)
 		c = _big_uint_sub_two_words(self.table[i], ss2.table[i], c, self.table[i]);
 
 	return c;
@@ -625,17 +625,17 @@ size_t big_uint_compensation_to_left(inout big_uint_t self)
 
 	// a - index a last word which is different from zero
 	ssize_t a;
-	for(a=TABLE_SIZE-1 ; a>=0 && self.table[a]==0 ; --a);
+	for(a=UINT_PREC-1 ; a>=0 && self.table[a]==0 ; --a);
 
 	if( a < 0 )
 		return moving; // all words in table have zero
 
-	if( a != TABLE_SIZE-1 ) {
-		moving += ( TABLE_SIZE-1 - a ) * BIG_NUM_BITS_PER_UNIT;
+	if( a != UINT_PREC-1 ) {
+		moving += ( UINT_PREC-1 - a ) * BIG_NUM_BITS_PER_UNIT;
 
 		// moving all words
 		ssize_t i;
-		for(i=TABLE_SIZE-1 ; a>=0 ; --i, --a)
+		for(i=UINT_PREC-1 ; a>=0 ; --i, --a)
 			self.table[i] = self.table[a];
 
 		// setting the rest word to zero
@@ -643,8 +643,8 @@ size_t big_uint_compensation_to_left(inout big_uint_t self)
 			self.table[i] = 0;
 	}
 
-	size_t moving2 = _big_uint_find_leading_bit_in_word( self.table[TABLE_SIZE-1] );
-	// moving2 is different from -1 because the value table[TABLE_SIZE-1]
+	size_t moving2 = _big_uint_find_leading_bit_in_word( self.table[UINT_PREC-1] );
+	// moving2 is different from -1 because the value table[UINT_PREC-1]
 	// is not zero
 
 	moving2 = BIG_NUM_BITS_PER_UNIT - moving2 - 1;
@@ -664,18 +664,18 @@ size_t big_uint_compensation_to_left_big(inout big_big_uint_t self)
 
 	// a - index a last word which is different from zero
 	ssize_t a;
-	for(a=BIG_TABLE_SIZE-1 ; a>=0 && self.table[a]==0 ; --a);
+	for(a=BIG_UINT_PREC-1 ; a>=0 && self.table[a]==0 ; --a);
 
 	if( a < 0 )
 		return moving; // all words in table have zero
 
-	if( a != BIG_TABLE_SIZE-1 )
+	if( a != BIG_UINT_PREC-1 )
 	{
-		moving += ( BIG_TABLE_SIZE-1 - a ) * BIG_NUM_BITS_PER_UNIT;
+		moving += ( BIG_UINT_PREC-1 - a ) * BIG_NUM_BITS_PER_UNIT;
 
 		// moving all words
 		ssize_t i;
-		for(i=BIG_TABLE_SIZE-1 ; a>=0 ; --i, --a)
+		for(i=BIG_UINT_PREC-1 ; a>=0 ; --i, --a)
 			self.table[i] = self.table[a];
 
 		// setting the rest word to zero
@@ -683,8 +683,8 @@ size_t big_uint_compensation_to_left_big(inout big_big_uint_t self)
 			self.table[i] = 0;
 	}
 
-	size_t moving2 = _big_uint_find_leading_bit_in_word( self.table[BIG_TABLE_SIZE-1] );
-	// moving2 is different from -1 because the value table[BIG_TABLE_SIZE-1]
+	size_t moving2 = _big_uint_find_leading_bit_in_word( self.table[BIG_UINT_PREC-1] );
+	// moving2 is different from -1 because the value table[BIG_UINT_PREC-1]
 	// is not zero
 
 	moving2 = BIG_NUM_BITS_PER_UNIT - moving2 - 1;
@@ -703,7 +703,7 @@ size_t big_uint_compensation_to_left_big(inout big_big_uint_t self)
  */
 bool big_uint_find_leading_bit(big_uint_t self, out size_t table_id, out size_t index)
 {
-	for(table_id=TABLE_SIZE-1 ; (table_id)!=0 && self.table[table_id]==0 ; --(table_id));
+	for(table_id=UINT_PREC-1 ; (table_id)!=0 && self.table[table_id]==0 ; --(table_id));
 
 	if( table_id==0 && self.table[table_id]==0 ) {
 		// is zero
@@ -728,9 +728,9 @@ bool big_uint_find_leading_bit(big_uint_t self, out size_t table_id, out size_t 
  */
 bool big_uint_find_lowest_bit(big_uint_t self, out size_t table_id, out size_t index)
 {
-	for(table_id=0 ; table_id<TABLE_SIZE && self.table[table_id]==0 ; ++(table_id));
+	for(table_id=0 ; table_id<UINT_PREC && self.table[table_id]==0 ; ++(table_id));
 
-		if( table_id >= TABLE_SIZE )
+		if( table_id >= UINT_PREC )
 		{
 			// is zero
 			index    = 0;
@@ -787,7 +787,7 @@ big_num_strg_t big_uint_set_bit(inout big_uint_t self, size_t bit_index)
  */
 void big_uint_bit_and(inout big_uint_t self, big_uint_t ss2)
 {
-	for(size_t x=0 ; x<TABLE_SIZE ; ++x)
+	for(size_t x=0 ; x<UINT_PREC ; ++x)
 		self.table[x] &= ss2.table[x];
 }
 
@@ -798,7 +798,7 @@ void big_uint_bit_and(inout big_uint_t self, big_uint_t ss2)
  */
 void big_uint_bit_or(inout big_uint_t self, big_uint_t ss2)
 {
-	for(size_t x=0 ; x<TABLE_SIZE ; ++x)
+	for(size_t x=0 ; x<UINT_PREC ; ++x)
 		self.table[x] |= ss2.table[x];
 }
 
@@ -809,7 +809,7 @@ void big_uint_bit_or(inout big_uint_t self, big_uint_t ss2)
  */
 void big_uint_bit_xor(inout big_uint_t self, big_uint_t ss2)
 {
-	for(size_t x=0 ; x<TABLE_SIZE ; ++x)
+	for(size_t x=0 ; x<UINT_PREC ; ++x)
 		self.table[x] ^= ss2.table[x];
 }
 
@@ -819,7 +819,7 @@ void big_uint_bit_xor(inout big_uint_t self, big_uint_t ss2)
  */
 void big_uint_bit_not(inout big_uint_t self)
 {
-	for(size_t x=0 ; x<TABLE_SIZE ; ++x)
+	for(size_t x=0 ; x<UINT_PREC ; ++x)
 		self.table[x] = ~self.table[x];
 }
 
@@ -879,7 +879,7 @@ big_num_carry_t big_uint_mul_int(inout big_uint_t self, big_num_strg_t ss2)
 		return 0;
 	}
 
-	for(x1=0 ; x1<TABLE_SIZE-1 ; ++x1) {
+	for(x1=0 ; x1<UINT_PREC-1 ; ++x1) {
 		_big_uint_mul_two_words(u.table[x1], ss2, r2, r1);
 		c += _big_uint_add_two_uints(self, r2,r1,x1);
 	}
@@ -913,12 +913,12 @@ big_num_carry_t big_uint_mul_int_big(inout big_big_uint_t self, big_num_strg_t s
 		return 0;
 	}
 
-	for(x1=0 ; x1<BIG_TABLE_SIZE-1 ; ++x1) {
+	for(x1=0 ; x1<BIG_UINT_PREC-1 ; ++x1) {
 		_big_uint_mul_two_words(u.table[x1], ss2, r2, r1);
 		c += _big_uint_add_two_uints_big(self, r2, r1, x1);
 	}
 
-	// x1 = BIG_TABLE_SIZE-1  (last word)
+	// x1 = BIG_UINT_PREC-1  (last word)
 	_big_uint_mul_two_words(u.table[x1], ss2, r2, r1);
 	c += (r2!=0) ? 1 : 0;
 	c += _big_uint_add_uint_big(self, r1, x1);
@@ -987,7 +987,7 @@ big_num_div_ret_t big_uint_div_int(inout big_uint_t self, big_num_strg_t divisor
 	big_num_strg_t r = 0;
 
 	// we're looking for the last word in ss1
-	for(i=TABLE_SIZE-1 ; i>0 && dividend.table[i]==0 ; --i);
+	for(i=UINT_PREC-1 ; i>0 && dividend.table[i]==0 ; --i);
 
 	for( ; i>=0 ; --i)
 		_big_uint_div_two_words(r, dividend.table[i], divisor, self.table[i], r);
@@ -1089,7 +1089,7 @@ void big_uint_sqrt(inout big_uint_t self)
 
 	big_uint_set_zero(self);
 	big_uint_set_zero(bit);
-	bit.table[TABLE_SIZE-1] = (BIG_NUM_HIGHEST_BIT >> 1);
+	bit.table[UINT_PREC-1] = (BIG_NUM_HIGHEST_BIT >> 1);
 	
 	while( big_uint_cmp_bigger(bit, value, -1))
 		big_uint_rcr(bit, 2, 0);
@@ -1121,7 +1121,7 @@ void big_uint_sqrt(inout big_uint_t self)
  */
 void big_uint_clear_first_bits(inout big_uint_t self, size_t n)
 {
-	if( n >= TABLE_SIZE*BIG_NUM_BITS_PER_UNIT ) {
+	if( n >= UINT_PREC*BIG_NUM_BITS_PER_UNIT ) {
 		big_uint_set_zero(self);
 		return;
 	}
@@ -1155,7 +1155,7 @@ void big_uint_clear_first_bits(inout big_uint_t self, size_t n)
  */
 bool big_uint_is_the_highest_bit_set(big_uint_t self)
 {
-	return (self.table[TABLE_SIZE-1] & BIG_NUM_HIGHEST_BIT) != 0;
+	return (self.table[UINT_PREC-1] & BIG_NUM_HIGHEST_BIT) != 0;
 }
 
 /**
@@ -1177,11 +1177,11 @@ bool big_uint_is_the_lowest_bit_set(big_uint_t self)
  */
 bool big_uint_is_only_the_highest_bit_set(big_uint_t self)
 {
-	for(size_t i=0 ; i<TABLE_SIZE-1 ; ++i)
+	for(size_t i=0 ; i<UINT_PREC-1 ; ++i)
 		if( self.table[i] != 0 )
 			return false;
 	
-	if( self.table[TABLE_SIZE-1] != BIG_NUM_HIGHEST_BIT )
+	if( self.table[UINT_PREC-1] != BIG_NUM_HIGHEST_BIT )
 		return false;
 	
 	return true;
@@ -1198,7 +1198,7 @@ bool big_uint_is_only_the_lowest_bit_set(big_uint_t self)
 	if( self.table[0] != 1 )
 		return false;
 
-	for(size_t i=1 ; i<TABLE_SIZE ; ++i)
+	for(size_t i=1 ; i<UINT_PREC ; ++i)
 		if( self.table[i] != 0 )
 			return false;
 
@@ -1213,7 +1213,7 @@ bool big_uint_is_only_the_lowest_bit_set(big_uint_t self)
  */
 bool big_uint_is_zero(big_uint_t self)
 {
-	for(size_t i=0 ; i<TABLE_SIZE ; ++i)
+	for(size_t i=0 ; i<UINT_PREC ; ++i)
 		if(self.table[i] != 0)
 			return false;
 
@@ -1258,7 +1258,7 @@ bool big_uint_are_first_bits_zero(big_uint_t self, size_t bits)
  */
 void big_uint_init_uint(inout big_uint_t self, big_num_strg_t value)
 {
-	for(size_t i=1 ; i<TABLE_SIZE ; ++i)
+	for(size_t i=1 ; i<UINT_PREC ; ++i)
 		self.table[i] = 0;
 
 	self.table[0] = value;
@@ -1274,7 +1274,7 @@ big_num_carry_t big_uint_init_ulint(inout big_uint_t self, big_num_lstrg_t value
 {
 	self.table[0] = big_num_strg_t(value);
 
-	if( TABLE_SIZE == 1 ) {
+	if( UINT_PREC == 1 ) {
 		big_num_carry_t c = ((value >> BIG_NUM_BITS_PER_UNIT) == 0) ? 0 : 1;
 
 		return c;
@@ -1282,7 +1282,7 @@ big_num_carry_t big_uint_init_ulint(inout big_uint_t self, big_num_lstrg_t value
 
 	self.table[1] = big_num_strg_t((value >> BIG_NUM_BITS_PER_UNIT));
 
-	for(size_t i=2 ; i<TABLE_SIZE ; ++i)
+	for(size_t i=2 ; i<UINT_PREC ; ++i)
 		self.table[i] = 0;
 
 	return 0;
@@ -1295,7 +1295,7 @@ big_num_carry_t big_uint_init_ulint(inout big_uint_t self, big_num_lstrg_t value
  */
 void big_uint_init_big_uint(inout big_uint_t self, big_uint_t value)
 {
-	for(size_t i=0 ; i<TABLE_SIZE ; ++i)
+	for(size_t i=0 ; i<UINT_PREC ; ++i)
 		self.table[i] = value.table[i];
 }
 
@@ -1339,7 +1339,7 @@ big_num_carry_t big_uint_to_uint(big_uint_t self, out big_num_strg_t result)
 {
 	result = self.table[0];
 
-	for(size_t i=1 ; i<TABLE_SIZE ; ++i)
+	for(size_t i=1 ; i<UINT_PREC ; ++i)
 		if( self.table[i] != 0 )
 			return 1;
 
@@ -1373,7 +1373,7 @@ big_num_carry_t	big_uint_to_luint(big_uint_t self, out big_num_lstrg_t result)
 	result = self.table[0];
 	result += big_num_lstrg_t(self.table[1]) << BIG_NUM_BITS_PER_UNIT;
 
-	for(size_t i=2 ; i<TABLE_SIZE ; ++i)
+	for(size_t i=2 ; i<UINT_PREC ; ++i)
 		if( self.table[i] != 0 )
 			return 1;
 
@@ -1419,8 +1419,8 @@ bool big_uint_cmp_smaller(big_uint_t self, big_uint_t l, ssize_t index)
 {
 	big_num_sstrg_t i;
 
-	if( index==-1 || index >= big_num_sstrg_t(TABLE_SIZE) )
-		i = TABLE_SIZE - 1;
+	if( index==-1 || index >= big_num_sstrg_t(UINT_PREC) )
+		i = UINT_PREC - 1;
 	else
 		i = index;
 
@@ -1453,8 +1453,8 @@ bool big_uint_cmp_bigger(big_uint_t self, big_uint_t l, ssize_t index)
 {
 	big_num_sstrg_t i;
 
-	if( index==-1 || index>= big_num_sstrg_t(TABLE_SIZE) )
-		i = TABLE_SIZE - 1;
+	if( index==-1 || index>= big_num_sstrg_t(UINT_PREC) )
+		i = UINT_PREC - 1;
 	else
 		i = index;
 
@@ -1485,8 +1485,8 @@ bool big_uint_cmp_equal(big_uint_t self, big_uint_t l, ssize_t index)
 {
 	big_num_sstrg_t i;
 
-	if( index==-1 || index>= big_num_sstrg_t(TABLE_SIZE) )
-		i = TABLE_SIZE - 1;
+	if( index==-1 || index>= big_num_sstrg_t(UINT_PREC) )
+		i = UINT_PREC - 1;
 	else
 		i = index;
 
@@ -1513,8 +1513,8 @@ bool big_uint_cmp_smaller_equal(big_uint_t self, big_uint_t l, ssize_t index)
 {
 	big_num_sstrg_t i;
 
-	if( index==-1 || index>= big_num_sstrg_t(TABLE_SIZE))
-		i = TABLE_SIZE - 1;
+	if( index==-1 || index>= big_num_sstrg_t(UINT_PREC))
+		i = UINT_PREC - 1;
 	else
 		i = index;
 
@@ -1541,8 +1541,8 @@ bool big_uint_cmp_bigger_equal(big_uint_t self, big_uint_t l, ssize_t index)
 {
 	big_num_sstrg_t i;
 
-	if( index==-1 || index>= big_num_sstrg_t(TABLE_SIZE))
-		i = TABLE_SIZE - 1;
+	if( index==-1 || index>= big_num_sstrg_t(UINT_PREC))
+		i = UINT_PREC - 1;
 	else
 		i = index;
 
@@ -1612,7 +1612,7 @@ big_num_carry_t _big_uint_add_uint(inout big_uint_t self, big_num_strg_t value, 
 
 	c = _big_uint_add_two_words(self.table[index], value, 0, self.table[index]);
 
-	for(i=index+1 ; i < TABLE_SIZE && (c != 0) ; ++i)
+	for(i=index+1 ; i < UINT_PREC && (c != 0) ; ++i)
 		c = _big_uint_add_two_words(self.table[i], 0, c, self.table[i]);
 	
 	return c;
@@ -1644,7 +1644,7 @@ big_num_carry_t _big_uint_add_uint_big(inout big_big_uint_t self, big_num_strg_t
 
 	c = _big_uint_add_two_words(self.table[index], value, 0, self.table[index]);
 
-	for(i=index+1 ; i < BIG_TABLE_SIZE && (c != 0) ; ++i)
+	for(i=index+1 ; i < BIG_UINT_PREC && (c != 0) ; ++i)
 		c = _big_uint_add_two_words(self.table[i], 0, c, self.table[i]);
 	
 	return c;
@@ -1688,7 +1688,7 @@ big_num_carry_t _big_uint_add_two_uints(inout big_uint_t self, big_num_strg_t x2
 	c = _big_uint_add_two_words(self.table[index],   x1, 0, self.table[index]);
 	c = _big_uint_add_two_words(self.table[index+1], x2, c, self.table[index+1]);
 
-	for(i=index+2 ; i<TABLE_SIZE && (c != 0); ++i)
+	for(i=index+2 ; i<UINT_PREC && (c != 0); ++i)
 		c = _big_uint_add_two_words(self.table[i], 0, c, self.table[i]);
 	
 	return c;
@@ -1732,7 +1732,7 @@ big_num_carry_t _big_uint_add_two_uints_big(inout big_big_uint_t self, big_num_s
 	c = _big_uint_add_two_words(self.table[index],   x1, 0, self.table[index]);
 	c = _big_uint_add_two_words(self.table[index+1], x2, c, self.table[index+1]);
 
-	for(i=index+2 ; i<BIG_TABLE_SIZE && (c != 0); ++i)
+	for(i=index+2 ; i<BIG_UINT_PREC && (c != 0); ++i)
 		c = _big_uint_add_two_words(self.table[i], 0, c, self.table[i]);
 	
 	return c;
@@ -1790,7 +1790,7 @@ big_num_carry_t _big_uint_sub_uint(inout big_uint_t self, big_num_strg_t value, 
 
 	c = _big_uint_sub_two_words(self.table[index], value, 0, self.table[index]);
 
-	for(i=index+1 ; i<TABLE_SIZE && (c != 0); ++i)
+	for(i=index+1 ; i<UINT_PREC && (c != 0); ++i)
 		c = _big_uint_sub_two_words(self.table[i], 0, c, self.table[i]);
 
 	return c;
@@ -1819,7 +1819,7 @@ big_num_carry_t _big_uint_rcl2_one(inout big_uint_t self, big_num_carry_t c)
 	if( c != 0 )
 		c = 1;
 
-	for(i=0 ; i<TABLE_SIZE ; ++i) {
+	for(i=0 ; i<UINT_PREC ; ++i) {
 		new_c    		= (self.table[i] & BIG_NUM_HIGHEST_BIT) != 0 ? 1 : 0;
 		self.table[i] 	= (self.table[i] << 1) | c;
 		c        		= new_c;
@@ -1851,7 +1851,7 @@ big_num_carry_t _big_uint_rcl2_one_big(inout big_big_uint_t self, big_num_carry_
 	if( c != 0 )
 		c = 1;
 
-	for(i=0 ; i<BIG_TABLE_SIZE ; ++i) {
+	for(i=0 ; i<BIG_UINT_PREC ; ++i) {
 		new_c    		= (self.table[i] & BIG_NUM_HIGHEST_BIT) != 0 ? 1 : 0;
 		self.table[i] 	= (self.table[i] << 1) | c;
 		c        		= new_c;
@@ -1883,7 +1883,7 @@ big_num_carry_t _big_uint_rcr2_one(inout big_uint_t self, big_num_carry_t c)
 	if( c != 0 )
 		c = BIG_NUM_HIGHEST_BIT;
 
-	for(i=big_num_sstrg_t(TABLE_SIZE)-1 ; i>=0 ; --i) {
+	for(i=big_num_sstrg_t(UINT_PREC)-1 ; i>=0 ; --i) {
 		new_c    		= (self.table[i] & 1) != 0? BIG_NUM_HIGHEST_BIT : 0;
 		self.table[i] 	= (self.table[i] >> 1) | c;
 		c        		= new_c;
@@ -1917,7 +1917,7 @@ big_num_carry_t _big_uint_rcr2_one_big(inout big_big_uint_t self, big_num_carry_
 	if( c != 0 )
 		c = BIG_NUM_HIGHEST_BIT;
 
-	for(i=big_num_sstrg_t(BIG_TABLE_SIZE)-1 ; i>=0 ; --i) {
+	for(i=big_num_sstrg_t(BIG_UINT_PREC)-1 ; i>=0 ; --i) {
 		new_c    		= (self.table[i] & 1) != 0 ? BIG_NUM_HIGHEST_BIT : 0;
 		self.table[i] 	= (self.table[i] >> 1) | c;
 		c        		= new_c;
@@ -1953,7 +1953,7 @@ big_num_carry_t _big_uint_rcl2(inout big_uint_t self, size_t bits, big_num_carry
 	if( c != 0 )
 		c = BIG_NUM_MAX_VALUE >> move;
 
-	for(i=0 ; i<TABLE_SIZE ; ++i) {
+	for(i=0 ; i<UINT_PREC ; ++i) {
 		new_c    		= self.table[i] >> move;
 		self.table[i] 	= (self.table[i] << bits) | c;
 		c        		= new_c;
@@ -1987,7 +1987,7 @@ big_num_carry_t _big_uint_rcl2_big(inout big_big_uint_t self, size_t bits, big_n
 	if( c != 0 )
 		c = BIG_NUM_MAX_VALUE >> move;
 
-	for(i=0 ; i<BIG_TABLE_SIZE ; ++i) {
+	for(i=0 ; i<BIG_UINT_PREC ; ++i) {
 		new_c    		= self.table[i] >> move;
 		self.table[i] 	= (self.table[i] << bits) | c;
 		c        		= new_c;
@@ -2021,7 +2021,7 @@ big_num_carry_t _big_uint_rcr2(inout big_uint_t self, size_t bits, big_num_carry
 	if( c != 0 )
 		c = BIG_NUM_MAX_VALUE << move;
 
-	for(i=TABLE_SIZE-1 ; i>=0 ; --i) {
+	for(i=UINT_PREC-1 ; i>=0 ; --i) {
 		new_c    		= self.table[i] << move;
 		self.table[i] 	= (self.table[i] >> bits) | c;
 		c        		= new_c;
@@ -2057,7 +2057,7 @@ big_num_carry_t _big_uint_rcr2_big(inout big_big_uint_t self, size_t bits, big_n
 	if( c != 0 )
 		c = BIG_NUM_MAX_VALUE << move;
 
-	for(i=BIG_TABLE_SIZE-1 ; i>=0 ; --i) {
+	for(i=BIG_UINT_PREC-1 ; i>=0 ; --i) {
 		new_c    		= self.table[i] << move;
 		self.table[i] 	= (self.table[i] >> bits) | c;
 		c        		= new_c;
@@ -2192,23 +2192,23 @@ void _big_uint_rcl_move_all_words(inout big_uint_t self, out size_t rest_bits, o
 	big_num_strg_t mask = ( c != 0 ) ? BIG_NUM_MAX_VALUE : 0;
 
 
-	if( all_words >= TABLE_SIZE ) {
-		if( all_words == TABLE_SIZE && rest_bits == 0 )
+	if( all_words >= UINT_PREC ) {
+		if( all_words == UINT_PREC && rest_bits == 0 )
 			last_c = self.table[0] & 1;
 		// else: last_c is default set to 0
 
 		// clearing
-		for(size_t i = 0 ; i<TABLE_SIZE ; ++i)
+		for(size_t i = 0 ; i<UINT_PREC ; ++i)
 			self.table[i] = mask;
 
 		rest_bits = 0;
 	} else if( all_words > 0 ) {
-		// 0 < all_words < TABLE_SIZE
+		// 0 < all_words < UINT_PREC
 		ssize_t first, second;
-		last_c = self.table[TABLE_SIZE - all_words] & 1; // all_words is greater than 0
+		last_c = self.table[UINT_PREC - all_words] & 1; // all_words is greater than 0
 
 		// copying the first part of the value
-		for(first = TABLE_SIZE-1, second=first-all_words ; second>=0 ; --first, --second)
+		for(first = UINT_PREC-1, second=first-all_words ; second>=0 ; --first, --second)
 			self.table[first] = self.table[second];
 
 		// setting the rest to 'c'
@@ -2232,25 +2232,25 @@ void _big_uint_rcl_move_all_words_big(inout big_big_uint_t self, out size_t rest
 	big_num_strg_t mask = ( c != 0 ) ? BIG_NUM_MAX_VALUE : 0;
 
 
-	if( all_words >= BIG_TABLE_SIZE ) {
-		if( all_words == BIG_TABLE_SIZE && rest_bits == 0 )
+	if( all_words >= BIG_UINT_PREC ) {
+		if( all_words == BIG_UINT_PREC && rest_bits == 0 )
 			last_c = self.table[0] & 1;
 		// else: last_c is default set to 0
 
 		// clearing
-		for(size_t i = 0 ; i<BIG_TABLE_SIZE ; ++i)
+		for(size_t i = 0 ; i<BIG_UINT_PREC ; ++i)
 			self.table[i] = mask;
 
 		rest_bits = 0;
 	}
 	else
 	if( all_words > 0 ) {
-		// 0 < all_words < BIG_TABLE_SIZE
+		// 0 < all_words < BIG_UINT_PREC
 		ssize_t first, second;
-		last_c = self.table[BIG_TABLE_SIZE- all_words] & 1; // all_words is greater than 0
+		last_c = self.table[BIG_UINT_PREC- all_words] & 1; // all_words is greater than 0
 
 		// copying the first part of the value
-		for(first = BIG_TABLE_SIZE-1, second=first-all_words ; second>=0 ; --first, --second)
+		for(first = BIG_UINT_PREC-1, second=first-all_words ; second>=0 ; --first, --second)
 			self.table[first] = self.table[second];
 
 		// setting the rest to 'c'
@@ -2274,28 +2274,28 @@ void _big_uint_rcr_move_all_words(inout big_uint_t self, out size_t rest_bits, o
 	big_num_strg_t mask = ( c != 0 ) ? BIG_NUM_MAX_VALUE : 0;
 
 
-	if( all_words >= TABLE_SIZE ) {
-		if( all_words == TABLE_SIZE && rest_bits == 0 )
-			last_c = (self.table[TABLE_SIZE-1] & BIG_NUM_HIGHEST_BIT) != 0? 1 : 0;
+	if( all_words >= UINT_PREC ) {
+		if( all_words == UINT_PREC && rest_bits == 0 )
+			last_c = (self.table[UINT_PREC-1] & BIG_NUM_HIGHEST_BIT) != 0? 1 : 0;
 		// else: last_c is default set to 0
 
 		// clearing
-		for(size_t i = 0 ; i<TABLE_SIZE ; ++i)
+		for(size_t i = 0 ; i<UINT_PREC ; ++i)
 			self.table[i] = mask;
 
 		rest_bits = 0;
 	} else if( all_words > 0 ) {
-		// 0 < all_words < TABLE_SIZE
+		// 0 < all_words < UINT_PREC
 
 		ssize_t first, second;
 		last_c = (self.table[all_words - 1] & BIG_NUM_HIGHEST_BIT) != 0 ? 1 : 0; // all_words is > 0
 
 		// copying the first part of the value
-		for(first=0, second=all_words ; second<TABLE_SIZE ; ++first, ++second)
+		for(first=0, second=all_words ; second<UINT_PREC ; ++first, ++second)
 			self.table[first] = self.table[second];
 
 		// setting the rest to 'c'
-		for( ; first<TABLE_SIZE ; ++first )
+		for( ; first<UINT_PREC ; ++first )
 			self.table[first] = mask;
 	}
 }
@@ -2315,28 +2315,28 @@ void _big_uint_rcr_move_all_words_big(inout big_big_uint_t self, out size_t rest
 	big_num_strg_t mask = ( c != 0 ) ? BIG_NUM_MAX_VALUE : 0;
 
 
-	if( all_words >= BIG_TABLE_SIZE ) {
-		if( all_words == BIG_TABLE_SIZE && rest_bits == 0 )
-			last_c = (self.table[BIG_TABLE_SIZE-1] & BIG_NUM_HIGHEST_BIT) != 0 ? 1 : 0;
+	if( all_words >= BIG_UINT_PREC ) {
+		if( all_words == BIG_UINT_PREC && rest_bits == 0 )
+			last_c = (self.table[BIG_UINT_PREC-1] & BIG_NUM_HIGHEST_BIT) != 0 ? 1 : 0;
 		// else: last_c is default set to 0
 
 		// clearing
-		for(size_t i = 0 ; i<BIG_TABLE_SIZE ; ++i)
+		for(size_t i = 0 ; i<BIG_UINT_PREC ; ++i)
 			self.table[i] = mask;
 
 		rest_bits = 0;
 	} else if( all_words > 0 ) {
-		// 0 < all_words < BIG_TABLE_SIZE
+		// 0 < all_words < BIG_UINT_PREC
 
 		ssize_t first, second;
 		last_c = (self.table[all_words - 1] & BIG_NUM_HIGHEST_BIT) != 0 ? 1 : 0; // all_words is > 0
 
 		// copying the first part of the value
-		for(first=0, second=all_words ; second<BIG_TABLE_SIZE ; ++first, ++second)
+		for(first=0, second=all_words ; second<BIG_UINT_PREC ; ++first, ++second)
 			self.table[first] = self.table[second];
 
 		// setting the rest to 'c'
-		for( ; first<BIG_TABLE_SIZE ; ++first )
+		for( ; first<BIG_UINT_PREC ; ++first )
 			self.table[first] = mask;
 	}
 }
@@ -2352,7 +2352,7 @@ big_num_carry_t _big_uint_mul1(inout big_uint_t self, big_uint_t ss2)
 	big_uint_t ss1 = self;
 	big_uint_set_zero(self);
 
-	for(size_t i=0; i < TABLE_SIZE*BIG_NUM_BITS_PER_UNIT ; ++i) {
+	for(size_t i=0; i < UINT_PREC*BIG_NUM_BITS_PER_UNIT ; ++i) {
 		if( big_uint_add(self, self, 0) != 0 ) {
 			return 1;
 		}
@@ -2381,14 +2381,14 @@ void _big_uint_mul1_no_carry(inout big_uint_t self, big_uint_t ss2_, out big_big
 	size_t i;
 
 	// copying *this into result and ss2_ into ss2
-	for(i=0 ; i<TABLE_SIZE ; ++i)
+	for(i=0 ; i<UINT_PREC ; ++i)
 	{
 		result.table[i] = self.table[i];
 		ss2.table[i]    = ss2_.table[i];
 	}
 
 	// cleaning the highest bytes in result and ss2
-	for( ; i < BIG_TABLE_SIZE ; ++i)
+	for( ; i < BIG_UINT_PREC ; ++i)
 	{
 		result.table[i] = 0;
 		ss2.table[i]    = 0;
@@ -2399,7 +2399,7 @@ void _big_uint_mul1_no_carry(inout big_uint_t self, big_uint_t ss2_, out big_big
 	big_big_uint_t ss1 = result;
 	big_uint_set_zero_big(result);
 
-	for(size_t i=0; i < BIG_TABLE_SIZE*BIG_NUM_BITS_PER_UNIT ; ++i) {
+	for(size_t i=0; i < BIG_UINT_PREC*BIG_NUM_BITS_PER_UNIT ; ++i) {
 		if( big_uint_add_big(result, result, 0) != 0 ) {
 			return;
 		}
@@ -2429,11 +2429,11 @@ big_num_carry_t _big_uint_mul2(inout big_uint_t self, big_uint_t ss2)
 	_big_uint_mul2_no_carry(self, ss2, result);
 
 	// copying result
-	for(i=0 ; i<TABLE_SIZE ; ++i)
+	for(i=0 ; i<UINT_PREC ; ++i)
 		self.table[i] = result.table[i];
 
 	// testing carry
-	for( ; i<BIG_TABLE_SIZE ; ++i) {
+	for( ; i<BIG_UINT_PREC ; ++i) {
 		if( result.table[i] != 0 ) {
 			c = 1;
 			break;
@@ -2463,15 +2463,15 @@ void _big_uint_mul2_no_carry(inout big_uint_t self, big_uint_t ss2, out big_big_
  */
 void _big_uint_mul2_no_carry2(inout big_uint_t self, const big_num_strg_t ss1[BIG_NUM_PREC], const big_num_strg_t ss2[BIG_NUM_PREC], out big_big_uint_t result)
 {
-	size_t x1size  = BIG_TABLE_SIZE, 	x2size  = BIG_TABLE_SIZE;
+	size_t x1size  = BIG_UINT_PREC, 	x2size  = BIG_UINT_PREC;
 	size_t x1start = 0,       			x2start = 0;
 
-	if( BIG_TABLE_SIZE > 2 ) {	
+	if( BIG_UINT_PREC > 2 ) {	
 		// if the ss_size is smaller than or equal to 2
 		// there is no sense to set x1size (and others) to another values
 
-		for(x1size=BIG_TABLE_SIZE ; x1size>0 && ss1[x1size-1]==0 ; --x1size);
-		for(x2size=BIG_TABLE_SIZE ; x2size>0 && ss2[x2size-1]==0 ; --x2size);
+		for(x1size=BIG_UINT_PREC ; x1size>0 && ss1[x1size-1]==0 ; --x1size);
+		for(x2size=BIG_UINT_PREC ; x2size>0 && ss2[x2size-1]==0 ; --x2size);
 
 		for(x1start=0 ; x1start<x1size && ss1[x1start]==0 ; ++x1start);
 		for(x2start=0 ; x2start<x2size && ss2[x2start]==0 ; ++x2start);
@@ -2495,7 +2495,7 @@ void _big_uint_mul2_no_carry3(inout big_uint_t self, const big_num_strg_t ss1[BI
 {
 	big_num_strg_t r2, r1;
 
-	for(size_t i=0 ; i < BIG_TABLE_SIZE; ++i)
+	for(size_t i=0 ; i < BIG_UINT_PREC; ++i)
 		result.table[i] = 0;
 
 	if( x1size==0 || x2size==0 )
@@ -2512,7 +2512,7 @@ void _big_uint_mul2_no_carry3(inout big_uint_t self, const big_num_strg_t ss1[BI
 			c = _big_uint_add_two_words(result.table[x2+x1],   r1, 0, result.table[x2+x1]);
 			c = _big_uint_add_two_words(result.table[x2+x1+1], r2, c, result.table[x2+x1+1]);
 
-			for(i=x2+x1+2 ; i<BIG_TABLE_SIZE && (c != 0) ; ++i)
+			for(i=x2+x1+2 ; i<BIG_UINT_PREC && (c != 0) ; ++i)
 				c = _big_uint_add_two_words(result.table[i], 0, c, result.table[i]);
 			// here will never be a carry
 		}
@@ -2596,7 +2596,7 @@ div_std_test_t _big_uint_div_standard_test_big(inout big_big_uint_t self, big_bi
  */
 div_calc_test_t _big_uint_div_calculating_size(inout big_uint_t self, big_uint_t divisor, out size_t m, out size_t n)
 {
-	m = n = TABLE_SIZE-1;
+	m = n = UINT_PREC-1;
 
 	for( ; n!=0 && divisor.table[n]==0 ; --n);
 
@@ -2633,7 +2633,7 @@ div_calc_test_t _big_uint_div_calculating_size(inout big_uint_t self, big_uint_t
  */
 div_calc_test_t _big_uint_div_calculating_size_big(inout big_big_uint_t self, big_big_uint_t divisor, out size_t m, out size_t n)
 {
-	m = n = BIG_TABLE_SIZE-1;
+	m = n = BIG_UINT_PREC-1;
 
 	for( ; n!=0 && divisor.table[n]==0 ; --n);
 
@@ -2717,7 +2717,7 @@ big_num_div_ret_t _big_uint_div1_calculate(inout big_uint_t self, big_uint_t div
 	big_num_carry_t c;
 
 	big_uint_set_zero(rest);
-	loop = TABLE_SIZE * BIG_NUM_BITS_PER_UNIT;
+	loop = UINT_PREC * BIG_NUM_BITS_PER_UNIT;
 	c = 0;
 
 	for ( ;; ) {
@@ -2783,7 +2783,7 @@ big_num_div_ret_t _big_uint_div1_calculate_big(inout big_big_uint_t self, big_bi
 	big_num_carry_t c;
 
 	big_uint_set_zero_big(rest);
-	loop = BIG_TABLE_SIZE * BIG_NUM_BITS_PER_UNIT;
+	loop = BIG_UINT_PREC * BIG_NUM_BITS_PER_UNIT;
 	c = 0;
 
 	for ( ;; ) {
@@ -3015,6 +3015,8 @@ bool _big_uint_div2_divisor_greater_or_equal(inout big_uint_t self, big_uint_t d
 
 #define big_int_t	big_uint_t
 
+#define INT_PREC	BIG_NUM_PREC
+
 #define BIG_INT_SIGN_CHANGE_OK		0
 #define BIG_INT_SIGN_CHANGE_FAILED	1
 #define big_int_sign_ret_t			uint
@@ -3085,7 +3087,7 @@ big_num_carry_t		_big_int_pow2(inout big_int_t self, const big_int_t pow);
 void big_int_set_max(inout big_int_t self)
 {
 	big_uint_set_max(self);
-	self.table[TABLE_SIZE-1] = ~BIG_NUM_HIGHEST_BIT;
+	self.table[INT_PREC-1] = ~BIG_NUM_HIGHEST_BIT;
 }
 
 /**
@@ -3096,7 +3098,7 @@ void big_int_set_max(inout big_int_t self)
 void big_int_set_min(inout big_int_t self)
 {
 	big_uint_set_zero(self);
-	self.table[TABLE_SIZE-1] = BIG_NUM_HIGHEST_BIT;
+	self.table[INT_PREC-1] = BIG_NUM_HIGHEST_BIT;
 }
 
 /**
@@ -3479,13 +3481,13 @@ big_num_ret_t big_int_pow(inout big_int_t self, big_int_t _pow)
  */
 big_num_carry_t big_int_init_uint(inout big_int_t self, big_num_strg_t value)
 {
-	for(size_t i = 1; i < TABLE_SIZE ; ++i)
+	for(size_t i = 1; i < INT_PREC ; ++i)
 		self.table[i] = 0;
 	self.table[0] = value;
 
 	// there can be a carry here when the size of this value is equal to one word
 	// and the 'value' has the highest bit set
-	if( TABLE_SIZE==1 && (value & BIG_NUM_HIGHEST_BIT)!=0 )
+	if( INT_PREC==1 && (value & BIG_NUM_HIGHEST_BIT)!=0 )
 		return 1;
 
 	return 0;
@@ -3504,10 +3506,10 @@ big_num_carry_t	big_int_init_ulint(inout big_int_t self, big_num_lstrg_t value)
 	if( c != 0)
 		return 1;
 
-	if( TABLE_SIZE == 1 )
+	if( INT_PREC == 1 )
 		return ((self.table[0] & BIG_NUM_HIGHEST_BIT) == 0) ? 0 : 1;
 	
-	if( TABLE_SIZE == 2 )
+	if( INT_PREC == 2 )
 		return ((self.table[1] & BIG_NUM_HIGHEST_BIT) == 0) ? 0 : 1;
 
 	return 0;
@@ -3522,7 +3524,7 @@ big_num_carry_t	big_int_init_ulint(inout big_int_t self, big_num_lstrg_t value)
 big_num_carry_t big_int_init_big_uint(inout big_int_t self, big_uint_t value)
 {
 	self = value;
-	return (value.table[TABLE_SIZE-1] & BIG_NUM_HIGHEST_BIT) != 0 ? 1 : 0; // check if highest bit set, if so there is a carry
+	return (value.table[INT_PREC-1] & BIG_NUM_HIGHEST_BIT) != 0 ? 1 : 0; // check if highest bit set, if so there is a carry
 }
 
 /**
@@ -3534,7 +3536,7 @@ void big_int_init_int(inout big_int_t self, big_num_sstrg_t value)
 {
 	big_num_strg_t fill = ( value<0 ) ? BIG_NUM_MAX_VALUE : 0;
 
-	for(size_t i=1 ; i<TABLE_SIZE ; ++i)
+	for(size_t i=1 ; i<INT_PREC ; ++i)
 		self.table[i] = fill;
 
 	self.table[0] = big_num_strg_t(value);
@@ -3552,7 +3554,7 @@ big_num_carry_t	big_int_init_lint(inout big_int_t self, big_num_lsstrg_t value)
 
 	self.table[0] = big_num_strg_t(big_num_lstrg_t(value));
 
-	if( TABLE_SIZE == 1 ) {
+	if( INT_PREC == 1 ) {
 		if( (big_num_strg_t(big_num_lstrg_t(value)) >> 32) != mask )
 			return 1;
 
@@ -3561,7 +3563,7 @@ big_num_carry_t	big_int_init_lint(inout big_int_t self, big_num_lsstrg_t value)
 
 	self.table[1] = big_num_strg_t(big_num_lstrg_t(value) >> 32);
 
-	for(size_t i=2 ; i < TABLE_SIZE ; ++i)
+	for(size_t i=2 ; i < INT_PREC ; ++i)
 		self.table[i] = mask;
 
 	return 0;
@@ -3586,7 +3588,7 @@ void big_int_init_big_int(inout big_int_t self, big_int_t value)
 big_num_carry_t	big_int_to_uint(big_int_t self, out big_num_strg_t result)
 {
 	big_num_carry_t c = big_uint_to_uint(self, result);
-	if (TABLE_SIZE == 1)
+	if (INT_PREC == 1)
 		return (result & BIG_NUM_HIGHEST_BIT) == 0 ? 0 : 1;
 	return c;
 }
@@ -3615,10 +3617,10 @@ big_num_carry_t	big_int_to_luint(big_int_t self, out big_num_lstrg_t result)
 {
 	big_num_carry_t c = big_uint_to_luint(self, result);
 
-	if (TABLE_SIZE == 1)
+	if (INT_PREC == 1)
 		return (self.table[0] & BIG_NUM_HIGHEST_BIT) == 0 ? 0 : 1;
 	
-	if (TABLE_SIZE == 2)
+	if (INT_PREC == 2)
 		return (self.table[1] & BIG_NUM_HIGHEST_BIT) == 0 ? 0 : 1;
 	
 	return c;
@@ -3632,7 +3634,7 @@ big_num_carry_t	big_int_to_luint(big_int_t self, out big_num_lstrg_t result)
  */
 big_num_carry_t	big_int_to_lint(big_int_t self, out big_num_lsstrg_t result)
 {
-	if( TABLE_SIZE == 1 ) {
+	if( INT_PREC == 1 ) {
 		result = big_num_lsstrg_t(big_num_sstrg_t(self.table[0]));
 	} else {
 		big_num_strg_t low  = self.table[0];
@@ -3646,7 +3648,7 @@ big_num_carry_t	big_int_to_lint(big_int_t self, out big_num_lsstrg_t result)
 		if( (high & BIG_NUM_HIGHEST_BIT) != (mask & BIG_NUM_HIGHEST_BIT) )
 			return 1;
 
-		for(size_t i=2 ; i<TABLE_SIZE ; ++i)
+		for(size_t i=2 ; i<INT_PREC ; ++i)
 			if( self.table[i] != mask )
 				return 1;
 	}
@@ -3669,7 +3671,7 @@ big_num_carry_t	big_int_to_lint(big_int_t self, out big_num_lsstrg_t result)
  */
 bool big_int_cmp_smaller(big_int_t self, big_int_t l)
 {
-	big_num_sstrg_t i = TABLE_SIZE-1;
+	big_num_sstrg_t i = INT_PREC-1;
 
 	big_num_sstrg_t a1 = big_num_sstrg_t(self.table[i]);
 	big_num_sstrg_t a2 = big_num_sstrg_t(l.table[i]);
@@ -3700,7 +3702,7 @@ bool big_int_cmp_smaller(big_int_t self, big_int_t l)
  */
 bool big_int_cmp_bigger(big_int_t self, big_int_t l)
 {
-	big_num_sstrg_t i = TABLE_SIZE-1;
+	big_num_sstrg_t i = INT_PREC-1;
 
 	big_num_sstrg_t a1 = big_num_sstrg_t(self.table[i]);
 	big_num_sstrg_t a2 = big_num_sstrg_t(l.table[i]);
@@ -3745,7 +3747,7 @@ bool big_int_cmp_equal(big_int_t self, big_int_t l)
  */
 bool big_int_cmp_smaller_equal(big_int_t self, big_int_t l)
 {
-	big_num_sstrg_t i = TABLE_SIZE-1;
+	big_num_sstrg_t i = INT_PREC-1;
 
 	big_num_sstrg_t a1 = big_num_sstrg_t(self.table[i]);
 	big_num_sstrg_t a2 = big_num_sstrg_t(l.table[i]);
@@ -3774,7 +3776,7 @@ bool big_int_cmp_smaller_equal(big_int_t self, big_int_t l)
  */
 bool big_int_cmp_bigger_equal(big_int_t self, big_int_t l)
 {
-	big_num_sstrg_t i = TABLE_SIZE-1;
+	big_num_sstrg_t i = INT_PREC-1;
 
 	big_num_sstrg_t a1 = big_num_sstrg_t(self.table[i]);
 	big_num_sstrg_t a2 = big_num_sstrg_t(l.table[i]);
@@ -3960,6 +3962,8 @@ big_num_ret_t _big_int_pow2(inout big_int_t self, const big_int_t pow)
 // BigFloat.h
 //===============
 
+#define BIG_MAN_PREC	BIG_NUM_PREC
+
 #define big_float_info_t uint
 struct big_float_t {
 	big_int_t exponent;
@@ -4079,8 +4083,8 @@ void big_float_set_one(inout big_float_t self)
 {
 	self.info = 0;
 	big_uint_set_zero(self.mantissa);
-	self.mantissa.table[BIG_NUM_PREC-1] = BIG_NUM_HIGHEST_BIT;
-	big_int_init_int(self.exponent, -big_num_sstrg_t(BIG_NUM_PREC * BIG_NUM_BITS_PER_UNIT - 1));
+	self.mantissa.table[BIG_MAN_PREC-1] = BIG_NUM_HIGHEST_BIT;
+	big_int_init_int(self.exponent, -big_num_sstrg_t(BIG_MAN_PREC * BIG_NUM_BITS_PER_UNIT - 1));
 }
 
 /**
@@ -4144,8 +4148,8 @@ void big_float_set_e(inout big_float_t self)
 	// which took 1420 iterations
 	// (the result was compared with e taken from http://antwrp.gsfc.nasa.gov/htmltest/gifcity/e.2mil)
 
-	big_uint_set_from_table(self.mantissa, temp_table, BIG_NUM_PREC);
-	big_int_init_int(self.exponent, -big_num_sstrg_t(BIG_NUM_PREC)*big_num_sstrg_t(BIG_NUM_BITS_PER_UNIT) + 2);
+	big_uint_set_from_table(self.mantissa, temp_table, BIG_MAN_PREC);
+	big_int_init_int(self.exponent, -big_num_sstrg_t(BIG_MAN_PREC)*big_num_sstrg_t(BIG_NUM_BITS_PER_UNIT) + 2);
 	self.info = 0;
 }
 
@@ -4201,8 +4205,8 @@ void big_float_set_ln2(inout big_float_t self)
 	// which took 4035 iterations
 	// (the result was compared with ln(2) taken from http://ja0hxv.calico.jp/pai/estart.html)
 
-	big_uint_set_from_table(self.mantissa, temp_table, BIG_NUM_PREC);
-	big_int_init_int(self.exponent, -big_num_sstrg_t(BIG_NUM_PREC)*big_num_sstrg_t(BIG_NUM_BITS_PER_UNIT));
+	big_uint_set_from_table(self.mantissa, temp_table, BIG_MAN_PREC);
+	big_int_init_int(self.exponent, -big_num_sstrg_t(BIG_MAN_PREC)*big_num_sstrg_t(BIG_NUM_BITS_PER_UNIT));
 	self.info = 0;
 }
 
@@ -4453,20 +4457,20 @@ big_num_carry_t big_float_mul_uint(inout big_float_t self, big_num_strg_t ss2)
 	}
 
 	// man_result = mantissa * ss2.mantissa
-	for(i=0 ; i<BIG_NUM_PREC ; ++i)
+	for(i=0 ; i<BIG_MAN_PREC ; ++i)
 		man_result.table[i] = self.mantissa.table[i];
-	for (; i < 2*BIG_NUM_PREC; ++i)
+	for (; i < 2*BIG_MAN_PREC; ++i)
 		man_result.table[i] = 0;
 	big_num_carry_t man_c = big_uint_mul_int_big(man_result, ss2);
 
-	big_num_sstrg_t bit = _big_uint_find_leading_bit_in_word(man_result.table[BIG_NUM_PREC]);
+	big_num_sstrg_t bit = _big_uint_find_leading_bit_in_word(man_result.table[BIG_MAN_PREC]);
 
 	if( bit!=-1 && big_num_strg_t(bit) > (BIG_NUM_BITS_PER_UNIT/2) ) {
 		// 'i' will be from 0 to BIG_NUM_BITS_PER_UNIT
 		i = big_uint_compensation_to_left_big(man_result);
 		c = big_int_add_int(self.exponent, BIG_NUM_BITS_PER_UNIT - i);
 
-		for(i=0 ; i < BIG_NUM_PREC ; ++i)
+		for(i=0 ; i < BIG_MAN_PREC ; ++i)
 			self.mantissa.table[i] = man_result.table[i+1];
 	} else {
 		if( bit != -1 ) {
@@ -4474,7 +4478,7 @@ big_num_carry_t big_float_mul_uint(inout big_float_t self, big_num_strg_t ss2)
 			c += big_int_add_int(self.exponent, bit+1);
 		}
 
-		for(i=0 ; i < BIG_NUM_PREC ; ++i)
+		for(i=0 ; i < BIG_MAN_PREC ; ++i)
 			self.mantissa.table[i] = man_result.table[i];
 	}
 
@@ -4546,18 +4550,18 @@ big_num_carry_t big_float_mul(inout big_float_t self, big_float_t ss2, bool roun
 	// if there is a zero value in man_result the method CompensationToLeft()
 	// returns 0 but we'll correct this at the end in Standardizing() method)
 	i = big_uint_compensation_to_left_big(man_result);
-	big_num_sstrg_t exp_add = big_num_sstrg_t(BIG_NUM_PREC * BIG_NUM_BITS_PER_UNIT - i);
+	big_num_sstrg_t exp_add = big_num_sstrg_t(BIG_MAN_PREC * BIG_NUM_BITS_PER_UNIT - i);
 
 	if( exp_add != 0 )
 		c += big_int_add_int(self.exponent, exp_add );
 
 	c += big_int_add(self.exponent, ss2.exponent);
 
-	for(i=0 ; i<BIG_NUM_PREC ; ++i)
-		self.mantissa.table[i] = man_result.table[i+BIG_NUM_PREC];
+	for(i=0 ; i<BIG_MAN_PREC ; ++i)
+		self.mantissa.table[i] = man_result.table[i+BIG_MAN_PREC];
 
-	if( round && ((man_result.table[BIG_NUM_PREC-1] & BIG_NUM_HIGHEST_BIT) != 0) ) {
-		bool is_half = _big_float_check_greater_or_equal_half(self, man_result.table, BIG_NUM_PREC);
+	if( round && ((man_result.table[BIG_MAN_PREC-1] & BIG_NUM_HIGHEST_BIT) != 0) ) {
+		bool is_half = _big_float_check_greater_or_equal_half(self, man_result.table, BIG_MAN_PREC);
 		c += _big_float_round_half_to_even(self, is_half, true);
 	}
 
@@ -4605,11 +4609,11 @@ big_num_ret_t big_float_div(inout big_float_t self, big_float_t ss2, bool round)
 	if( big_float_is_zero(self) )
 		return 0;
 
-	for(i=0 ; i<BIG_NUM_PREC ; ++i) {
+	for(i=0 ; i<BIG_MAN_PREC ; ++i) {
 		man1.table[i] 				= 0;
-		man1.table[i+BIG_NUM_PREC] 	= self.mantissa.table[i];
+		man1.table[i+BIG_MAN_PREC] 	= self.mantissa.table[i];
 		man2.table[i]     			= ss2.mantissa.table[i];
-		man2.table[i+BIG_NUM_PREC] 	= 0;
+		man2.table[i+BIG_MAN_PREC] 	= 0;
 	}
 
 	big_big_uint_t remainder;
@@ -4622,12 +4626,12 @@ big_num_ret_t big_float_div(inout big_float_t self, big_float_t ss2, bool round)
 
 	c += big_int_sub(self.exponent, ss2.exponent);
 	
-	for(i=0 ; i<BIG_NUM_PREC ; ++i)
-		self.mantissa.table[i] = man1.table[i+BIG_NUM_PREC];
+	for(i=0 ; i<BIG_MAN_PREC ; ++i)
+		self.mantissa.table[i] = man1.table[i+BIG_MAN_PREC];
 
-	if( round && ((man1.table[BIG_NUM_PREC-1] & BIG_NUM_HIGHEST_BIT) != 0) )
+	if( round && ((man1.table[BIG_MAN_PREC-1] & BIG_NUM_HIGHEST_BIT) != 0) )
 	{
-		bool is_half = _big_float_check_greater_or_equal_half(self, man1.table, BIG_NUM_PREC);
+		bool is_half = _big_float_check_greater_or_equal_half(self, man1.table, BIG_MAN_PREC);
 		c += _big_float_round_half_to_even(self, is_half, true);
 	}
 
@@ -4700,7 +4704,7 @@ big_num_strg_t big_float_mod2(big_float_t self)
 {	
 	big_int_t zero, negative_bits;
 	big_int_set_zero(zero);
-	big_int_init_int(negative_bits, -big_num_sstrg_t(BIG_NUM_PREC*BIG_NUM_BITS_PER_UNIT));
+	big_int_init_int(negative_bits, -big_num_sstrg_t(BIG_MAN_PREC*BIG_NUM_BITS_PER_UNIT));
 
 	if( big_int_cmp_bigger(self.exponent, zero) || big_int_cmp_smaller_equal(self.exponent, negative_bits) )
 		return 0;
@@ -4866,7 +4870,7 @@ big_num_ret_t big_float_pow(inout big_float_t self, big_float_t _pow)
 
 	big_int_t zero, negative_bits;
 	big_int_set_zero(zero);
-	big_int_init_int(negative_bits, -big_num_sstrg_t(BIG_NUM_PREC*BIG_NUM_BITS_PER_UNIT));
+	big_int_init_int(negative_bits, -big_num_sstrg_t(BIG_MAN_PREC*BIG_NUM_BITS_PER_UNIT));
 
 	if ( big_int_cmp_bigger(_pow.exponent, negative_bits) && big_int_cmp_smaller_equal(_pow.exponent, zero)) {
 		if ( _big_float_is_integer(_pow) )
@@ -4952,7 +4956,7 @@ big_num_carry_t big_float_exp(inout big_float_t self, big_float_t x)
 
 	// m will be the value of the mantissa in range (-1,1)
 	big_float_t m = x;
-	big_int_init_int(m.exponent, -big_num_sstrg_t(BIG_NUM_PREC * BIG_NUM_BITS_PER_UNIT));
+	big_int_init_int(m.exponent, -big_num_sstrg_t(BIG_MAN_PREC * BIG_NUM_BITS_PER_UNIT));
 
 	// 'e_' will be the value of '2^exponent'
 	//   e_.mantissa.table[man-1] = TTMATH_UINT_HIGHEST_BIT;  and
@@ -4963,7 +4967,7 @@ big_num_carry_t big_float_exp(inout big_float_t self, big_float_t x)
 	//     (we must add 'man*TTMATH_BITS_PER_UINT' because we've taken it from the mantissa)
 	big_float_t e_ = x;
 	big_int_set_zero(e_.mantissa);
-	e_.mantissa.table[BIG_NUM_PREC-1] = BIG_NUM_HIGHEST_BIT;
+	e_.mantissa.table[BIG_MAN_PREC-1] = BIG_NUM_HIGHEST_BIT;
 	c += big_int_add_int(e_.exponent, 1);
 	big_float_abs(e_);
 
@@ -5034,10 +5038,10 @@ big_num_ret_t big_float_ln(inout big_float_t self, big_float_t x)
 
 	// m will be the value of the mantissa in range <1,2)
 	big_float_t m = x;
-	big_int_init_int(m.exponent, -big_num_sstrg_t(BIG_NUM_PREC*BIG_NUM_BITS_PER_UNIT - 1));
+	big_int_init_int(m.exponent, -big_num_sstrg_t(BIG_MAN_PREC*BIG_NUM_BITS_PER_UNIT - 1));
 
-	// we must add 'BIG_NUM_PREC*BIG_NUM_BITS_PER_UNIT-1' because we've taken it from the mantissa
-	big_float_init_int(mantissa_compensation, BIG_NUM_PREC*BIG_NUM_BITS_PER_UNIT-1);
+	// we must add 'BIG_MAN_PREC*BIG_NUM_BITS_PER_UNIT-1' because we've taken it from the mantissa
+	big_float_init_int(mantissa_compensation, BIG_MAN_PREC*BIG_NUM_BITS_PER_UNIT-1);
 	big_num_carry_t c = big_float_add(exponent_temp, mantissa_compensation, true);
 
 	size_t steps;
@@ -5147,7 +5151,7 @@ void big_float_init_double(inout big_float_t self, double value)
 		
 		_big_float_init_double_set_exp_and_man(self,
 			(temp.u[1] & 0x80000000u) != 0,
-			e - 1023 - BIG_NUM_PREC*BIG_NUM_BITS_PER_UNIT + 1, 0x80000000u,
+			e - 1023 - BIG_MAN_PREC*BIG_NUM_BITS_PER_UNIT + 1, 0x80000000u,
 			m1, m2);
 
 		// we do not have to call Standardizing() here
@@ -5328,7 +5332,7 @@ void big_float_init_double(inout big_float_t self, double value)
 
 			_big_float_init_double_set_exp_and_man(self,
 				(temp.u[1] & 0x80000000u) != 0,
-				big_num_sstrg_t(e - 1022 - BIG_NUM_PREC*BIG_NUM_BITS_PER_UNIT + 1 - moved), 
+				big_num_sstrg_t(e - 1022 - BIG_MAN_PREC*BIG_NUM_BITS_PER_UNIT + 1 - moved), 
 				0, m[1], m[0]);
 		} else {
 			// If E=0 and F is zero and S is 1, then V=-0
@@ -5356,10 +5360,10 @@ void big_float_init_uint(inout big_float_t self, big_num_strg_t value)
 
 	self.info = 0;
 
-	for (size_t i = 0; i < BIG_NUM_PREC-1; ++i)
+	for (size_t i = 0; i < BIG_MAN_PREC-1; ++i)
 		self.mantissa.table[i] = 0;
-	self.mantissa.table[BIG_NUM_PREC-1] = value;
-	big_int_init_int(self.exponent, -big_num_sstrg_t(BIG_NUM_PREC-1) * big_num_sstrg_t(BIG_NUM_BITS_PER_UNIT));
+	self.mantissa.table[BIG_MAN_PREC-1] = value;
+	big_int_init_int(self.exponent, -big_num_sstrg_t(BIG_MAN_PREC-1) * big_num_sstrg_t(BIG_NUM_BITS_PER_UNIT));
 
 	// there shouldn't be a carry because 'value' has the 'uint' type 
 	_big_float_standardizing(self);
@@ -5445,7 +5449,7 @@ big_num_carry_t	big_float_to_double(big_float_t self, out double result)
 		return 0;
 	}
 
-	big_num_sstrg_t e_correction = big_num_sstrg_t(BIG_NUM_PREC*BIG_NUM_BITS_PER_UNIT) - 1;
+	big_num_sstrg_t e_correction = big_num_sstrg_t(BIG_MAN_PREC*BIG_NUM_BITS_PER_UNIT) - 1;
 	big_int_t _e_correction;
 	big_int_init_int(_e_correction, 1024 - e_correction);
 	if (big_int_cmp_bigger_equal(self.exponent, _e_correction) ) {
@@ -5786,11 +5790,11 @@ big_num_carry_t _big_float_round_half_to_even(inout big_float_t self, bool is_ha
 void _big_float_add_check_exponents(inout big_float_t ss2, big_int_t exp_offset, out bool last_bit_set, out bool rest_zero, out bool do_adding, out bool do_rounding)
 {
 	big_int_t mantissa_size_in_bits;
-	big_int_init_uint(mantissa_size_in_bits, BIG_NUM_PREC * BIG_NUM_BITS_PER_UNIT);
+	big_int_init_uint(mantissa_size_in_bits, BIG_MAN_PREC * BIG_NUM_BITS_PER_UNIT);
 
 	if (big_int_cmp_equal(exp_offset, mantissa_size_in_bits)) {
 		last_bit_set = big_uint_is_the_highest_bit_set(ss2.mantissa);
-		rest_zero = big_uint_are_first_bits_zero(ss2.mantissa, BIG_NUM_PREC * BIG_NUM_BITS_PER_UNIT - 1);
+		rest_zero = big_uint_are_first_bits_zero(ss2.mantissa, BIG_MAN_PREC * BIG_NUM_BITS_PER_UNIT - 1);
 		do_rounding = true;
 	} else if (big_int_cmp_smaller(exp_offset, mantissa_size_in_bits)) {
 		big_num_strg_t moved;
@@ -5915,7 +5919,7 @@ big_num_carry_t _big_float_add(inout big_float_t self, big_float_t ss2, bool rou
  * @return true tab was equal the half (0.5 decimal)
  * @return false tab was greater than a half (greater than 0.5 decimal)
  */
-bool _big_float_check_greater_or_equal_half(inout big_float_t self, big_num_strg_t tab[2*BIG_TABLE_SIZE], big_num_strg_t len)
+bool _big_float_check_greater_or_equal_half(inout big_float_t self, big_num_strg_t tab[2*BIG_UINT_PREC], big_num_strg_t len)
 {
 	size_t i;
 
@@ -6165,12 +6169,16 @@ void _big_float_ln_surrounding_1(inout big_float_t self, big_float_t x, inout si
  */
 void _big_float_init_uint_or_int(inout big_float_t self, big_uint_t value, big_num_sstrg_t compensation)
 {
-	big_int_init_int(self.exponent, - compensation);
+	size_t minimum_size = (BIG_MAN_PREC < BIG_MAN_PREC) ? BIG_MAN_PREC : BIG_MAN_PREC;
+	big_int_init_int(self.exponent, (big_num_sstrg_t(BIG_MAN_PREC)-big_num_sstrg_t(BIG_MAN_PREC)) * big_num_sstrg_t(BIG_NUM_BITS_PER_UNIT) - compensation);
 
 	// copying the highest words
 	size_t i;
-	for(i=1 ; i<=BIG_NUM_PREC ; ++i)
-		self.mantissa.table[BIG_NUM_PREC-i] = value.table[BIG_NUM_PREC-i];
+	for(i=1 ; i<=minimum_size ; ++i)
+		self.mantissa.table[BIG_MAN_PREC-i] = value.table[BIG_MAN_PREC-i];
+
+	for ( ; i <= BIG_MAN_PREC ; ++i)
+		self.mantissa.table[BIG_MAN_PREC-1] = 0;
 
 	// the highest bit is either one or zero (when the whole mantissa is zero)
 	// we can only call CorrectZero()
@@ -6191,7 +6199,7 @@ big_num_carry_t _big_float_to_uint_or_int(big_float_t self, out big_num_strg_t r
 	if ( big_float_is_zero(self) )
 		return 0;
 
-	big_num_sstrg_t max_bit = -big_num_sstrg_t(BIG_NUM_PREC * BIG_NUM_BITS_PER_UNIT);
+	big_num_sstrg_t max_bit = -big_num_sstrg_t(BIG_MAN_PREC * BIG_NUM_BITS_PER_UNIT);
 	big_int_t _max_bit;
 	big_int_init_int(_max_bit, max_bit + BIG_NUM_BITS_PER_UNIT);
 
@@ -6214,7 +6222,7 @@ big_num_carry_t _big_float_to_uint_or_int(big_float_t self, out big_num_strg_t r
 	// how_many_bits is negative, we'll make it positive
 	how_many_bits = -how_many_bits;
 
-	result = (self.mantissa.table[BIG_NUM_PREC-1] >> (how_many_bits % BIG_NUM_BITS_PER_UNIT));
+	result = (self.mantissa.table[BIG_MAN_PREC-1] >> (how_many_bits % BIG_NUM_BITS_PER_UNIT));
 
 	return 0;
 }
@@ -6233,14 +6241,14 @@ void _big_float_init_double_set_exp_and_man(inout big_float_t self, bool is_sign
 	self.exponent;
 	big_int_init_int(self.exponent, e);
 
-	if( BIG_NUM_PREC > 1 ) {
-		self.mantissa.table[BIG_NUM_PREC-1] = m1 | mhighest;
-		self.mantissa.table[big_num_sstrg_t(BIG_NUM_PREC-2)] = m2;
+	if( BIG_MAN_PREC > 1 ) {
+		self.mantissa.table[BIG_MAN_PREC-1] = m1 | mhighest;
+		self.mantissa.table[big_num_sstrg_t(BIG_MAN_PREC-2)] = m2;
 		// although man>1 we're using casting into sint
 		// to get rid from a warning which generates Microsoft Visual:
 		// warning C4307: '*' : integral constant overflow
 
-		for(size_t i=0 ; i<BIG_NUM_PREC-2 ; ++i)
+		for(size_t i=0 ; i<BIG_MAN_PREC-2 ; ++i)
 			self.mantissa.table[i] = 0;
 	} else {
 		self.mantissa.table[0] = m1 | mhighest;
@@ -6287,8 +6295,8 @@ double _big_float_to_double_set_double(big_float_t self, bool is_sign, big_num_s
 		return packDouble2x32(temp.u);
 	
 	big_num_strg_t m[2];
-	m[1] = self.mantissa.table[BIG_NUM_PREC-1];
-	m[0] = (BIG_NUM_PREC > 1) ? self.mantissa.table[BIG_NUM_PREC-2] : 0;
+	m[1] = self.mantissa.table[BIG_MAN_PREC-1];
+	m[0] = (BIG_MAN_PREC > 1) ? self.mantissa.table[big_num_sstrg_t(BIG_MAN_PREC-2)] : 0;
 	
 	// big_uint_rcr(m, 12 + move, 0)
 	{
@@ -6542,14 +6550,14 @@ void _big_float_skip_fraction(inout big_float_t self) {
 		return;
 	
 	big_int_t negative_bits;
-	big_int_init_int(negative_bits, -big_num_sstrg_t(BIG_NUM_PREC * BIG_NUM_BITS_PER_UNIT));
+	big_int_init_int(negative_bits, -big_num_sstrg_t(BIG_MAN_PREC * BIG_NUM_BITS_PER_UNIT));
 	if (big_int_cmp_smaller_equal(self.exponent, negative_bits)) {
 		// value is from (-1, 1), return zero
 		big_float_set_zero(self);
 		return;
 	}
 
-	// exponent is in range (-BIG_NUM_PREC * BIG_NUM_BITS_PER_UNIT, 0)
+	// exponent is in range (-BIG_MAN_PREC * BIG_NUM_BITS_PER_UNIT, 0)
 	big_num_sstrg_t e;
 	big_int_to_int(self.exponent, e);
 	big_uint_clear_first_bits(self.mantissa, -e);
@@ -6576,14 +6584,14 @@ bool _big_float_is_integer(big_float_t self)
 		return true;
 
 	big_int_t negative_bits;
-	big_int_init_int(negative_bits, -big_num_sstrg_t(BIG_NUM_PREC * BIG_NUM_BITS_PER_UNIT));
+	big_int_init_int(negative_bits, -big_num_sstrg_t(BIG_MAN_PREC * BIG_NUM_BITS_PER_UNIT));
 
 	if (big_int_cmp_smaller_equal(self.exponent, negative_bits)) {
 		// value is from (-1, 1), return zero
 		return false;
 	}
 
-	// exponent is in range (-BIG_NUM_PREC * BIG_NUM_BITS_PER_UNIT, 0)
+	// exponent is in range (-BIG_MAN_PREC * BIG_NUM_BITS_PER_UNIT, 0)
 	big_num_sstrg_t e;
 	big_int_to_int(self.exponent, e);
 	e = -e; // e means how many bits we must check

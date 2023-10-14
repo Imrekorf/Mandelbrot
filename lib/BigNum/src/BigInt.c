@@ -14,8 +14,7 @@
 extern "C" {
 #endif
 
-#define TABLE_SIZE 	BIG_NUM_PREC
-#define BIG_TABLE_SIZE (2*TABLE_SIZE)
+#define INT_PREC 	BIG_NUM_PREC
 
 // protected import functions from big_uint
 extern big_num_carry_t		_big_uint_sub_uint(big_uint_t* self, big_num_strg_t value, size_t index);
@@ -41,7 +40,7 @@ static big_num_carry_t		_big_int_pow2(big_int_t* self, const big_int_t pow);
 void big_int_set_max(big_int_t* self)
 {
 	big_uint_set_max(self);
-	self->table[TABLE_SIZE-1] = ~BIG_NUM_HIGHEST_BIT;
+	self->table[INT_PREC-1] = ~BIG_NUM_HIGHEST_BIT;
 }
 
 /**
@@ -52,7 +51,7 @@ void big_int_set_max(big_int_t* self)
 void big_int_set_min(big_int_t* self)
 {
 	big_uint_set_zero(self);
-	self->table[TABLE_SIZE-1] = BIG_NUM_HIGHEST_BIT;
+	self->table[INT_PREC-1] = BIG_NUM_HIGHEST_BIT;
 }
 
 /**
@@ -437,13 +436,13 @@ big_num_ret_t big_int_pow(big_int_t* self, big_int_t pow)
  */
 big_num_carry_t big_int_init_uint(big_int_t* self, big_num_strg_t value)
 {
-	for(size_t i = 1; i < TABLE_SIZE ; ++i)
+	for(size_t i = 1; i < INT_PREC ; ++i)
 		self->table[i] = 0;
 	self->table[0] = value;
 
 	// there can be a carry here when the size of this value is equal to one word
 	// and the 'value' has the highest bit set
-	if( TABLE_SIZE==1 && (value & BIG_NUM_HIGHEST_BIT)!=0 )
+	if( INT_PREC==1 && (value & BIG_NUM_HIGHEST_BIT)!=0 )
 		return 1;
 
 	return 0;
@@ -462,10 +461,10 @@ big_num_carry_t	big_int_init_ulint(big_int_t* self, big_num_lstrg_t value)
 	if( c )
 		return 1;
 
-	if( TABLE_SIZE == 1 )
+	if( INT_PREC == 1 )
 		return ((self->table[0] & BIG_NUM_HIGHEST_BIT) == 0) ? 0 : 1;
 	
-	if( TABLE_SIZE == 2 )
+	if( INT_PREC == 2 )
 		return ((self->table[1] & BIG_NUM_HIGHEST_BIT) == 0) ? 0 : 1;
 
 	return 0;
@@ -480,7 +479,7 @@ big_num_carry_t	big_int_init_ulint(big_int_t* self, big_num_lstrg_t value)
 big_num_carry_t big_int_init_big_uint(big_int_t* self, big_uint_t value)
 {
 	*self = value;
-	return (value.table[TABLE_SIZE-1] & BIG_NUM_HIGHEST_BIT) != 0; // check if highest bit set, if so there is a carry
+	return (value.table[INT_PREC-1] & BIG_NUM_HIGHEST_BIT) != 0; // check if highest bit set, if so there is a carry
 }
 
 /**
@@ -492,7 +491,7 @@ void big_int_init_int(big_int_t* self, big_num_sstrg_t value)
 {
 	big_num_strg_t fill = ( value<0 ) ? BIG_NUM_MAX_VALUE : 0;
 
-	for(size_t i=1 ; i<TABLE_SIZE ; ++i)
+	for(size_t i=1 ; i<INT_PREC ; ++i)
 		self->table[i] = fill;
 
 	self->table[0] = (big_num_strg_t)(value);
@@ -510,7 +509,7 @@ big_num_carry_t	big_int_init_lint(big_int_t* self, big_num_lsstrg_t value)
 
 	self->table[0] = (big_num_strg_t)(big_num_lstrg_t)value;
 
-	if( TABLE_SIZE == 1 )
+	if( INT_PREC == 1 )
 	{
 		if( (big_num_strg_t)((big_num_lstrg_t)(value) >> 32) != mask )
 			return 1;
@@ -520,7 +519,7 @@ big_num_carry_t	big_int_init_lint(big_int_t* self, big_num_lsstrg_t value)
 
 	self->table[1] = (big_num_strg_t)((big_num_lstrg_t)(value) >> 32);
 
-	for(size_t i=2 ; i < TABLE_SIZE ; ++i)
+	for(size_t i=2 ; i < INT_PREC ; ++i)
 		self->table[i] = mask;
 
 	return 0;
@@ -545,7 +544,7 @@ void big_int_init_big_int(big_int_t* self, big_int_t value)
 big_num_carry_t	big_int_to_uint(big_int_t self, big_num_strg_t * result)
 {
 	big_num_carry_t c = big_uint_to_uint(self, result);
-	if (TABLE_SIZE == 1)
+	if (INT_PREC == 1)
 		return (*result & BIG_NUM_HIGHEST_BIT) == 0 ? 0 : 1;
 	return c;
 }
@@ -571,10 +570,10 @@ big_num_carry_t	big_int_to_luint(big_int_t self, big_num_lstrg_t * result)
 {
 	big_num_carry_t c = big_uint_to_luint(self, result);
 
-	if (TABLE_SIZE == 1)
+	if (INT_PREC == 1)
 		return (self.table[0] & BIG_NUM_HIGHEST_BIT) == 0 ? 0 : 1;
 	
-	if (TABLE_SIZE == 2)
+	if (INT_PREC == 2)
 		return (self.table[1] & BIG_NUM_HIGHEST_BIT) == 0 ? 0 : 1;
 	
 	return c;
@@ -588,7 +587,7 @@ big_num_carry_t	big_int_to_luint(big_int_t self, big_num_lstrg_t * result)
  */
 big_num_carry_t	big_int_to_lint(big_int_t self, big_num_lsstrg_t * result)
 {
-	if( TABLE_SIZE == 1 ) {
+	if( INT_PREC == 1 ) {
 		*result = (big_num_lsstrg_t)((big_num_sstrg_t)(self.table[0]));
 	} else {
 		big_num_strg_t low  = self.table[0];
@@ -602,7 +601,7 @@ big_num_carry_t	big_int_to_lint(big_int_t self, big_num_lsstrg_t * result)
 		if( (high & BIG_NUM_HIGHEST_BIT) != (mask & BIG_NUM_HIGHEST_BIT) )
 			return 1;
 
-		for(size_t i=2 ; i<TABLE_SIZE ; ++i)
+		for(size_t i=2 ; i<INT_PREC ; ++i)
 			if( self.table[i] != mask )
 				return 1;
 	}
@@ -625,7 +624,7 @@ big_num_carry_t	big_int_to_lint(big_int_t self, big_num_lsstrg_t * result)
  */
 bool big_int_cmp_smaller(big_int_t self, big_int_t l)
 {
-	big_num_sstrg_t i = TABLE_SIZE-1;
+	big_num_sstrg_t i = INT_PREC-1;
 
 	big_num_sstrg_t a1 = (big_num_sstrg_t)(self.table[i]);
 	big_num_sstrg_t a2 = (big_num_sstrg_t)(l.table[i]);
@@ -656,7 +655,7 @@ bool big_int_cmp_smaller(big_int_t self, big_int_t l)
  */
 bool big_int_cmp_bigger(big_int_t self, big_int_t l)
 {
-	big_num_sstrg_t i = TABLE_SIZE-1;
+	big_num_sstrg_t i = INT_PREC-1;
 
 	big_num_sstrg_t a1 = (big_num_sstrg_t)(self.table[i]);
 	big_num_sstrg_t a2 = (big_num_sstrg_t)(l.table[i]);
@@ -701,7 +700,7 @@ bool big_int_cmp_equal(big_int_t self, big_int_t l)
  */
 bool big_int_cmp_smaller_equal(big_int_t self, big_int_t l)
 {
-	big_num_sstrg_t i = TABLE_SIZE-1;
+	big_num_sstrg_t i = INT_PREC-1;
 
 	big_num_sstrg_t a1 = (big_num_sstrg_t)(self.table[i]);
 	big_num_sstrg_t a2 = (big_num_sstrg_t)(l.table[i]);
@@ -730,7 +729,7 @@ bool big_int_cmp_smaller_equal(big_int_t self, big_int_t l)
  */
 bool big_int_cmp_bigger_equal(big_int_t self, big_int_t l)
 {
-	big_num_sstrg_t i = TABLE_SIZE-1;
+	big_num_sstrg_t i = INT_PREC-1;
 
 	big_num_sstrg_t a1 = (big_num_sstrg_t)(self.table[i]);
 	big_num_sstrg_t a2 = (big_num_sstrg_t)(l.table[i]);

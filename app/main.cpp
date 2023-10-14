@@ -15,7 +15,10 @@
 #include "gen_shaders.h"
 #include "util.hpp"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-result"
 #include "ttmath.h"
+#pragma GCC diagnostic pop
 #include "BigNum/BigUInt.h"
 #include "BigNum/BigInt.h"
 #include "BigNum/BigFloat.h"

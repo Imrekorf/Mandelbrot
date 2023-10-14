@@ -16,6 +16,8 @@
 extern "C" {
 #endif
 
+#define BIG_MAN_PREC	BIG_NUM_PREC
+
 #define BIG_FLOAT_INFO_SIGN 	(big_float_info_t)(1 << 7)
 #define BIG_FLOAT_INFO_NAN		(big_float_info_t)(1 << 6)
 #define BIG_FLOAT_INFO_ZERO		(big_float_info_t)(1 << 5)
@@ -66,8 +68,8 @@ void big_float_set_one(big_float_t * self)
 {
 	self->info = 0;
 	big_uint_set_zero(&self->mantissa);
-	self->mantissa.table[BIG_NUM_PREC-1] = BIG_NUM_HIGHEST_BIT;
-	big_int_init_int(&self->exponent, -(big_num_sstrg_t)(BIG_NUM_PREC * BIG_NUM_BITS_PER_UNIT - 1));
+	self->mantissa.table[BIG_MAN_PREC-1] = BIG_NUM_HIGHEST_BIT;
+	big_int_init_int(&self->exponent, -(big_num_sstrg_t)(BIG_MAN_PREC * BIG_NUM_BITS_PER_UNIT - 1));
 }
 
 /**
@@ -131,7 +133,7 @@ void big_float_set_e(big_float_t * self)
 	// (the result was compared with e taken from http://antwrp.gsfc.nasa.gov/htmltest/gifcity/e.2mil)
 
 	big_uint_set_from_table(&self->mantissa, temp_table, sizeof(temp_table) / sizeof(int));
-	big_int_init_int(&self->exponent, -(big_num_sstrg_t)(BIG_NUM_PREC)*(big_num_sstrg_t)(BIG_NUM_BITS_PER_UNIT) + 2);
+	big_int_init_int(&self->exponent, -(big_num_sstrg_t)(BIG_MAN_PREC)*(big_num_sstrg_t)(BIG_NUM_BITS_PER_UNIT) + 2);
 	self->info = 0;
 }
 
@@ -187,7 +189,7 @@ void big_float_set_ln2(big_float_t * self)
 	// (the result was compared with ln(2) taken from http://ja0hxv.calico.jp/pai/estart.html)
 
 	big_uint_set_from_table(&self->mantissa, temp_table, sizeof(temp_table) / sizeof(big_num_sstrg_t));
-	big_int_init_int(&self->exponent, -(big_num_sstrg_t)(BIG_NUM_PREC)*(big_num_sstrg_t)(BIG_NUM_BITS_PER_UNIT));
+	big_int_init_int(&self->exponent, -(big_num_sstrg_t)(BIG_MAN_PREC)*(big_num_sstrg_t)(BIG_NUM_BITS_PER_UNIT));
 	self->info = 0;
 }
 
@@ -438,20 +440,20 @@ big_num_carry_t big_float_mul_uint(big_float_t * self, big_num_strg_t ss2)
 	}
 
 	// man_result = mantissa * ss2.mantissa
-	for(i=0 ; i<BIG_NUM_PREC ; ++i)
+	for(i=0 ; i<BIG_MAN_PREC ; ++i)
 		man_result.table[i] = self->mantissa.table[i];
-	for (; i < 2*BIG_NUM_PREC; ++i)
+	for (; i < 2*BIG_MAN_PREC; ++i)
 		man_result.table[i] = 0;
 	big_num_carry_t man_c = big_uint_mul_int_big(&man_result, ss2);
 
-	big_num_sstrg_t bit = _big_uint_find_leading_bit_in_word(man_result.table[BIG_NUM_PREC]);
+	big_num_sstrg_t bit = _big_uint_find_leading_bit_in_word(man_result.table[BIG_MAN_PREC]);
 
 	if( bit!=-1 && (big_num_strg_t)(bit) > (BIG_NUM_BITS_PER_UNIT/2) ) {
 		// 'i' will be from 0 to BIG_NUM_BITS_PER_UNIT
 		i = big_uint_compensation_to_left_big(&man_result);
 		c = big_int_add_int(&self->exponent, BIG_NUM_BITS_PER_UNIT - i);
 
-		for(i=0 ; i < BIG_NUM_PREC ; ++i)
+		for(i=0 ; i < BIG_MAN_PREC ; ++i)
 			self->mantissa.table[i] = man_result.table[i+1];
 	} else {
 		if( bit != -1 ) {
@@ -459,7 +461,7 @@ big_num_carry_t big_float_mul_uint(big_float_t * self, big_num_strg_t ss2)
 			c += big_int_add_int(&self->exponent, bit+1);
 		}
 
-		for(i=0 ; i < BIG_NUM_PREC ; ++i)
+		for(i=0 ; i < BIG_MAN_PREC ; ++i)
 			self->mantissa.table[i] = man_result.table[i];
 	}
 
@@ -531,18 +533,18 @@ big_num_carry_t big_float_mul(big_float_t * self, big_float_t ss2, bool round)
 	// if there is a zero value in man_result the method CompensationToLeft()
 	// returns 0 but we'll correct this at the end in Standardizing() method)
 	i = big_uint_compensation_to_left_big(&man_result);
-	big_num_sstrg_t exp_add = BIG_NUM_PREC * BIG_NUM_BITS_PER_UNIT - i;
+	big_num_sstrg_t exp_add = BIG_MAN_PREC * BIG_NUM_BITS_PER_UNIT - i;
 
 	if( exp_add )
 		c += big_int_add_int(&self->exponent, exp_add );
 
 	c += big_int_add(&self->exponent, ss2.exponent);
 
-	for(i=0 ; i<BIG_NUM_PREC ; ++i)
-		self->mantissa.table[i] = man_result.table[i+BIG_NUM_PREC];
+	for(i=0 ; i<BIG_MAN_PREC ; ++i)
+		self->mantissa.table[i] = man_result.table[i+BIG_MAN_PREC];
 
-	if( round && (man_result.table[BIG_NUM_PREC-1] & BIG_NUM_HIGHEST_BIT) != 0 ) {
-		bool is_half = _big_float_check_greater_or_equal_half(self, man_result.table, BIG_NUM_PREC);
+	if( round && (man_result.table[BIG_MAN_PREC-1] & BIG_NUM_HIGHEST_BIT) != 0 ) {
+		bool is_half = _big_float_check_greater_or_equal_half(self, man_result.table, BIG_MAN_PREC);
 		c += _big_float_round_half_to_even(self, is_half, true);
 	}
 
@@ -590,11 +592,11 @@ big_num_ret_t big_float_div(big_float_t * self, big_float_t ss2, bool round)
 	if( big_float_is_zero(*self) )
 		return 0;
 
-	for(i=0 ; i<BIG_NUM_PREC ; ++i) {
+	for(i=0 ; i<BIG_MAN_PREC ; ++i) {
 		man1.table[i] 				= 0;
-		man1.table[i+BIG_NUM_PREC] 	= self->mantissa.table[i];
+		man1.table[i+BIG_MAN_PREC] 	= self->mantissa.table[i];
 		man2.table[i]     			= ss2.mantissa.table[i];
-		man2.table[i+BIG_NUM_PREC] 	= 0;
+		man2.table[i+BIG_MAN_PREC] 	= 0;
 	}
 
 	big_big_uint_t remainder;
@@ -607,12 +609,12 @@ big_num_ret_t big_float_div(big_float_t * self, big_float_t ss2, bool round)
 
 	c += big_int_sub(&self->exponent, ss2.exponent);
 	
-	for(i=0 ; i<BIG_NUM_PREC ; ++i)
-		self->mantissa.table[i] = man1.table[i+BIG_NUM_PREC];
+	for(i=0 ; i<BIG_MAN_PREC ; ++i)
+		self->mantissa.table[i] = man1.table[i+BIG_MAN_PREC];
 
-	if( round && (man1.table[BIG_NUM_PREC-1] & BIG_NUM_HIGHEST_BIT) != 0 )
+	if( round && (man1.table[BIG_MAN_PREC-1] & BIG_NUM_HIGHEST_BIT) != 0 )
 	{
-		bool is_half = _big_float_check_greater_or_equal_half(self, man1.table, BIG_NUM_PREC);
+		bool is_half = _big_float_check_greater_or_equal_half(self, man1.table, BIG_MAN_PREC);
 		c += _big_float_round_half_to_even(self, is_half, true);
 	}
 
@@ -685,7 +687,7 @@ big_num_strg_t big_float_mod2(big_float_t self)
 {	
 	big_int_t zero, negative_bits;
 	big_int_set_zero(&zero);
-	big_int_init_int(&negative_bits, -(big_num_sstrg_t)(BIG_NUM_PREC*BIG_NUM_BITS_PER_UNIT));
+	big_int_init_int(&negative_bits, -(big_num_sstrg_t)(BIG_MAN_PREC*BIG_NUM_BITS_PER_UNIT));
 
 	if( big_int_cmp_bigger(self.exponent, zero) || big_int_cmp_smaller_equal(self.exponent, negative_bits) )
 		return 0;
@@ -851,7 +853,7 @@ big_num_ret_t big_float_pow(big_float_t * self, big_float_t pow)
 
 	big_int_t zero, negative_bits;
 	big_int_set_zero(&zero);
-	big_int_init_int(&negative_bits, -(big_num_sstrg_t)(BIG_NUM_PREC*BIG_NUM_BITS_PER_UNIT));
+	big_int_init_int(&negative_bits, -(big_num_sstrg_t)(BIG_MAN_PREC*BIG_NUM_BITS_PER_UNIT));
 
 	if ( big_int_cmp_bigger(pow.exponent, negative_bits) && big_int_cmp_smaller_equal(pow.exponent, zero)) {
 		if ( _big_float_is_integer(pow) )
@@ -937,7 +939,7 @@ big_num_carry_t big_float_exp(big_float_t * self, big_float_t x)
 
 	// m will be the value of the mantissa in range (-1,1)
 	big_float_t m = x;
-	big_int_init_int(&m.exponent, -(big_num_sstrg_t)(BIG_NUM_PREC * BIG_NUM_BITS_PER_UNIT));
+	big_int_init_int(&m.exponent, -(big_num_sstrg_t)(BIG_MAN_PREC * BIG_NUM_BITS_PER_UNIT));
 
 	// 'e_' will be the value of '2^exponent'
 	//   e_.mantissa.table[man-1] = TTMATH_UINT_HIGHEST_BIT;  and
@@ -948,7 +950,7 @@ big_num_carry_t big_float_exp(big_float_t * self, big_float_t x)
 	//     (we must add 'man*TTMATH_BITS_PER_UINT' because we've taken it from the mantissa)
 	big_float_t e_ = x;
 	big_int_set_zero(&e_.mantissa);
-	e_.mantissa.table[BIG_NUM_PREC-1] = BIG_NUM_HIGHEST_BIT;
+	e_.mantissa.table[BIG_MAN_PREC-1] = BIG_NUM_HIGHEST_BIT;
 	c += big_int_add_int(&e_.exponent, 1);
 	big_float_abs(&e_);
 
@@ -1018,10 +1020,10 @@ big_num_ret_t big_float_ln(big_float_t * self, big_float_t x)
 
 	// m will be the value of the mantissa in range <1,2)
 	big_float_t m = x;
-	big_int_init_int(&m.exponent, -(big_num_sstrg_t)(BIG_NUM_PREC*BIG_NUM_BITS_PER_UNIT - 1));
+	big_int_init_int(&m.exponent, -(big_num_sstrg_t)(BIG_MAN_PREC*BIG_NUM_BITS_PER_UNIT - 1));
 
-	// we must add 'BIG_NUM_PREC*BIG_NUM_BITS_PER_UNIT-1' because we've taken it from the mantissa
-	big_float_init_int(&mantissa_compensation, BIG_NUM_PREC*BIG_NUM_BITS_PER_UNIT-1);
+	// we must add 'BIG_MAN_PREC*BIG_NUM_BITS_PER_UNIT-1' because we've taken it from the mantissa
+	big_float_init_int(&mantissa_compensation, BIG_MAN_PREC*BIG_NUM_BITS_PER_UNIT-1);
 	big_num_carry_t c = big_float_add(&exponent_temp, mantissa_compensation, true);
 
 	_big_float_ln_surrounding_1(self, m, NULL);
@@ -1130,7 +1132,7 @@ void big_float_init_double(big_float_t * self, double value)
 		
 		_big_float_init_double_set_exp_and_man(self,
 			(temp.u[1] & 0x80000000u) != 0,
-			e - 1023 - BIG_NUM_PREC*BIG_NUM_BITS_PER_UNIT + 1, 0x80000000u,
+			e - 1023 - BIG_MAN_PREC*BIG_NUM_BITS_PER_UNIT + 1, 0x80000000u,
 			m1, m2);
 
 		// we do not have to call Standardizing() here
@@ -1311,7 +1313,7 @@ void big_float_init_double(big_float_t * self, double value)
 
 			_big_float_init_double_set_exp_and_man(self,
 				(temp.u[1] & 0x80000000u) != 0,
-				e - 1022 - BIG_NUM_PREC*BIG_NUM_BITS_PER_UNIT + 1 - moved, 0,
+				e - 1022 - BIG_MAN_PREC*BIG_NUM_BITS_PER_UNIT + 1 - moved, 0,
 				m[1], m[0]);
 		} else {
 			// If E=0 and F is zero and S is 1, then V=-0
@@ -1339,10 +1341,10 @@ void big_float_init_uint(big_float_t * self, big_num_strg_t value)
 
 	self->info = 0;
 
-	for (size_t i = 0; i < BIG_NUM_PREC-1; ++i)
+	for (size_t i = 0; i < BIG_MAN_PREC-1; ++i)
 		self->mantissa.table[i] = 0;
-	self->mantissa.table[BIG_NUM_PREC-1] = value;
-	big_int_init_int(&self->exponent, -(big_num_sstrg_t)(BIG_NUM_PREC-1) * (big_num_sstrg_t)(BIG_NUM_BITS_PER_UNIT));
+	self->mantissa.table[BIG_MAN_PREC-1] = value;
+	big_int_init_int(&self->exponent, -(big_num_sstrg_t)(BIG_MAN_PREC-1) * (big_num_sstrg_t)(BIG_NUM_BITS_PER_UNIT));
 
 	// there shouldn't be a carry because 'value' has the 'uint' type 
 	_big_float_standardizing(self);
@@ -1428,7 +1430,7 @@ big_num_carry_t	big_float_to_double(big_float_t self, double * result)
 		return 0;
 	}
 
-	big_num_sstrg_t e_correction = (big_num_sstrg_t)(BIG_NUM_PREC*BIG_NUM_BITS_PER_UNIT) - 1;
+	big_num_sstrg_t e_correction = (big_num_sstrg_t)(BIG_MAN_PREC*BIG_NUM_BITS_PER_UNIT) - 1;
 	big_int_t _e_correction;
 	big_int_init_int(&_e_correction, 1024 - e_correction);
 	if (big_int_cmp_bigger_equal(self.exponent, _e_correction) ) {
@@ -1779,11 +1781,11 @@ big_num_carry_t _big_float_round_half_to_even(big_float_t * self, bool is_half, 
 static void _big_float_add_check_exponents(big_float_t* ss2, big_int_t exp_offset, bool * last_bit_set, bool * rest_zero, bool * do_adding, bool * do_rounding)
 {
 	big_int_t mantissa_size_in_bits;
-	big_int_init_uint(&mantissa_size_in_bits, BIG_NUM_PREC * BIG_NUM_BITS_PER_UNIT);
+	big_int_init_uint(&mantissa_size_in_bits, BIG_MAN_PREC * BIG_NUM_BITS_PER_UNIT);
 
 	if (big_int_cmp_equal(exp_offset, mantissa_size_in_bits)) {
 		*last_bit_set = big_uint_is_the_highest_bit_set(ss2->mantissa);
-		*rest_zero = big_uint_are_first_bits_zero(ss2->mantissa, BIG_NUM_PREC * BIG_NUM_BITS_PER_UNIT - 1);
+		*rest_zero = big_uint_are_first_bits_zero(ss2->mantissa, BIG_MAN_PREC * BIG_NUM_BITS_PER_UNIT - 1);
 		*do_rounding = true;
 	} else if (big_int_cmp_smaller(exp_offset, mantissa_size_in_bits)) {
 		big_num_strg_t moved;
@@ -2164,8 +2166,8 @@ static void _big_float_init_uint_or_int(big_float_t * self, big_uint_t value, bi
 
 	// copying the highest words
 	size_t i;
-	for(i=1 ; i<=BIG_NUM_PREC ; ++i)
-		self->mantissa.table[BIG_NUM_PREC-i] = value.table[BIG_NUM_PREC-i];
+	for(i=1 ; i<=BIG_MAN_PREC ; ++i)
+		self->mantissa.table[BIG_MAN_PREC-i] = value.table[BIG_MAN_PREC-i];
 
 	// the highest bit is either one or zero (when the whole mantissa is zero)
 	// we can only call CorrectZero()
@@ -2186,7 +2188,7 @@ static big_num_carry_t _big_float_to_uint_or_int(big_float_t self, big_num_strg_
 	if ( big_float_is_zero(self) )
 		return 0;
 
-	big_num_sstrg_t max_bit = -(big_num_sstrg_t)(BIG_NUM_PREC * BIG_NUM_BITS_PER_UNIT);
+	big_num_sstrg_t max_bit = -(big_num_sstrg_t)(BIG_MAN_PREC * BIG_NUM_BITS_PER_UNIT);
 	big_int_t _max_bit;
 	big_int_init_int(&_max_bit, max_bit + BIG_NUM_BITS_PER_UNIT);
 
@@ -2209,7 +2211,7 @@ static big_num_carry_t _big_float_to_uint_or_int(big_float_t self, big_num_strg_
 	// how_many_bits is negative, we'll make it positive
 	how_many_bits = -how_many_bits;
 
-	*result = (self.mantissa.table[BIG_NUM_PREC-1] >> (how_many_bits % BIG_NUM_BITS_PER_UNIT));
+	*result = (self.mantissa.table[BIG_MAN_PREC-1] >> (how_many_bits % BIG_NUM_BITS_PER_UNIT));
 
 	return 0;
 }
@@ -2228,14 +2230,14 @@ static void _big_float_init_double_set_exp_and_man(big_float_t * self, bool is_s
 	self->exponent;
 	big_int_init_int(&self->exponent, e);
 
-	if( BIG_NUM_PREC > 1 ) {
-		self->mantissa.table[BIG_NUM_PREC-1] = m1 | mhighest;
-		self->mantissa.table[(big_num_sstrg_t)(BIG_NUM_PREC-2)] = m2;
+	if( BIG_MAN_PREC > 1 ) {
+		self->mantissa.table[BIG_MAN_PREC-1] = m1 | mhighest;
+		self->mantissa.table[(big_num_sstrg_t)(BIG_MAN_PREC-2)] = m2;
 		// although man>1 we're using casting into sint
 		// to get rid from a warning which generates Microsoft Visual:
 		// warning C4307: '*' : integral constant overflow
 
-		for(size_t i=0 ; i<BIG_NUM_PREC-2 ; ++i)
+		for(size_t i=0 ; i<BIG_MAN_PREC-2 ; ++i)
 			self->mantissa.table[i] = 0;
 	} else {
 		self->mantissa.table[0] = m1 | mhighest;
@@ -2282,8 +2284,8 @@ static double _big_float_to_double_set_double(big_float_t self, bool is_sign, bi
 		return temp.d;
 	
 	big_num_strg_t m[2];
-	m[1] = self.mantissa.table[BIG_NUM_PREC-1];
-	m[0] = (BIG_NUM_PREC > 1) ? self.mantissa.table[BIG_NUM_PREC-2] : 0;
+	m[1] = self.mantissa.table[BIG_MAN_PREC-1];
+	m[0] = (BIG_MAN_PREC > 1) ? self.mantissa.table[BIG_MAN_PREC-2] : 0;
 	
 	// big_uint_rcr(m, 12 + move, 0)
 	{
@@ -2537,14 +2539,14 @@ static void _big_float_skip_fraction(big_float_t* self) {
 		return;
 	
 	big_int_t negative_bits;
-	big_int_init_int(&negative_bits, -(big_num_sstrg_t)(BIG_NUM_PREC * BIG_NUM_BITS_PER_UNIT));
+	big_int_init_int(&negative_bits, -(big_num_sstrg_t)(BIG_MAN_PREC * BIG_NUM_BITS_PER_UNIT));
 	if (big_int_cmp_smaller_equal(self->exponent, negative_bits)) {
 		// value is from (-1, 1), return zero
 		big_float_set_zero(self);
 		return;
 	}
 
-	// exponent is in range (-BIG_NUM_PREC * BIG_NUM_BITS_PER_UNIT, 0)
+	// exponent is in range (-BIG_MAN_PREC * BIG_NUM_BITS_PER_UNIT, 0)
 	big_num_sstrg_t e;
 	big_int_to_int(self->exponent, &e);
 	big_uint_clear_first_bits(&self->mantissa, -e);
@@ -2571,14 +2573,14 @@ static bool _big_float_is_integer(big_float_t self)
 		return true;
 
 	big_int_t negative_bits;
-	big_int_init_int(&negative_bits, -(big_num_sstrg_t)(BIG_NUM_PREC * BIG_NUM_BITS_PER_UNIT));
+	big_int_init_int(&negative_bits, -(big_num_sstrg_t)(BIG_MAN_PREC * BIG_NUM_BITS_PER_UNIT));
 
 	if (big_int_cmp_smaller_equal(self.exponent, negative_bits)) {
 		// value is from (-1, 1), return zero
 		return false;
 	}
 
-	// exponent is in range (-BIG_NUM_PREC * BIG_NUM_BITS_PER_UNIT, 0)
+	// exponent is in range (-BIG_MAN_PREC * BIG_NUM_BITS_PER_UNIT, 0)
 	big_num_sstrg_t e;
 	big_int_to_int(self.exponent, &e);
 	e = -e; // e means how many bits we must check
