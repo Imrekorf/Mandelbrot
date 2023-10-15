@@ -2,9 +2,31 @@
 #extension GL_ARB_gpu_shader_int64 : require
 precision highp float;
 
-// Config
+/**
+ * @file BigNum.h
+ * @author Imre Korf (I.korf@outlook.com)
+ * @date 2023-10-01
+ * 
+ * @copyright 2023 Imre Korf
+ */
 
-#define BIG_NUM_PREC	 	2 // amount of word's to allocate for uint and int, float using 2x this amount
+#ifndef _BIG_NUM_H_
+#define _BIG_NUM_H_
+
+#ifndef GL_core_profile
+#include <stddef.h>
+#include <stdint.h>
+#include <limits.h>
+#include <stdbool.h>
+#endif
+
+#if defined(__cplusplus) && !defined(GL_core_profile)
+extern "C" {
+#endif
+
+//===============
+// Config
+//===============
 
 /**
  * during some kind of calculating when we're making any long formulas
@@ -19,6 +41,8 @@ precision highp float;
  */
 #define BIG_NUM_ARITHMETIC_MAX_LOOP	1000
 
+#define BIG_NUM_PREC	 	2 // amount of word's to allocate for uint and int, float using 2x this amount. In reality uses twice as much to allow for non-carry operations
+
 #define BIG_NUM_MUL_DEF		BIG_NUM_MUL1
 #define BIG_NUM_DIV_DEF		BIG_NUM_DIV1
 
@@ -26,100 +50,283 @@ precision highp float;
 // Don't touch
 //===============
 
-//===============
-// defines from BigNum.h
-//===============
-
-#define BIG_NUM_MAX_VALUE 			((1<<( 32     ))-1)
-#define BIG_NUM_HIGHEST_BIT			((1<<( 32 - 1 )))
+#ifndef GL_core_profile
+#define BIG_NUM_MAX_VALUE 			(big_num_strg_t  )((1ULL<<( CHAR_BIT*sizeof(big_num_strg_t  )      ))-1ULL)
+#define BIG_NUM_HIGHEST_BIT			(big_num_strg_t  )((1ULL<<( CHAR_BIT*sizeof(big_num_strg_t  ) -1ULL)))
+#define BIG_NUM_BITS_PER_UNIT		(CHAR_BIT*sizeof(big_num_strg_t))
+#else
+#define BIG_NUM_MAX_VALUE 			(uint((1UL<<( 32UL       ))-1UL))
+#define BIG_NUM_HIGHEST_BIT			(uint((1UL<<( 32UL - 1UL ))    ))
 #define BIG_NUM_BITS_PER_UNIT		(32)
+#endif
 
+// macro's for GLSL compatibility
+#ifndef GL_core_profile
+#define _big_num_inout(type, x)		 	type * x
+#define _big_num_out(type, x)		 	type * x
+
+#define _big_num_strg_t(x) 				((big_num_strg_t)(x))
+#define _big_num_sstrg_t(x) 			((big_num_sstrg_t)(x))
+#define _big_num_lstrg_t(x)				((big_num_lstrg_t)(x))
+#define _big_num_lsstrg_t(x)			((big_num_lsstrg_t)(x))
+#define _big_num_ssize_t(x)				((ssize_t)(x))
+#define _big_num_size_t(x)				(size_t(x))
+#define _big_num_float(x)				((float)(x))
+#define _big_num_ref(x)					(&x)
+#define _big_num_deref(x)				(*x)
+
+#define _big_num_static					static
+#define _big_num_const_param			const
+#else
+#define _big_num_static
+#define _big_num_const_param
+
+// macro's for GLSL compatibility
+#define _big_num_inout(type, x)		 	inout type x
+#define _big_num_out(type, x)		 	out type x
+
+#define _big_num_strg_t(x) 				(big_num_strg_t(x))
+#define _big_num_sstrg_t(x) 			(big_num_sstrg_t(x))
+#define _big_num_lstrg_t(x)				(big_num_lstrg_t(x))
+#define _big_num_lsstrg_t(x)			(big_num_lsstrg_t(x))
+#define _big_num_ssize_t(x)				(ssize_t(x))
+#define _big_num_size_t(x)				(size_t(x))
+#define _big_num_float(x)				(float(x))
+#define _big_num_ref(x)					(x)
+#define _big_num_deref(x)				(x)
+
+#endif
+
+/**
+ * Multiplication algorithm selector and
+ * Division algorithm selector
+ */
+#ifndef GL_core_profile
+typedef enum {
+	/**
+	 * Continues addition
+	 */
+	BIG_NUM_MUL1 = 0,
+	/**
+	 * No carry algorithm
+	 */
+	BIG_NUM_MUL2 = 1,
+	/**
+	 * 
+	 */
+	BIG_NUM_DIV1 = 0,
+	/**
+	 * 
+	 */
+	BIG_NUM_DIV2 = 1,
+} big_num_algo_t;
+#else
 #define BIG_NUM_MUL1 				0
 #define BIG_NUM_MUL2 				1
 #define BIG_NUM_DIV1				0
 #define BIG_NUM_DIV2				1
 #define big_num_algo_t				uint
+#endif
 
+/**
+ * return results for big_uint_div
+ */
+#ifndef GL_core_profile
+typedef enum {
+	/**
+	 * ok
+	 */
+	BIG_NUM_DIV_OK = 0,
+	/**
+	 * division by zero
+	 */
+	BIG_NUM_DIV_ZERO = 1,
+	/**
+	 * division calculating ( used internally )
+	 */
+	BIG_NUM_DIV_BUSY = 2,
+} big_num_div_ret_t;
+#else
 #define BIG_NUM_DIV_OK				0
 #define BIG_NUM_DIV_ZERO			1
 #define BIG_NUM_DIV_BUSY			2
 #define big_num_div_ret_t			uint
+#endif
 
+/**
+ * return results for big_*type*_pow
+ */
+#ifndef GL_core_profile
+typedef enum {
+	/**
+	 * ok
+	 */
+	BIG_NUM_OK = 0,
+	/**
+	 * carry
+	 */
+	BIG_NUM_OVERFLOW = 1,
+	/**
+	 * incorrect argument
+	 * (a^b) 	: a = 0 and b = 0
+	 * log(b) 	: b <= 0
+	 * a / b 	: b = 0
+	 * a % b	: b = 0
+	 */
+	BIG_NUM_INVALID_ARG = 2,
+	/**
+	 * incorrect base
+	 * log(x, base): (base <= 0 or base = 1)
+	 */
+	BIG_NUM_LOG_INVALID_BASE = 3,
+} big_num_ret_t;
+#else
 #define BIG_NUM_OK					0
 #define BIG_NUM_OVERFLOW			1
 #define BIG_NUM_INVALID_ARG			2
 #define BIG_NUM_LOG_INVALID_BASE	3
 #define big_num_ret_t				uint
+#endif
 
+/**
+ * The type used to store the big num values in
+ */
+#ifndef GL_core_profile
+typedef uint32_t big_num_strg_t;
+#else
 #define big_num_strg_t				uint
+#endif
+
+/**
+ * Signed version of the big_num_strg_t
+ */
+#ifndef GL_core_profile
+typedef int32_t  big_num_sstrg_t;
+#else
 #define big_num_sstrg_t				int
+#endif
+
+/**
+ * Signed version of the big_num_strg_t
+ */
+#ifndef GL_core_profile
+typedef uint64_t  big_num_lstrg_t;
+#else
 #define big_num_lstrg_t				uint64_t
+#endif
+
+/**
+ * Signed version of the big_num_strg_t
+ */
+#ifndef GL_core_profile
+typedef int64_t  big_num_lsstrg_t;
+#else
 #define big_num_lsstrg_t			int64_t
+#endif
+
+/**
+ * Carry type, either 1 or 0
+ */
+#ifndef GL_core_profile
+typedef big_num_strg_t  big_num_carry_t;
+#else
 #define big_num_carry_t				big_num_strg_t
+#endif
+
 // let glsl know about some C types to make C code a bit easier to port
+#ifdef GL_core_profile
 #define size_t						uint
 #define ssize_t						int
+#endif
 
-//===============
-// BigUint.h
-//===============
+#ifndef GL_core_profile
+typedef struct big_uint_s 	big_uint_t;
+typedef big_uint_t		 	big_int_t;
+typedef struct big_float_s 	big_float_t;
 
-struct big_uint_t {
-	big_num_strg_t			table[BIG_NUM_PREC];
+void big_uint_to_string(big_uint_t * self, char * result, size_t result_len, size_t b);
+void big_int_to_string(big_int_t * self, char * result, size_t result_len, size_t b);
+extern void big_float_to_string(big_float_t * self, char * result, size_t result_len, size_t b,
+	bool scient, ssize_t scient_from, ssize_t round_index, bool trim_zeroes, char comma);
+#endif
+
+#if defined(__cplusplus) && !defined(GL_core_profile)
+}
+#endif
+
+#endif // _BIG_NUM_H_
+/**
+ * @file BigUInt.h
+ * @author Imre Korf (I.korf@outlook.com)
+ * @date 2023-10-01
+ * 
+ * @copyright 2023 Imre Korf 
+ */
+
+#ifndef _BIG_UINT_H_
+#define _BIG_UINT_H_
+
+#ifndef GL_core_profile
+#include <stdint.h>
+#include <stdbool.h>
+#include "BigNum/BigNum.h"
+#endif
+
+#if defined(__cplusplus) && !defined(GL_core_profile)
+extern "C" {
+#endif
+
+#define UINT_PREC BIG_NUM_PREC
+
+struct big_uint_s {
+	size_t			size;
+	big_num_strg_t 	table[2*UINT_PREC]; // use 2* for non-carry functions
 };
+#ifndef GL_core_profile
+typedef struct big_uint_s big_uint_t;
+#else
+#define big_uint_t big_uint_s
+#endif
 
-struct big_big_uint_t {
-	big_num_strg_t			table[2*BIG_NUM_PREC];
-};
-
-size_t	 			big_uint_size(inout big_uint_t self);
-void 				big_uint_set_zero(inout big_uint_t self);
-void 				big_uint_set_zero_big(inout big_big_uint_t self);
-void 				big_uint_set_one(inout big_uint_t self);
-void				big_uint_set_one_big(inout big_big_uint_t self);
-void 				big_uint_set_max(inout big_uint_t self);
-void 				big_uint_set_min(inout big_uint_t self);
-void 				big_uint_swap(inout big_uint_t self, inout big_uint_t ss2);
-void 				big_uint_set_from_table(inout big_uint_t self, big_num_strg_t temp_table[BIG_NUM_PREC], size_t temp_table_len);
-
-
-big_num_carry_t		big_uint_add_uint(inout big_uint_t self, big_num_strg_t val);
-big_num_carry_t 	big_uint_add(inout big_uint_t self, big_uint_t ss2, big_num_carry_t c);
-big_num_carry_t 	big_uint_add_big(inout big_big_uint_t self, big_big_uint_t ss2, big_num_carry_t c);
-big_num_carry_t		big_uint_sub_uint(inout big_uint_t self, big_num_strg_t val);
-big_num_carry_t 	big_uint_sub(inout big_uint_t self, big_uint_t ss2, big_num_carry_t c);
-big_num_carry_t 	big_uint_sub_big(inout big_big_uint_t self, big_big_uint_t ss2, big_num_carry_t c);
-big_num_strg_t 		big_uint_rcl(inout big_uint_t self, size_t bits, big_num_carry_t c);
-big_num_strg_t 		big_uint_rcl_big(inout big_big_uint_t self, size_t bits, big_num_carry_t c);
-big_num_strg_t 		big_uint_rcr(inout big_uint_t self, size_t bits, big_num_carry_t c);
-big_num_strg_t 		big_uint_rcr_big(inout big_big_uint_t self, size_t bits, big_num_carry_t c);
-size_t	 			big_uint_compensation_to_left(inout big_uint_t self);
-size_t	 			big_uint_compensation_to_left_big(inout big_big_uint_t self);
-bool 				big_uint_find_leading_bit(big_uint_t self, out size_t table_id, out size_t index);
-bool 				big_uint_find_lowest_bit(big_uint_t self, out size_t table_id, out size_t index);
-big_num_strg_t		big_uint_get_bit(big_uint_t self, size_t bit_index);
-big_num_strg_t		big_uint_set_bit(inout big_uint_t self, size_t bit_index);
-void 				big_uint_bit_and(inout big_uint_t self, big_uint_t ss2);
-void 				big_uint_bit_or(inout big_uint_t self, big_uint_t ss2);
-void 				big_uint_bit_xor(inout big_uint_t self, big_uint_t ss2);
-void 				big_uint_bit_not(inout big_uint_t self);
-void				big_uint_bit_not2(inout big_uint_t self);
+size_t	 			big_uint_size(_big_num_inout(big_uint_t, self));
+void 				big_uint_set_zero(_big_num_inout(big_uint_t, self));
+void 				big_uint_set_one(_big_num_inout(big_uint_t, self));
+void 				big_uint_set_max(_big_num_inout(big_uint_t, self));
+void 				big_uint_set_min(_big_num_inout(big_uint_t, self));
+void 				big_uint_swap(_big_num_inout(big_uint_t, self), _big_num_inout(big_uint_t, ss2));
+void 				big_uint_set_from_table(_big_num_inout(big_uint_t, self), _big_num_const_param big_num_strg_t temp_table[2*UINT_PREC], size_t temp_table_len);
 
 
-big_num_carry_t		big_uint_mul_int(inout big_uint_t self, big_num_strg_t ss2);
-big_num_carry_t 	big_uint_mul_int_big(inout big_big_uint_t self, big_num_strg_t ss2);
-big_num_carry_t		big_uint_mul(inout big_uint_t self, big_uint_t ss2, big_num_algo_t algorithm);
-void				big_uint_mul_no_carry(inout big_uint_t self, big_uint_t ss2, out big_big_uint_t result, big_num_algo_t algorithm);
+big_num_carry_t		big_uint_add_uint(_big_num_inout(big_uint_t, self), big_num_strg_t val);
+big_num_carry_t 	big_uint_add(_big_num_inout(big_uint_t, self), big_uint_t ss2, big_num_carry_t c);
+big_num_carry_t		big_uint_sub_uint(_big_num_inout(big_uint_t, self), big_num_strg_t val);
+big_num_carry_t 	big_uint_sub(_big_num_inout(big_uint_t, self), big_uint_t ss2, big_num_carry_t c);
+big_num_strg_t 		big_uint_rcl(_big_num_inout(big_uint_t, self), size_t bits, big_num_carry_t c);
+big_num_strg_t 		big_uint_rcr(_big_num_inout(big_uint_t, self), size_t bits, big_num_carry_t c);
+size_t	 			big_uint_compensation_to_left(_big_num_inout(big_uint_t, self));
+bool 				big_uint_find_leading_bit(big_uint_t self, _big_num_out(size_t, table_id), _big_num_out(size_t, index));
+bool 				big_uint_find_lowest_bit(big_uint_t self, _big_num_out(size_t, table_id), _big_num_out(size_t, index));
+bool	 			big_uint_get_bit(big_uint_t self, size_t bit_index);
+bool	 			big_uint_set_bit(_big_num_inout(big_uint_t, self), size_t bit_index);
+void 				big_uint_bit_and(_big_num_inout(big_uint_t, self), big_uint_t ss2);
+void 				big_uint_bit_or(_big_num_inout(big_uint_t, self), big_uint_t ss2);
+void 				big_uint_bit_xor(_big_num_inout(big_uint_t, self), big_uint_t ss2);
+void 				big_uint_bit_not(_big_num_inout(big_uint_t, self));
+void				big_uint_bit_not2(_big_num_inout(big_uint_t, self));
 
-big_num_div_ret_t 	big_uint_div_int(inout big_uint_t self, big_num_strg_t divisor, out big_num_strg_t remainder);
-big_num_div_ret_t 	big_uint_div(inout big_uint_t self, big_uint_t divisor, out big_uint_t remainder, big_num_algo_t algorithm);
-big_num_div_ret_t 	big_uint_div_big(inout big_big_uint_t self, big_big_uint_t divisor, out big_big_uint_t remainder, big_num_algo_t algorithm);
 
-big_num_ret_t		big_uint_pow(inout big_uint_t self, big_uint_t _pow);
-void 				big_uint_sqrt(inout big_uint_t self);
+big_num_carry_t		big_uint_mul_int(_big_num_inout(big_uint_t, self), big_num_strg_t ss2);
+big_num_carry_t		big_uint_mul(_big_num_inout(big_uint_t, self), big_uint_t ss2, big_num_algo_t algorithm);
+void				big_uint_mul_no_carry(_big_num_inout(big_uint_t, self), big_uint_t ss2, _big_num_out(big_uint_t , result), big_num_algo_t algorithm);
+
+big_num_div_ret_t 	big_uint_div_int(_big_num_inout(big_uint_t, self), big_num_strg_t divisor, _big_num_out(big_num_strg_t, remainder));
+big_num_div_ret_t 	big_uint_div(_big_num_inout(big_uint_t, self), big_uint_t divisor, _big_num_out(big_uint_t , remainder), big_num_algo_t algorithm);
+
+big_num_ret_t		big_uint_pow(_big_num_inout(big_uint_t, self), big_uint_t pow);
+void 				big_uint_sqrt(_big_num_inout(big_uint_t, self));
 
 
-void 				big_uint_clear_first_bits(inout big_uint_t self, size_t n);
+void 				big_uint_clear_first_bits(_big_num_inout(big_uint_t, self), size_t n);
 bool 				big_uint_is_the_highest_bit_set(big_uint_t self);
 bool 				big_uint_is_the_lowest_bit_set(big_uint_t self);
 bool 				big_uint_is_only_the_highest_bit_set(big_uint_t self);
@@ -127,65 +334,122 @@ bool 				big_uint_is_only_the_lowest_bit_set(big_uint_t self);
 bool 				big_uint_is_zero(big_uint_t self);
 bool 				big_uint_are_first_bits_zero(big_uint_t self, size_t bits);
 
+void				big_uint_init(_big_num_inout(big_uint_t, self), size_t size);
+void 				big_uint_init_uint(_big_num_inout(big_uint_t, self), size_t size, big_num_strg_t value);
+big_num_carry_t		big_uint_init_ulint(_big_num_inout(big_uint_t, self), size_t size, big_num_lstrg_t value);
+big_num_carry_t		big_uint_init_big_uint(_big_num_inout(big_uint_t, self), size_t size, big_uint_t value);
+big_num_carry_t		big_uint_init_int(_big_num_inout(big_uint_t, self), size_t size, big_num_sstrg_t value);
+big_num_carry_t		big_uint_init_lint(_big_num_inout(big_uint_t, self), size_t size, big_num_lsstrg_t value);
+#define 			big_uint_set_uint(ptr, value) 		big_uint_init_uint(ptr, (ptr)->size, value)
+#define 			big_uint_set_ulint(ptr, value) 		big_uint_init_ulint(ptr, (ptr)->size, value)
+#define 			big_uint_set_big_uint(ptr, value) 	big_uint_init_big_uint(ptr, (ptr)->size, value)
+#define 			big_uint_set_int(ptr, value) 		big_uint_init_int(ptr, (ptr)->size, value)
+#define 			big_uint_set_lint(ptr, value) 		big_uint_init_lint(ptr, (ptr)->size, value)
+big_num_carry_t		big_uint_to_uint(big_uint_t self, _big_num_out(big_num_strg_t, result));
+big_num_carry_t		big_uint_to_int(big_uint_t self, _big_num_out(big_num_sstrg_t, result));
+big_num_carry_t		big_uint_to_luint(big_uint_t self, _big_num_out(big_num_lstrg_t, result));
+big_num_carry_t		big_uint_to_lint(big_uint_t self, _big_num_out(big_num_lsstrg_t, result));
 
-void 				big_uint_init_uint(inout big_uint_t self, big_num_strg_t value);
-big_num_carry_t		big_uint_init_ulint(inout big_uint_t self, big_num_lstrg_t value);
-void 				big_uint_init_big_uint(inout big_uint_t self, big_uint_t value);
-big_num_carry_t		big_uint_init_int(inout big_uint_t self, big_num_sstrg_t value);
-big_num_carry_t		big_uint_init_lint(inout big_uint_t self, big_num_lsstrg_t value);
-big_num_carry_t		big_uint_to_uint(big_uint_t self, out big_num_strg_t result);
-big_num_carry_t		big_uint_to_int(big_uint_t self, out big_num_sstrg_t result);
-big_num_carry_t		big_uint_to_luint(big_uint_t self, out big_num_lstrg_t result);
-big_num_carry_t		big_uint_to_lint(big_uint_t self, out big_num_lsstrg_t result);
+bool 				big_uint_cmp_smaller(big_uint_t self, _big_num_const_param big_uint_t l, ssize_t index);
+bool 				big_uint_cmp_bigger(big_uint_t self, _big_num_const_param big_uint_t l, ssize_t index);
+bool 				big_uint_cmp_equal(big_uint_t self, _big_num_const_param big_uint_t l, ssize_t index);
+bool 				big_uint_cmp_smaller_equal(big_uint_t self, _big_num_const_param big_uint_t l, ssize_t index);
+bool 				big_uint_cmp_bigger_equal(big_uint_t self, _big_num_const_param big_uint_t l, ssize_t index);
 
-bool 				big_uint_cmp_smaller(big_uint_t self, big_uint_t l, ssize_t index);
-bool 				big_uint_cmp_bigger(big_uint_t self, big_uint_t l, ssize_t index);
-bool 				big_uint_cmp_equal(big_uint_t self, big_uint_t l, ssize_t index);
-bool 				big_uint_cmp_smaller_equal(big_uint_t self, big_uint_t l, ssize_t index);
-bool 				big_uint_cmp_bigger_equal(big_uint_t self, big_uint_t l, ssize_t index);
+#if defined(__cplusplus) && !defined(GL_core_profile)
+}
+#endif
 
+#endif // _BIG_UINT_H_
+/**
+ * @file BigInt.h
+ * @author Imre Korf (I.korf@outlook.com)
+ * @date 2023-10-01
+ * 
+ * @copyright 2023 Imre Korf
+ */
+
+#ifndef _BIG_INT_H_
+#define _BIG_INT_H_
+
+#ifndef GL_core_profile
+#include "BigNum/BigNum.h"
+#include "BigNum/BigUInt.h"
+#endif
+
+#if defined(__cplusplus) && !defined(GL_core_profile)
+extern "C" {
+#endif
+
+#ifndef GL_core_profile
+typedef big_uint_t big_int_t;
+#else
 #define big_int_t	big_uint_t
+#endif
 
+/**
+ * return results for big_int_change_sign
+ */
+#ifndef GL_core_profile
+typedef enum {
+	/**
+	 * changed sign
+	 */
+	BIG_INT_SIGN_CHANGE_OK = 0,
+	/**
+	 * returned if impossible to change sign value
+	 */
+	BIG_INT_SIGN_CHANGE_FAILED = 1,
+} big_int_sign_ret_t;
+#else
 #define BIG_INT_SIGN_CHANGE_OK		0
-#define BIG_INT_SIGN_CHANGE_FAILED	1
+#define BIG_INT_SIGN_CHANGE_FAILED 	1
 #define big_int_sign_ret_t			uint
+#endif
 
-void 				big_int_set_max(inout big_int_t self);
-void 				big_int_set_min(inout big_int_t self);
-void 				big_int_set_zero(inout big_int_t self);
-void 				big_int_swap(inout big_int_t self, inout big_int_t ss2);
+void 				big_int_set_max(_big_num_inout(big_int_t, self));
+void 				big_int_set_min(_big_num_inout(big_int_t, self));
+void 				big_int_set_zero(_big_num_inout(big_int_t, self));
+void 				big_int_swap(_big_num_inout(big_int_t, self), _big_num_inout(big_int_t, ss2));
 
-void				big_int_set_sign_one(inout big_int_t self);
-big_int_sign_ret_t	big_int_change_sign(inout big_int_t self);
-void				big_int_set_sign(inout big_int_t self);
+void				big_int_set_sign_one(_big_num_inout(big_int_t, self));
+big_int_sign_ret_t	big_int_change_sign(_big_num_inout(big_int_t, self));
+void				big_int_set_sign(_big_num_inout(big_int_t, self));
 bool				big_int_is_sign(big_int_t self);
-big_num_strg_t		big_int_abs(inout big_int_t self);
+big_num_strg_t		big_int_abs(_big_num_inout(big_int_t, self));
 
-big_num_carry_t 	big_int_add(inout big_int_t self, big_int_t ss2);
-big_num_strg_t		big_int_add_int(inout big_int_t self, big_num_strg_t value);
-big_num_carry_t 	big_int_sub(inout big_int_t self, big_int_t ss2);
-big_num_strg_t		big_int_sub_int(inout big_int_t self, big_num_strg_t value);
+big_num_carry_t 	big_int_add(_big_num_inout(big_int_t, self), big_int_t ss2);
+big_num_strg_t		big_int_add_int(_big_num_inout(big_int_t, self), big_num_strg_t value, size_t index);
+big_num_carry_t 	big_int_sub(_big_num_inout(big_int_t, self), big_int_t ss2);
+big_num_strg_t		big_int_sub_int(_big_num_inout(big_int_t, self), big_num_strg_t value, size_t index);
 
-size_t	 			big_int_compensation_to_left(inout big_int_t self);
+size_t	 			big_int_compensation_to_left(_big_num_inout(big_int_t, self));
 
-big_num_carry_t		big_int_mul_int(inout big_int_t self, big_num_sstrg_t ss2);
-big_num_carry_t		big_int_mul(inout big_int_t self, big_int_t ss2);
+big_num_carry_t		big_int_mul_int(_big_num_inout(big_int_t, self), big_num_sstrg_t ss2);
+big_num_carry_t		big_int_mul(_big_num_inout(big_int_t, self), big_int_t ss2);
 
-big_num_div_ret_t 	big_int_div_int(inout big_int_t self, big_num_sstrg_t divisor, out big_num_sstrg_t remainder);
-big_num_div_ret_t 	big_int_div(inout big_int_t self, big_int_t divisor, out big_int_t remainder);
+big_num_div_ret_t 	big_int_div_int(_big_num_inout(big_int_t, self), big_num_sstrg_t divisor, _big_num_out(big_num_sstrg_t, remainder));
+big_num_div_ret_t 	big_int_div(_big_num_inout(big_int_t, self), big_int_t divisor, _big_num_out(big_int_t, remainder));
 
-big_num_ret_t		big_int_pow(inout big_int_t self, big_int_t _pow);
+big_num_ret_t		big_int_pow(_big_num_inout(big_int_t, self), big_int_t pow);
 
-big_num_carry_t		big_int_init_uint(inout big_int_t self, big_num_strg_t value);
-big_num_carry_t		big_int_init_ulint(inout big_int_t self, big_num_lstrg_t value);
-big_num_carry_t		big_int_init_big_uint(inout big_int_t self, big_uint_t value);
-void				big_int_init_int(inout big_int_t self, big_num_sstrg_t value);
-big_num_carry_t		big_int_init_lint(inout big_int_t self, big_num_lsstrg_t value);
-void				big_int_init_big_int(inout big_int_t self, big_int_t value);
-big_num_carry_t		big_int_to_uint(big_int_t self, out big_num_strg_t result);
-big_num_carry_t		big_int_to_int(big_int_t self, out big_num_sstrg_t result);
-big_num_carry_t		big_int_to_luint(big_int_t self, out big_num_lstrg_t result);
-big_num_carry_t		big_int_to_lint(big_int_t self, out big_num_lsstrg_t result);
+void				big_int_init(_big_num_inout(big_int_t, self), size_t size);
+big_num_carry_t		big_int_init_uint(_big_num_inout(big_int_t, self), size_t size, big_num_strg_t value);
+big_num_carry_t		big_int_init_ulint(_big_num_inout(big_int_t, self), size_t size, big_num_lstrg_t value);
+big_num_carry_t		big_int_init_big_uint(_big_num_inout(big_int_t, self), size_t size, big_uint_t value);
+void				big_int_init_int(_big_num_inout(big_int_t, self), size_t size, big_num_sstrg_t value);
+big_num_carry_t		big_int_init_lint(_big_num_inout(big_int_t, self), size_t size, big_num_lsstrg_t value);
+big_num_carry_t		big_int_init_big_int(_big_num_inout(big_int_t, self), size_t size, big_int_t value);
+#define 			big_int_set_uint(ptr, value) 		big_int_init_uint(ptr, (ptr)->size, value)
+#define 			big_int_set_ulint(ptr, value) 		big_int_init_ulint(ptr, (ptr)->size, value)
+#define 			big_int_set_big_uint(ptr, value) 	big_int_init_big_uint(ptr, (ptr)->size, value)
+#define 			big_int_set_int(ptr, value) 		big_int_init_int(ptr, (ptr)->size, value)
+#define 			big_int_set_lint(ptr, value) 		big_int_init_lint(ptr, (ptr)->size, value)
+#define 			big_int_set_big_int(ptr, value) 	big_int_init_big_int(ptr, (ptr)->size, value)
+big_num_carry_t		big_int_to_uint(big_int_t self, _big_num_out(big_num_strg_t, result));
+big_num_carry_t		big_int_to_int(big_int_t self, _big_num_out(big_num_sstrg_t, result));
+big_num_carry_t		big_int_to_luint(big_int_t self, _big_num_out(big_num_lstrg_t, result));
+big_num_carry_t		big_int_to_lint(big_int_t self, _big_num_out(big_num_lsstrg_t, result));
 
 bool 				big_int_cmp_smaller(big_int_t self, big_int_t l);
 bool 				big_int_cmp_bigger(big_int_t self, big_int_t l);
@@ -193,73 +457,11 @@ bool 				big_int_cmp_equal(big_int_t self, big_int_t l);
 bool 				big_int_cmp_smaller_equal(big_int_t self, big_int_t l);
 bool 				big_int_cmp_bigger_equal(big_int_t self, big_int_t l);
 
-//===============
-// BigFloat.h
-//===============
+#ifdef __cplusplus
+}
+#endif
 
-#define big_float_info_t uint
-struct big_float_t {
-	big_int_t exponent;
-	big_uint_t mantissa;
-	big_float_info_t info;
-};
-
-void 				big_float_set_max(inout big_float_t self);
-void 				big_float_set_min(inout big_float_t self);
-void 				big_float_set_zero(inout big_float_t self);
-void 				big_float_set_one(inout big_float_t self);
-void 				big_float_set_05(inout big_float_t self);
-void				big_float_set_e(inout big_float_t self);
-void				big_float_set_ln2(inout big_float_t self);
-void 				big_float_set_nan(inout big_float_t self);
-void 				big_float_set_zero_nan(inout big_float_t self);
-void 				big_float_swap(inout big_float_t self, inout big_float_t ss2);
-
-bool 				big_float_is_zero(big_float_t self);
-bool 				big_float_is_sign(big_float_t self);
-bool 				big_float_is_nan(big_float_t self);
-
-void 				big_float_abs(inout big_float_t self);
-big_num_carry_t		big_float_round(inout big_float_t self);
-void 				big_float_sgn(inout big_float_t self);
-void 				big_float_set_sign(inout big_float_t self);
-
-big_num_carry_t 	big_float_add(inout big_float_t self, big_float_t ss2, bool round);
-big_num_carry_t 	big_float_sub(inout big_float_t self, big_float_t ss2, bool round);
-big_num_carry_t 	big_float_mul_uint(inout big_float_t self, big_num_strg_t ss2);
-big_num_carry_t 	big_float_mul_int(inout big_float_t self, big_num_sstrg_t ss2);
-big_num_carry_t 	big_float_mul(inout big_float_t self, big_float_t ss2, bool round);
-
-big_num_ret_t 		big_float_div(inout big_float_t self, big_float_t ss2, bool round);
-big_num_ret_t 		big_float_mod(inout big_float_t self, big_float_t ss2);
-big_num_strg_t 		big_float_mod2(big_float_t self);
-
-big_num_ret_t 		big_float_pow_big_uint(inout big_float_t self, big_uint_t pow);
-big_num_ret_t 		big_float_pow_big_int(inout big_float_t self, big_int_t pow);
-big_num_ret_t 		big_float_pow_big_frac(inout big_float_t self, big_float_t pow);
-big_num_ret_t		big_float_pow(inout big_float_t self, big_float_t pow);
-big_num_ret_t 		big_float_sqrt(inout big_float_t self);
-big_num_carry_t		big_float_exp(inout big_float_t self, big_float_t x);
-big_num_ret_t 		big_float_ln(inout big_float_t self, big_float_t x);
-big_num_ret_t 		big_float_log(inout big_float_t self, big_float_t x, big_float_t base);
-
-void 				big_float_init_float(inout big_float_t self, float value);
-void				big_float_init_double(inout big_float_t self, double value);
-void 				big_float_init_uint(inout big_float_t self, big_num_strg_t value);
-void 				big_float_init_int(inout big_float_t self, big_num_sstrg_t value);
-void				big_float_init_big_float(inout big_float_t self, big_float_t value);
-void				big_float_init_big_uint(inout big_float_t self, big_uint_t value);
-void				big_float_init_big_int(inout big_float_t self, big_int_t value);
-big_num_carry_t		big_float_to_double(big_float_t self, out double result);
-big_num_carry_t		big_float_to_float(big_float_t self, out float result);
-big_num_carry_t		big_float_to_uint(big_float_t self, out big_num_strg_t result);
-big_num_carry_t		big_float_to_int(big_float_t self, out big_num_sstrg_t result);
-
-bool 				big_float_cmp_smaller(big_float_t self, big_float_t l);
-bool 				big_float_cmp_bigger(big_float_t self, big_float_t l);
-bool 				big_float_cmp_equal(big_float_t self, big_float_t l);
-bool 				big_float_cmp_smaller_equal(big_float_t self, big_float_t l);
-bool 				big_float_cmp_bigger_equal(big_float_t self, big_float_t l);
+#endif // _BIG_INT_H_
 
 
 

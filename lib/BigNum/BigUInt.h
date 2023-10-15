@@ -6,14 +6,16 @@
  * @copyright 2023 Imre Korf 
  */
 
-#ifndef __BIG_UINT_H__
-#define __BIG_UINT_H__
+#ifndef _BIG_UINT_H_
+#define _BIG_UINT_H_
 
+#ifndef GL_core_profile
 #include <stdint.h>
 #include <stdbool.h>
 #include "BigNum/BigNum.h"
+#endif
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && !defined(GL_core_profile)
 extern "C" {
 #endif
 
@@ -81,6 +83,11 @@ big_num_carry_t		big_uint_init_ulint(_big_num_inout(big_uint_t, self), size_t si
 big_num_carry_t		big_uint_init_big_uint(_big_num_inout(big_uint_t, self), size_t size, big_uint_t value);
 big_num_carry_t		big_uint_init_int(_big_num_inout(big_uint_t, self), size_t size, big_num_sstrg_t value);
 big_num_carry_t		big_uint_init_lint(_big_num_inout(big_uint_t, self), size_t size, big_num_lsstrg_t value);
+#define 			big_uint_set_uint(ptr, value) 		big_uint_init_uint(ptr, (ptr)->size, value)
+#define 			big_uint_set_ulint(ptr, value) 		big_uint_init_ulint(ptr, (ptr)->size, value)
+#define 			big_uint_set_big_uint(ptr, value) 	big_uint_init_big_uint(ptr, (ptr)->size, value)
+#define 			big_uint_set_int(ptr, value) 		big_uint_init_int(ptr, (ptr)->size, value)
+#define 			big_uint_set_lint(ptr, value) 		big_uint_init_lint(ptr, (ptr)->size, value)
 big_num_carry_t		big_uint_to_uint(big_uint_t self, _big_num_out(big_num_strg_t, result));
 big_num_carry_t		big_uint_to_int(big_uint_t self, _big_num_out(big_num_sstrg_t, result));
 big_num_carry_t		big_uint_to_luint(big_uint_t self, _big_num_out(big_num_lstrg_t, result));
@@ -92,8 +99,8 @@ bool 				big_uint_cmp_equal(big_uint_t self, _big_num_const_param big_uint_t l, 
 bool 				big_uint_cmp_smaller_equal(big_uint_t self, _big_num_const_param big_uint_t l, ssize_t index);
 bool 				big_uint_cmp_bigger_equal(big_uint_t self, _big_num_const_param big_uint_t l, ssize_t index);
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && !defined(GL_core_profile)
 }
 #endif
 
-#endif // __BIG_UINT_H__
+#endif // _BIG_UINT_H_

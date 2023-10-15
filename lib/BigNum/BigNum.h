@@ -6,15 +6,17 @@
  * @copyright 2023 Imre Korf
  */
 
-#ifndef __BIG_NUM_H__
-#define __BIG_NUM_H__
+#ifndef _BIG_NUM_H_
+#define _BIG_NUM_H_
 
+#ifndef GL_core_profile
 #include <stddef.h>
 #include <stdint.h>
 #include <limits.h>
 #include <stdbool.h>
+#endif
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && !defined(GL_core_profile)
 extern "C" {
 #endif
 
@@ -35,7 +37,7 @@ extern "C" {
  */
 #define BIG_NUM_ARITHMETIC_MAX_LOOP	1000
 
-#define BIG_NUM_PREC	 	2 // amount of word's to allocate for uint and int, float using 2x this amount
+#define BIG_NUM_PREC	 	2 // amount of word's to allocate for uint and int, float using 2x this amount. In reality uses twice as much to allow for non-carry operations
 
 #define BIG_NUM_MUL_DEF		BIG_NUM_MUL1
 #define BIG_NUM_DIV_DEF		BIG_NUM_DIV1
@@ -65,6 +67,7 @@ extern "C" {
 #define _big_num_lsstrg_t(x)			((big_num_lsstrg_t)(x))
 #define _big_num_ssize_t(x)				((ssize_t)(x))
 #define _big_num_size_t(x)				(size_t(x))
+#define _big_num_float(x)				((float)(x))
 #define _big_num_ref(x)					(&x)
 #define _big_num_deref(x)				(*x)
 
@@ -84,6 +87,7 @@ extern "C" {
 #define _big_num_lsstrg_t(x)			(big_num_lsstrg_t(x))
 #define _big_num_ssize_t(x)				(ssize_t(x))
 #define _big_num_size_t(x)				(size_t(x))
+#define _big_num_float(x)				(float(x))
 #define _big_num_ref(x)					(x)
 #define _big_num_deref(x)				(x)
 
@@ -242,8 +246,8 @@ extern void big_float_to_string(big_float_t * self, char * result, size_t result
 	bool scient, ssize_t scient_from, ssize_t round_index, bool trim_zeroes, char comma);
 #endif
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && !defined(GL_core_profile)
 }
 #endif
 
-#endif // __BIG_NUM_H__
+#endif // _BIG_NUM_H_

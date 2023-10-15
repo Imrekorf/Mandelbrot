@@ -6,11 +6,12 @@
  * @copyright 2023 Imre Korf 
  */
 
+#ifndef GL_core_profile
 #include "BigNum/BigUInt.h"
-
 #include <assert.h>
+#endif
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && !defined(GL_core_profile)
 extern "C" {
 #endif
 
@@ -630,6 +631,22 @@ big_num_carry_t big_uint_mul(_big_num_inout(big_uint_t, self), big_uint_t ss2, b
 	}
 }
 
+/**
+ * the multiplication 'self' = 'self' * ss2
+ * 
+ * @param[in, out] self the big num object
+ * @param[in] ss2 the other big num object
+ * @param[in] algorithm the algorithm to use for multiplication
+ */
+void big_uint_mul_no_carry(_big_num_inout(big_uint_t, self), big_uint_t ss2, _big_num_out(big_uint_t, result), big_num_algo_t algorithm)
+{
+	switch (algorithm) {
+		case BIG_NUM_MUL1: _big_uint_mul1_no_carry(self, ss2, result); break;
+		case BIG_NUM_MUL2: _big_uint_mul2_no_carry(self, ss2, result); break;
+		default: _big_uint_mul1_no_carry(self, ss2, result); break;
+	}
+}
+
 /*!
  *
  * Division
@@ -722,11 +739,11 @@ big_num_ret_t big_uint_pow(_big_num_inout(big_uint_t, self), big_uint_t _pow)
 
 	big_uint_t start = _big_num_deref(self);
 	big_uint_t result;
+	big_uint_init(_big_num_ref(result), self->size);
 	big_uint_set_one(_big_num_ref(result));
 	big_num_carry_t c = 0;
 
-	while( c == 0)
-	{
+	while( c == 0) {
 		if( (_pow.table[0] & 1) != 0)
 			c += big_uint_mul(_big_num_ref(result), start, BIG_NUM_MUL_DEF);
 
@@ -751,6 +768,7 @@ big_num_ret_t big_uint_pow(_big_num_inout(big_uint_t, self), big_uint_t _pow)
 void big_uint_sqrt(_big_num_inout(big_uint_t, self))
 {
 	big_uint_t bit, temp;
+	big_uint_init(_big_num_ref(bit), self->size);
 
 	if( big_uint_is_zero(_big_num_deref(self)) )
 		return;
@@ -1838,7 +1856,7 @@ _big_num_static void _big_uint_mul1_no_carry(_big_num_inout(big_uint_t, self), b
 _big_num_static big_num_carry_t _big_uint_mul2(_big_num_inout(big_uint_t, self), big_uint_t ss2)
 {
 	big_uint_t result;
-	big_uint_init(_big_num_ref(result), 2*UINT_PREC);
+	big_uint_init(_big_num_ref(result), 2*self->size);
 	size_t i;
 	big_num_carry_t c = 0;
 
@@ -2028,6 +2046,7 @@ _big_num_static big_num_div_ret_t _big_uint_div1(_big_num_inout(big_uint_t, self
 	#ifndef GL_core_profile
 	if( !remainder ) {
 		big_uint_t rem;
+		big_uint_init(_big_num_ref(rem), self->size);
 		return _big_uint_div1_calculate(self, divisor, _big_num_ref(rem));
 	}
 	#endif
@@ -2292,6 +2311,6 @@ _big_num_static bool _big_uint_div2_divisor_greater_or_equal(_big_num_inout(big_
 	return false;
 }
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && !defined(GL_core_profile)
 }
 #endif

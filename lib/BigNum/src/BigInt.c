@@ -6,9 +6,12 @@
  * @copyright 2023 Imre Korf 
  */
 
+#ifndef GL_core_profile
 #include "BigNum/BigInt.h"
+#include <assert.h>
+#endif
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && !defined(GL_core_profile)
 extern "C" {
 #endif
 
@@ -191,9 +194,9 @@ big_num_carry_t big_int_add(_big_num_inout(big_int_t, self), big_int_t ss2)
  * @param[in] value the value to add
  * @return big_num_strg_t 
  */
-big_num_strg_t big_int_add_int(_big_num_inout(big_int_t, self), big_num_strg_t value)
+big_num_strg_t big_int_add_int(_big_num_inout(big_int_t, self), big_num_strg_t value, size_t index)
 {
-	return _big_int_add_int(self, value, 0);
+	return _big_int_add_int(self, value, index);
 }
 
 /**
@@ -228,9 +231,9 @@ big_num_carry_t big_int_sub(_big_num_inout(big_int_t, self), big_int_t ss2)
  * @param[in] value the value to subtract from self
  * @return big_num_carry_t 
  */
-big_num_strg_t big_int_sub_int(_big_num_inout(big_int_t, self), big_num_strg_t value)
+big_num_strg_t big_int_sub_int(_big_num_inout(big_int_t, self), big_num_strg_t value, size_t index)
 {
-	return _big_int_sub_int(self, value, 0);
+	return _big_int_sub_int(self, value, index);
 }
 
 /**
@@ -598,8 +601,8 @@ big_num_carry_t	big_int_to_uint(big_int_t self, _big_num_out(big_num_strg_t, res
 big_num_carry_t	big_int_to_int(big_int_t self, _big_num_out(big_num_sstrg_t, result))
 {
 	big_num_strg_t _result;
-	big_num_carry_t c = big_int_to_uint(self, _result);
-	result = _big_num_sstrg_t(_result);
+	big_num_carry_t c = big_int_to_uint(self, _big_num_ref(_result));
+	_big_num_deref(result) = _big_num_sstrg_t(_result);
 	return c;
 }
 
@@ -987,6 +990,6 @@ _big_num_static big_num_carry_t _big_int_init_uint_or_int(_big_num_inout(big_int
 	return 0;
 }
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && !defined(GL_core_profile)
 }
 #endif
