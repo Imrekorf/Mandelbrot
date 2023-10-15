@@ -22,7 +22,12 @@ extern "C" {
  * @param[in] self the big num object
  * @param[out] result the string to hold the value in
  * @param[out] result_len allocated memory length of the result buffer
- * @param[in] b the base to convert to, range: [2, 16]
+ * @param[in] b the base to convert to, range: [2, 16], default 10
+ * @param[in] scient if true the value will always be shown in scientific notation, default false
+ * @param[in] scient_from if scient is false then the value will be printed in scientific notation mode only if exponent is greater than scient_from, default 15
+ * @param[in] round_index indicates how many digits after comma are possible, -1 will print all digits
+ * @param[in] trim_zeroes if true, 1234,78000 -> 1234,78, default true
+ * @param[in] comma the main comma operator, default '.'
  */
 void big_float_to_string(big_float_t * self, char * result, size_t result_len, size_t b,
 	bool scient, ssize_t scient_from, ssize_t round_index, bool trim_zeroes, char comma)

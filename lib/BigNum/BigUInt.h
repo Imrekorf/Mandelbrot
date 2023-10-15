@@ -22,7 +22,7 @@ extern "C" {
 #define UINT_PREC BIG_NUM_PREC
 
 struct big_uint_s {
-	size_t			size;
+	big_num_strg_t	size;
 	big_num_strg_t 	table[2*UINT_PREC]; // use 2* for non-carry functions
 };
 #ifndef GL_core_profile

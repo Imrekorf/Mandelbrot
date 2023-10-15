@@ -284,7 +284,7 @@ extern "C" {
 #define UINT_PREC BIG_NUM_PREC
 
 struct big_uint_s {
-	size_t			size;
+	big_num_strg_t	size;
 	big_num_strg_t 	table[2*UINT_PREC]; // use 2* for non-carry functions
 };
 #ifndef GL_core_profile
@@ -3819,9 +3819,9 @@ extern "C" {
 #endif
 
 #ifndef GL_core_profile
-typedef unsigned char 		big_float_info_t;
+typedef big_num_strg_t 		big_float_info_t;
 #else
-#define big_float_info_t	uint
+#define big_float_info_t	big_num_strg_t
 #endif
 
 struct big_float_s{

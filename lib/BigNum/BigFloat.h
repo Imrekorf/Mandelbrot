@@ -20,9 +20,9 @@ extern "C" {
 #endif
 
 #ifndef GL_core_profile
-typedef unsigned char 		big_float_info_t;
+typedef big_num_strg_t 		big_float_info_t;
 #else
-#define big_float_info_t	uint
+#define big_float_info_t	big_num_strg_t
 #endif
 
 struct big_float_s{
