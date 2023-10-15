@@ -672,6 +672,12 @@ bool big_int_cmp_smaller(_big_num_const_param _big_num_inout(big_int_t, self), _
 {
 	big_num_sstrg_t i = _big_num_sstrg_t(self->size)-1;
 
+	big_num_sstrg_t a1 = _big_num_sstrg_t(self->table[i]);
+	big_num_sstrg_t a2 = _big_num_sstrg_t(l->table[i]);
+
+	if( a1 != a2 )
+		return a1 < a2;
+
 	for (; i >= 0 ; --i) {
 		if (self->table[i] != l->table[i])
 			return self->table[i] < l->table[i];
@@ -696,6 +702,12 @@ bool big_int_cmp_smaller(_big_num_const_param _big_num_inout(big_int_t, self), _
 bool big_int_cmp_bigger(_big_num_const_param _big_num_inout(big_int_t, self), _big_num_const_param _big_num_inout(big_int_t, l))
 {
 	big_num_sstrg_t i = _big_num_sstrg_t(self->size)-1;
+
+	big_num_sstrg_t a1 = _big_num_sstrg_t(self->table[i]);
+	big_num_sstrg_t a2 = _big_num_sstrg_t(l->table[i]);
+
+	if( a1 != a2 )
+		return a1 > a2;
 
 	for (; i >= 0 ; --i) {
 		if (self->table[i] != l->table[i])
@@ -736,6 +748,12 @@ bool big_int_cmp_smaller_equal(_big_num_const_param _big_num_inout(big_int_t, se
 {
 	big_num_sstrg_t i = _big_num_sstrg_t(self->size)-1;
 
+	big_num_sstrg_t a1 = _big_num_sstrg_t(self->table[i]);
+	big_num_sstrg_t a2 = _big_num_sstrg_t(l->table[i]);
+
+	if( a1 != a2 )
+		return a1 < a2;
+
 	for (; i >= 0 ; --i) {
 		if (self->table[i] != l->table[i])
 			return self->table[i] < l->table[i];
@@ -758,6 +776,12 @@ bool big_int_cmp_smaller_equal(_big_num_const_param _big_num_inout(big_int_t, se
 bool big_int_cmp_bigger_equal(_big_num_const_param _big_num_inout(big_int_t, self), _big_num_const_param _big_num_inout(big_int_t, l))
 {
 	big_num_sstrg_t i = _big_num_sstrg_t(self->size)-1;
+
+	big_num_sstrg_t a1 = _big_num_sstrg_t(self->table[i]);
+	big_num_sstrg_t a2 = _big_num_sstrg_t(l->table[i]);
+
+	if( a1 != a2 )
+		return a1 > a2;
 
 	for (; i >= 0 ; --i) {
 		if (self->table[i] != l->table[i])

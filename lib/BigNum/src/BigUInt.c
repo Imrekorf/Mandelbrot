@@ -2098,7 +2098,7 @@ _big_num_static big_num_div_ret_t _big_uint_div1_calculate(_big_num_inout(big_ui
 				c = big_uint_rcl(self, 1, c);
 				c = big_uint_add(rest, rest, c);
 				c = big_uint_add(rest, divisor, 0);
-
+				
 				if (c != 0) {
 					// "goto" div_b
 					--loop;
@@ -2106,7 +2106,7 @@ _big_num_static big_num_div_ret_t _big_uint_div1_calculate(_big_num_inout(big_ui
 						break; // goto div_a
 						
 					c = big_uint_rcl(self, 1, c);
-					return 0;
+					return BIG_NUM_DIV_OK;
 				}
 				else
 					continue; // goto div_d

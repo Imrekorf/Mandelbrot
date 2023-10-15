@@ -1,5 +1,5 @@
 /**
- * @file BigFloat.h
+ * @file BigFloat.c
  * @author Imre Korf (I.korf@outlook.com)
  * @date 2023-10-01
  * 
@@ -2590,7 +2590,7 @@ big_num_ret_t big_float_div(_big_num_inout(big_float_t, self), _big_num_const_pa
 	}
 
 	big_uint_t remainder;
-	big_uint_init(_big_num_ref(remainder), self->mantissa.size);
+	big_uint_init(_big_num_ref(remainder), 2*self->mantissa.size);
 	big_uint_div(_big_num_ref(man1), _big_num_ref(man2), _big_num_ref(remainder), BIG_NUM_DIV_DEF);
 
 	i = big_uint_compensation_to_left(_big_num_ref(man1));
@@ -3864,17 +3864,17 @@ _big_num_static bool _big_float_check_greater_or_equal_half(_big_num_inout(big_f
 _big_num_static big_num_ret_t _big_float_pow_big_float_uint(_big_num_inout(big_float_t, self), big_float_t _pow)
 {
 	if( big_float_is_nan(self) || big_float_is_nan(_big_num_ref(_pow)) )
-		return _big_float_check_carry(self, 1);
+		return _big_float_check_carry(self, 1) == 1 ? BIG_NUM_OVERFLOW : BIG_NUM_OK;
 
 	if( big_float_is_zero(self) ) {
 		if( big_float_is_zero(_big_num_ref(_pow)) ) {
 			// we don't define zero^zero
 			big_float_set_nan(self);
-			return 2;
+			return BIG_NUM_INVALID_ARG;
 		}
 
 		// 0^(+something) is zero
-		return 0;
+		return BIG_NUM_OK;
 	}
 
 	if (big_float_is_sign(_big_num_ref(_pow)))
@@ -3897,12 +3897,13 @@ _big_num_static big_num_ret_t _big_float_pow_big_float_uint(_big_num_inout(big_f
 		if( big_float_cmp_smaller(_big_num_ref(_pow), _big_num_ref(one)) )
 			break;
 
-		c += big_float_mul(_big_num_ref(start), _big_num_ref(start), true);
+		big_float_t start_cpy = start;
+		c += big_float_mul(_big_num_ref(start), _big_num_ref(start_cpy), true);
 	}
 
 	_big_num_deref(self) = result;
 
-	return _big_float_check_carry(self, c);
+	return _big_float_check_carry(self, c) == 1 ? BIG_NUM_OVERFLOW : BIG_NUM_OK;
 }
 
 /**

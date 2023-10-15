@@ -134,9 +134,7 @@ void _big_uint_to_string_base(big_uint_t self, char * result, size_t result_len,
 	digits_d *= BIG_NUM_BITS_PER_UNIT;
 	digits_d += index + 1;
 	digits_d *= _big_uint_to_string_log2(b);
-	digits = (big_num_strg_t)(digits_d) + 1 + result_index; // plus some epsilon
-
-	printf("digits: %d\n", digits);
+	digits = (big_num_strg_t)(digits_d) + 3; // plus some epsilon
 	
 	result_index = digits;
 	do {
@@ -144,6 +142,17 @@ void _big_uint_to_string_base(big_uint_t self, char * result, size_t result_len,
 		if (--result_index < result_len)
 			result[result_index] = (char)((rest < 10) ? (rest + '0') : (rest - 10 + 'A'));
 	} while (!big_uint_is_zero(_big_num_ref(temp)));
+
+	size_t i1 = negative ? 1 : 0;
+	size_t i2 = digits - 1;
+
+	for (; i1 < i2; ++i1, --i2) {
+		char tempc = (char)(result[i1]);
+		result[i1] = result[i2];
+		result[i2] = tempc;
+	}
+
+	strrev(result); // TODO: make it so this is not necessary
 }
 
 #ifdef __cplusplus

@@ -586,15 +586,16 @@ uniform big_float_t u_offset_i;
 #define MAN_PREC		1
 #define EXP_PREC		2
 
-#define MAX_ITTERATIONS (20)
+#define MAX_ITTERATIONS (10)
 #define COLOR_REPEAT	1
 #define DEBUG_SQUARE
 
 const float ln_max_ittr = log(MAX_ITTERATIONS+1);
 
-vec4 	mandelbrot(in dvec2 c);
-dvec2 	step_mandelbrot(in dvec2 z, in dvec2 c);
+vec4 mandelbrot(double c_x, double c_y, double offset_r, double offset_i, double zoom);
+void step_mandelbrot( inout double z_r_ptr, inout double z_i_ptr, double c_r, double c_i);
 vec4 	integerToColor(in float i);
+
 
 vec4 	mandelbrot_bignum(in vec2 c, in big_float_t offset_r, in big_float_t offset_i, in big_float_t zoom);
 void 	step_mandelbrot_big_num(
@@ -625,7 +626,18 @@ void main()
 	}
 #endif
 
-	FragColor = mandelbrot_bignum(translated, u_offset_r, u_offset_i, u_zoom);
+	big_float_t zoom, offset_r, offset_i;
+
+	big_float_init(zoom, MAN_PREC, EXP_PREC);
+	big_float_set_double(zoom, pow(2, 2));
+
+	big_float_init(offset_r, MAN_PREC, EXP_PREC);
+	big_float_set_double(offset_r, 0.2);
+	big_float_init(offset_i, MAN_PREC, EXP_PREC);
+	big_float_set_double(offset_i, 0.0);
+
+	// FragColor = mandelbrot_bignum(translated, offset_r, offset_i, zoom);
+	FragColor = mandelbrot(translated.x, translated.y, 0.2, 0.0, pow(2, 2));
 }
 
 vec4 integerToColor(in float i)
@@ -703,4 +715,38 @@ void step_mandelbrot_big_num(
 
 	big_float_set_big_float(z_r, z_r_t);
 	big_float_set_big_float(z_i, z_i_t);
+}
+
+void step_mandelbrot(
+	inout double z_r_ptr, inout double z_i_ptr,
+    double c_r, double c_i)
+{
+	double z_r, z_i, z_r_t, z_i_t;
+    z_r = z_r_ptr;
+    z_i = z_i_ptr;
+
+    z_r_t = z_r * z_r - z_i * z_i + c_r;
+    z_i_t = 2 * z_r * z_i + c_i;
+
+    z_r_ptr = z_r_t;
+    z_i_ptr = z_i_t;
+}
+
+vec4 mandelbrot(double c_x, double c_y, double offset_r, double offset_i, double zoom)
+{
+    double c_r = c_x, c_i = c_y, z_r = 0, z_i = 0;
+    c_r *= zoom;
+    c_i *= zoom;
+    c_r -= offset_r;
+    c_i -= offset_i;
+
+    int itterations = 0;
+    for (; itterations <= MAX_ITTERATIONS; itterations++) {
+        if ((z_r*z_r + z_i*z_i) > 4.0) {
+            return integerToColor(itterations);
+        }
+        step_mandelbrot(z_r, z_i, c_r, c_i);
+    }
+
+    return vec4(0.0, 0.0, 0.0, 1.0);
 }
