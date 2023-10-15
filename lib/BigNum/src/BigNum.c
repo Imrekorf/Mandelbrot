@@ -40,7 +40,7 @@ void 	_big_float_skip_fraction(big_float_t* self);
  * @param[out] result_len allocated memory length of the result buffer
  * @param[in] b the base to convert to, range: [2, 16]
  */
-void big_uint_to_string(big_uint_t * self, char * result, size_t result_len, size_t b)
+void big_uint_to_string(const big_uint_t * self, char * result, size_t result_len, size_t b)
 {
 	_big_uint_to_string_base(*self, result, result_len, b, false);
 }
@@ -52,10 +52,10 @@ void big_uint_to_string(big_uint_t * self, char * result, size_t result_len, siz
  * @param[out] result_len allocated memory length of the result buffer
  * @param[in] b the base to convert to, range: [2, 16]
  */
-void big_int_to_string(big_int_t * self, char * result, size_t result_len, size_t b)
+void big_int_to_string(const big_int_t * self, char * result, size_t result_len, size_t b)
 {
 	big_int_t temp = *self;
-	if (big_int_is_sign(temp)) {
+	if (big_int_is_sign(_big_num_ref(temp))) {
 		big_int_abs(&temp);
 		_big_uint_to_string_base(temp, result, result_len, b, true);
 	} else {
@@ -122,7 +122,7 @@ void _big_uint_to_string_base(big_uint_t self, char * result, size_t result_len,
 		return;
 	
 
-	if (!big_uint_find_leading_bit(self, &table_id, &index)) {
+	if (!big_uint_find_leading_bit(_big_num_ref(self), &table_id, &index)) {
 		result[result_index++] = '0';
 		return;
 	}
@@ -143,7 +143,7 @@ void _big_uint_to_string_base(big_uint_t self, char * result, size_t result_len,
 		big_uint_div_int(&temp, b, &rest);
 		if (--result_index < result_len)
 			result[result_index] = (char)((rest < 10) ? (rest + '0') : (rest - 10 + 'A'));
-	} while (!big_uint_is_zero(temp));
+	} while (!big_uint_is_zero(_big_num_ref(temp)));
 }
 
 #ifdef __cplusplus

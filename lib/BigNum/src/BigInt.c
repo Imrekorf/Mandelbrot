@@ -33,9 +33,9 @@ _big_num_static big_num_carry_t		_big_int_correct_carry_after_subtracting(_big_n
 _big_num_static big_num_carry_t		_big_int_sub_int(_big_num_inout(big_int_t, self), big_num_strg_t value, size_t index);
 _big_num_static big_num_carry_t		_big_int_check_min_carry(_big_num_inout(big_int_t, self), bool ss1_is_sign, bool ss2_is_sign);
 
-_big_num_static big_num_carry_t		_big_int_pow2(_big_num_inout(big_int_t, self), _big_num_const_param big_int_t _pow);
+_big_num_static big_num_carry_t		_big_int_pow2(_big_num_inout(big_int_t, self), _big_num_const_param _big_num_inout(big_int_t, _pow));
 
-_big_num_static big_num_carry_t 	_big_int_init_uint_or_int(_big_num_inout(big_int_t, self), big_uint_t value, bool uint_type);
+_big_num_static big_num_carry_t 	_big_int_init_uint_or_int(_big_num_inout(big_int_t, self), _big_num_const_param _big_num_inout(big_uint_t, value), bool uint_type);
 /**
  * this method sets the max value which this class can hold
  * (all bits will be one besides the last one)
@@ -109,12 +109,12 @@ big_int_sign_ret_t big_int_change_sign(_big_num_inout(big_int_t, self))
 		(if we look on our value without the sign we get the correct value 
 		eg. -2147483648 in Int<1> will be 2147483648 on the UInt<1> type)
 	*/
-	if( big_uint_is_only_the_highest_bit_set(_big_num_deref(self)) )
+	if( big_uint_is_only_the_highest_bit_set(self) )
 		return 1;
 
 	big_uint_t temp = _big_num_deref(self);
 	big_uint_set_zero(self);
-	big_uint_sub(self, temp, 0);
+	big_uint_sub(self, _big_num_ref(temp), 0);
 
 	return 0;
 }
@@ -130,7 +130,7 @@ big_int_sign_ret_t big_int_change_sign(_big_num_inout(big_int_t, self))
  */
 void big_int_set_sign(_big_num_inout(big_int_t, self))
 {
-	if (big_int_is_sign(_big_num_deref(self)))
+	if (big_int_is_sign(self))
 		return;
 	big_int_change_sign(self);
 }
@@ -141,7 +141,7 @@ void big_int_set_sign(_big_num_inout(big_int_t, self))
  * @return true is negative
  * @return false is positive
  */
-bool big_int_is_sign(big_int_t self)
+bool big_int_is_sign(_big_num_const_param _big_num_inout(big_int_t, self))
 {
 	return big_uint_is_the_highest_bit_set(self);
 }
@@ -154,7 +154,7 @@ bool big_int_is_sign(big_int_t self)
  */
 big_num_strg_t big_int_abs(_big_num_inout(big_int_t, self))
 {
-	if (!big_int_is_sign(_big_num_deref(self)))
+	if (!big_int_is_sign(self))
 		return 0;
 	return big_int_change_sign(self);
 }
@@ -175,9 +175,9 @@ big_num_strg_t big_int_abs(_big_num_inout(big_int_t, self))
  * @param[in] ss2 
  * @return big_num_carry_t 
  */
-big_num_carry_t big_int_add(_big_num_inout(big_int_t, self), big_int_t ss2)
+big_num_carry_t big_int_add(_big_num_inout(big_int_t, self), _big_num_const_param _big_num_inout(big_int_t, ss2))
 {
-	bool p1_is_sign = big_int_is_sign(_big_num_deref(self));
+	bool p1_is_sign = big_int_is_sign(self);
 	bool p2_is_sign = big_int_is_sign(ss2);
 
 	big_uint_add(self, ss2, 0);
@@ -215,12 +215,12 @@ big_num_strg_t big_int_add_int(_big_num_inout(big_int_t, self), big_num_strg_t v
  * @param[in] ss2 value to subtract from big num object
  * @return big_num_carry_t 
  */
-big_num_carry_t big_int_sub(_big_num_inout(big_int_t, self), big_int_t ss2)
+big_num_carry_t big_int_sub(_big_num_inout(big_int_t, self), _big_num_const_param _big_num_inout(big_int_t, ss2))
 {
-	bool p1_is_sign = big_int_is_sign(_big_num_deref(self));
+	bool p1_is_sign = big_int_is_sign(self);
 	bool p2_is_sign = big_int_is_sign(ss2);
 
-	big_uint_sub(self, ss2, 0);		
+	big_uint_sub(self, ss2, 0);
 
 	return _big_int_correct_carry_after_subtracting(self, p1_is_sign, p2_is_sign);
 }
@@ -257,7 +257,7 @@ big_num_carry_t	big_int_mul_int(_big_num_inout(big_int_t, self), big_num_sstrg_t
 	bool ss1_is_sign, ss2_is_sign;
 	big_num_carry_t c;
 
-	ss1_is_sign = big_int_is_sign(_big_num_deref(self));
+	ss1_is_sign = big_int_is_sign(self);
 
 	/*
 		we don't have to check the carry from Abs (values will be correct
@@ -293,8 +293,8 @@ big_num_carry_t	big_int_mul(_big_num_inout(big_int_t, self), big_int_t ss2)
 	bool ss1_is_sign, ss2_is_sign;
 	big_num_carry_t c;
 
-	ss1_is_sign = big_int_is_sign(_big_num_deref(self));
-	ss2_is_sign = big_int_is_sign(ss2);
+	ss1_is_sign = big_int_is_sign(self);
+	ss2_is_sign = big_int_is_sign(_big_num_ref(ss2));
 
 	/*
 		we don't have to check the carry from Abs (values will be correct
@@ -304,7 +304,7 @@ big_num_carry_t	big_int_mul(_big_num_inout(big_int_t, self), big_int_t ss2)
 	big_int_abs(self);
 	big_int_abs(_big_num_ref(ss2));
 
-	c  = big_uint_mul(self, ss2, BIG_NUM_MUL_DEF);
+	c  = big_uint_mul(self, _big_num_ref(ss2), BIG_NUM_MUL_DEF);
 	c += _big_int_check_min_carry(self, ss1_is_sign, ss2_is_sign);
 
 	if( ss1_is_sign != ss2_is_sign )
@@ -335,7 +335,7 @@ big_num_div_ret_t big_int_div_int(_big_num_inout(big_int_t, self), big_num_sstrg
 {
 	bool self_is_sign, divisor_is_sign;
 
-	self_is_sign = big_int_is_sign(_big_num_deref(self));
+	self_is_sign = big_int_is_sign(self);
 
 	/*
 		we don't have to test the carry from Abs as well as in Mul
@@ -390,8 +390,8 @@ big_num_div_ret_t big_int_div(_big_num_inout(big_int_t, self), big_int_t divisor
 {
 	bool self_is_sign, divisor_is_sign;
 
-	self_is_sign = big_int_is_sign(_big_num_deref(self));
-	divisor_is_sign = big_int_is_sign(divisor);
+	self_is_sign = big_int_is_sign(self);
+	divisor_is_sign = big_int_is_sign(_big_num_ref(divisor));
 
 	/*
 		we don't have to test the carry from Abs as well as in Mul
@@ -399,7 +399,7 @@ big_num_div_ret_t big_int_div(_big_num_inout(big_int_t, self), big_int_t divisor
 	big_int_abs(self);
 	big_int_abs(_big_num_ref(divisor));
 
-	big_num_div_ret_t c = big_uint_div(self, divisor, remainder, BIG_NUM_DIV_DEF);
+	big_num_div_ret_t c = big_uint_div(self, _big_num_ref(divisor), remainder, BIG_NUM_DIV_DEF);
 
 	if( self_is_sign != divisor_is_sign )
 		big_int_set_sign(self);
@@ -419,19 +419,19 @@ big_num_div_ret_t big_int_div(_big_num_inout(big_int_t, self), big_int_t divisor
  * @param[in] _pow the power to raise self to
  * @return big_num_ret_t 
  */
-big_num_ret_t big_int_pow(_big_num_inout(big_int_t, self), big_int_t _pow)
+big_num_ret_t big_int_pow(_big_num_inout(big_int_t, self), _big_num_const_param _big_num_inout(big_int_t, _pow))
 {
-	bool was_sign = big_int_is_sign(_big_num_deref(self));
+	bool was_sign = big_int_is_sign(self);
 	big_num_strg_t c = 0;
 
 	if( was_sign )
 		c += big_int_abs(self);
 
-	big_num_ret_t c_temp = big_uint_pow(self, _pow);
+	big_num_ret_t c_temp = big_uint_pow(self, _big_num_deref(_pow));
 	if( c_temp > 0 )
 		return c_temp; // c_temp can be: 0, 1 or 2
 	
-	if( was_sign && (_pow.table[0] & 1) == 1 )
+	if( was_sign && (_pow->table[0] & 1) == 1 )
 		// negative value to the power of odd number is negative
 		c += big_int_change_sign(self);
 
@@ -501,14 +501,14 @@ big_num_carry_t	big_int_init_ulint(_big_num_inout(big_int_t, self), size_t size,
  * @param[in] value the value to set self to
  * @return big_num_carry_t 
  */
-big_num_carry_t big_int_init_big_uint(_big_num_inout(big_int_t, self), size_t size, big_uint_t value)
+big_num_carry_t big_int_init_big_uint(_big_num_inout(big_int_t, self), size_t size, _big_num_const_param _big_num_inout(big_uint_t, value))
 {
 	#ifndef GL_core_profile
 	assert(size <= 2*UINT_PREC);
 	#endif
 	self->size = size;
 
-	return _big_int_init_uint_or_int(self, value, false);
+	return _big_int_init_uint_or_int(self, value, true);
 }
 
 /**
@@ -568,14 +568,14 @@ big_num_carry_t	big_int_init_lint(_big_num_inout(big_int_t, self), size_t size, 
  * @param[in, out] self the big num object
  * @param[in] value the value to set self to
  */
-big_num_carry_t big_int_init_big_int(_big_num_inout(big_int_t, self), size_t size, big_int_t value)
+big_num_carry_t big_int_init_big_int(_big_num_inout(big_int_t, self), size_t size, _big_num_const_param _big_num_inout(big_int_t, value))
 {
 	#ifndef GL_core_profile
 	assert(size <= 2*UINT_PREC);
 	#endif
 	self->size = size;
 
-	return _big_int_init_uint_or_int(self, value, true);
+	return _big_int_init_uint_or_int(self, value, false);
 }
 
 /**
@@ -584,10 +584,10 @@ big_num_carry_t big_int_init_big_int(_big_num_inout(big_int_t, self), size_t siz
  * @param[in] result the converted value
  * @return big_num_carry_t 
  */
-big_num_carry_t	big_int_to_uint(big_int_t self, _big_num_out(big_num_strg_t, result))
+big_num_carry_t	big_int_to_uint(_big_num_const_param _big_num_inout(big_int_t, self), _big_num_out(big_num_strg_t, result))
 {
 	big_num_carry_t c = big_uint_to_uint(self, result);
-	if (self.size == 1)
+	if (self->size == 1)
 		return (_big_num_deref(result) & BIG_NUM_HIGHEST_BIT) == 0 ? 0 : 1;
 	return c;
 }
@@ -598,7 +598,7 @@ big_num_carry_t	big_int_to_uint(big_int_t self, _big_num_out(big_num_strg_t, res
  * @param[in] result the converted value
  * @return big_num_carry_t 
  */
-big_num_carry_t	big_int_to_int(big_int_t self, _big_num_out(big_num_sstrg_t, result))
+big_num_carry_t	big_int_to_int(_big_num_const_param _big_num_inout(big_int_t, self), _big_num_out(big_num_sstrg_t, result))
 {
 	big_num_strg_t _result;
 	big_num_carry_t c = big_int_to_uint(self, _big_num_ref(_result));
@@ -612,15 +612,15 @@ big_num_carry_t	big_int_to_int(big_int_t self, _big_num_out(big_num_sstrg_t, res
  * @param[in] result the converted value
  * @return big_num_carry_t 
  */
-big_num_carry_t	big_int_to_luint(big_int_t self, _big_num_out(big_num_lstrg_t, result))
+big_num_carry_t	big_int_to_luint(_big_num_const_param _big_num_inout(big_int_t, self), _big_num_out(big_num_lstrg_t, result))
 {
 	big_num_carry_t c = big_uint_to_luint(self, result);
 
-	if (self.size == 1)
-		return (self.table[0] & BIG_NUM_HIGHEST_BIT) == 0 ? 0 : 1;
+	if (self->size == 1)
+		return (self->table[0] & BIG_NUM_HIGHEST_BIT) == 0 ? 0 : 1;
 	
-	if (self.size == 2)
-		return (self.table[1] & BIG_NUM_HIGHEST_BIT) == 0 ? 0 : 1;
+	if (self->size == 2)
+		return (self->table[1] & BIG_NUM_HIGHEST_BIT) == 0 ? 0 : 1;
 	
 	return c;
 }
@@ -631,13 +631,13 @@ big_num_carry_t	big_int_to_luint(big_int_t self, _big_num_out(big_num_lstrg_t, r
  * @param[in] result the converted value
  * @return big_num_carry_t 
  */
-big_num_carry_t	big_int_to_lint(big_int_t self, _big_num_out(big_num_lsstrg_t, result))
+big_num_carry_t	big_int_to_lint(_big_num_const_param _big_num_inout(big_int_t, self), _big_num_out(big_num_lsstrg_t, result))
 {
-	if( self.size == 1 ) {
-		_big_num_deref(result) = _big_num_lsstrg_t(_big_num_sstrg_t(self.table[0]));
+	if( self->size == 1 ) {
+		_big_num_deref(result) = _big_num_lsstrg_t(_big_num_sstrg_t(self->table[0]));
 	} else {
-		big_num_strg_t low  = self.table[0];
-		big_num_strg_t high = self.table[1];
+		big_num_strg_t low  = self->table[0];
+		big_num_strg_t high = self->table[1];
 
 		_big_num_deref(result) = _big_num_lsstrg_t(low);
 		_big_num_deref(result) |= (_big_num_lsstrg_t(high) << BIG_NUM_BITS_PER_UNIT);
@@ -647,8 +647,8 @@ big_num_carry_t	big_int_to_lint(big_int_t self, _big_num_out(big_num_lsstrg_t, r
 		if( (high & BIG_NUM_HIGHEST_BIT) != (mask & BIG_NUM_HIGHEST_BIT) )
 			return 1;
 
-		for(size_t i=2 ; i<self.size ; ++i)
-			if( self.table[i] != mask )
+		for(size_t i=2 ; i<self->size ; ++i)
+			if( self->table[i] != mask )
 				return 1;
 	}
 
@@ -668,19 +668,13 @@ big_num_carry_t	big_int_to_lint(big_int_t self, _big_num_out(big_num_lsstrg_t, r
  * @return true 
  * @return false 
  */
-bool big_int_cmp_smaller(big_int_t self, big_int_t l)
+bool big_int_cmp_smaller(_big_num_const_param _big_num_inout(big_int_t, self), _big_num_const_param _big_num_inout(big_int_t, l))
 {
-	big_num_sstrg_t i = _big_num_sstrg_t(self.size)-1;
+	big_num_sstrg_t i = _big_num_sstrg_t(self->size)-1;
 
-	big_num_sstrg_t a1 = _big_num_sstrg_t(self.table[i]);
-	big_num_sstrg_t a2 = _big_num_sstrg_t(l.table[i]);
-
-	if (a1 != a2)
-		return a1 < a2;
-
-	for (--i ; i >= 0 ; --i) {
-		if (self.table[i] != l.table[i])
-			return self.table[i] < l.table[i];
+	for (; i >= 0 ; --i) {
+		if (self->table[i] != l->table[i])
+			return self->table[i] < l->table[i];
 	}
 
 	return false;
@@ -699,19 +693,13 @@ bool big_int_cmp_smaller(big_int_t self, big_int_t l)
  * @return true 
  * @return false 
  */
-bool big_int_cmp_bigger(big_int_t self, big_int_t l)
+bool big_int_cmp_bigger(_big_num_const_param _big_num_inout(big_int_t, self), _big_num_const_param _big_num_inout(big_int_t, l))
 {
-	big_num_sstrg_t i = _big_num_sstrg_t(self.size)-1;
+	big_num_sstrg_t i = _big_num_sstrg_t(self->size)-1;
 
-	big_num_sstrg_t a1 = _big_num_sstrg_t(self.table[i]);
-	big_num_sstrg_t a2 = _big_num_sstrg_t(l.table[i]);
-
-	if (a1 != a2)
-		return a1 > a2;
-
-	for (--i ; i >= 0 ; --i) {
-		if (self.table[i] != l.table[i])
-			return self.table[i] > l.table[i];
+	for (; i >= 0 ; --i) {
+		if (self->table[i] != l->table[i])
+			return self->table[i] > l->table[i];
 	}
 
 	return false;
@@ -728,7 +716,7 @@ bool big_int_cmp_bigger(big_int_t self, big_int_t l)
  * @return true 
  * @return false 
  */
-bool big_int_cmp_equal(big_int_t self, big_int_t l)
+bool big_int_cmp_equal(_big_num_const_param _big_num_inout(big_int_t, self), _big_num_const_param _big_num_inout(big_int_t, l))
 {
 	return big_uint_cmp_equal(self, l, -1);
 }
@@ -744,19 +732,13 @@ bool big_int_cmp_equal(big_int_t self, big_int_t l)
  * @return true 
  * @return false 
  */
-bool big_int_cmp_smaller_equal(big_int_t self, big_int_t l)
+bool big_int_cmp_smaller_equal(_big_num_const_param _big_num_inout(big_int_t, self), _big_num_const_param _big_num_inout(big_int_t, l))
 {
-	big_num_sstrg_t i = _big_num_sstrg_t(self.size)-1;
+	big_num_sstrg_t i = _big_num_sstrg_t(self->size)-1;
 
-	big_num_sstrg_t a1 = _big_num_sstrg_t(self.table[i]);
-	big_num_sstrg_t a2 = _big_num_sstrg_t(l.table[i]);
-
-	if (a1 != a2)
-		return a1 < a2;
-
-	for (--i ; i >= 0 ; --i) {
-		if (self.table[i] != l.table[i])
-			return self.table[i] < l.table[i];
+	for (; i >= 0 ; --i) {
+		if (self->table[i] != l->table[i])
+			return self->table[i] < l->table[i];
 	}
 
 	return true;
@@ -773,19 +755,13 @@ bool big_int_cmp_smaller_equal(big_int_t self, big_int_t l)
  * @return true 
  * @return false 
  */
-bool big_int_cmp_bigger_equal(big_int_t self, big_int_t l)
+bool big_int_cmp_bigger_equal(_big_num_const_param _big_num_inout(big_int_t, self), _big_num_const_param _big_num_inout(big_int_t, l))
 {
-	big_num_sstrg_t i = _big_num_sstrg_t(self.size)-1;
+	big_num_sstrg_t i = _big_num_sstrg_t(self->size)-1;
 
-	big_num_sstrg_t a1 = _big_num_sstrg_t(self.table[i]);
-	big_num_sstrg_t a2 = _big_num_sstrg_t(l.table[i]);
-
-	if (a1 != a2)
-		return a1 > a2;
-
-	for (--i ; i >= 0 ; --i) {
-		if (self.table[i] != l.table[i])
-			return self.table[i] > l.table[i];
+	for (; i >= 0 ; --i) {
+		if (self->table[i] != l->table[i])
+			return self->table[i] > l->table[i];
 	}
 
 	return true;
@@ -803,12 +779,12 @@ bool big_int_cmp_bigger_equal(big_int_t self, big_int_t l)
 _big_num_static big_num_carry_t _big_int_correct_carry_after_adding(_big_num_inout(big_int_t, self), bool p1_is_sign, bool p2_is_sign)
 {
 	if( !p1_is_sign && !p2_is_sign ) {
-		if( big_uint_is_the_highest_bit_set(_big_num_deref(self)) )
+		if( big_uint_is_the_highest_bit_set(self) )
 			return 1;
 	}
 
 	if( p1_is_sign && p2_is_sign ) {	
-		if( ! big_uint_is_the_highest_bit_set(_big_num_deref(self)) )
+		if( ! big_uint_is_the_highest_bit_set(self) )
 			return 1;
 	}
 
@@ -824,7 +800,7 @@ _big_num_static big_num_carry_t _big_int_correct_carry_after_adding(_big_num_ino
  */
 _big_num_static big_num_carry_t _big_int_add_int(_big_num_inout(big_int_t, self), big_num_strg_t value, size_t index)
 {
-	bool p1_is_sign = big_int_is_sign(_big_num_deref(self));
+	bool p1_is_sign = big_int_is_sign(self);
 
 	_big_uint_add_uint(self, value, index);
 
@@ -841,7 +817,7 @@ _big_num_static big_num_carry_t _big_int_add_int(_big_num_inout(big_int_t, self)
  */
 _big_num_static big_num_carry_t _big_int_add_two_ints(_big_num_inout(big_int_t, self), big_num_strg_t x2, big_num_strg_t x1, size_t index)
 {
-	bool p1_is_sign = big_int_is_sign(_big_num_deref(self));
+	bool p1_is_sign = big_int_is_sign(self);
 
 	_big_uint_add_two_uints(self, x2, x1, index);
 
@@ -858,12 +834,12 @@ _big_num_static big_num_carry_t _big_int_add_two_ints(_big_num_inout(big_int_t, 
 _big_num_static big_num_carry_t _big_int_correct_carry_after_subtracting(_big_num_inout(big_int_t, self), bool p1_is_sign, bool p2_is_sign)
 {
 	if( !p1_is_sign && p2_is_sign ) {
-		if( big_uint_is_the_highest_bit_set(_big_num_deref(self)) )
+		if( big_uint_is_the_highest_bit_set(self) )
 			return 1;
 	}
 
 	if( p1_is_sign && !p2_is_sign ) {	
-		if( ! big_uint_is_the_highest_bit_set(_big_num_deref(self)) )
+		if( ! big_uint_is_the_highest_bit_set(self) )
 			return 1;
 	}
 
@@ -879,7 +855,7 @@ _big_num_static big_num_carry_t _big_int_correct_carry_after_subtracting(_big_nu
  */
 _big_num_static big_num_carry_t _big_int_sub_int(_big_num_inout(big_int_t, self), big_num_strg_t value, size_t index)
 {
-	bool p1_is_sign = big_int_is_sign(_big_num_deref(self));
+	bool p1_is_sign = big_int_is_sign(self);
 
 	_big_uint_sub_uint(self, value, index);
 
@@ -907,7 +883,7 @@ _big_num_static big_num_carry_t _big_int_check_min_carry(_big_num_inout(big_int_
 		the value is actually negative -- look at description of that case
 		in ChangeSign())
 	*/
-	if( big_int_is_sign(_big_num_deref(self)) )
+	if( big_int_is_sign(self) )
 	{
 		if( ss1_is_sign != ss2_is_sign )
 		{
@@ -916,7 +892,7 @@ _big_num_static big_num_carry_t _big_int_check_min_carry(_big_num_inout(big_int_
 				the result will be equal the value from SetMin() (only the highest bit is set)
 				(this situation is ok)
 			*/
-			if( !big_uint_is_only_the_highest_bit_set(_big_num_deref(self)) )
+			if( !big_uint_is_only_the_highest_bit_set(self) )
 				return 1;
 		}
 		else
@@ -937,19 +913,19 @@ _big_num_static big_num_carry_t _big_int_check_min_carry(_big_num_inout(big_int_
  * @param[in] _pow 
  * @return big_num_ret_t 
  */
-_big_num_static big_num_ret_t _big_int_pow2(_big_num_inout(big_int_t, self), _big_num_const_param big_int_t _pow)
+_big_num_static big_num_ret_t _big_int_pow2(_big_num_inout(big_int_t, self), _big_num_const_param _big_num_inout(big_int_t, _pow))
 {
-	bool was_sign = big_int_is_sign(_big_num_deref(self));
+	bool was_sign = big_int_is_sign(self);
 	big_num_carry_t c = 0;
 
 	if( was_sign )
 		c += big_int_abs(self);
 
-	big_num_ret_t c_temp = big_uint_pow(self, _pow);
+	big_num_ret_t c_temp = big_uint_pow(self, _big_num_deref(_pow));
 	if( c_temp > 0 )
 		return c_temp; // c_temp can be: 0, 1 or 2
 	
-	if( was_sign && (_pow.table[0] & 1) == 1 )
+	if( was_sign && (_pow->table[0] & 1) == 1 )
 		// negative value to the power of odd number is negative
 		c += big_int_change_sign(self);
 
@@ -960,31 +936,31 @@ _big_num_static big_num_ret_t _big_int_pow2(_big_num_inout(big_int_t, self), _bi
  * an auxiliary method for converting both from UInt and Int
  * @param[in, out] self the big num object
  * @param[in] value the value to set self to
- * @param[in] int_type false for uint, true for int
+ * @param[in] uint_type true for uint, false for int
  * @return _big_num_static 
  */
-_big_num_static big_num_carry_t _big_int_init_uint_or_int(_big_num_inout(big_int_t, self), big_uint_t value, bool int_type)
+_big_num_static big_num_carry_t _big_int_init_uint_or_int(_big_num_inout(big_int_t, self), _big_num_const_param _big_num_inout(big_uint_t, value), bool uint_type)
 {
-	size_t min_size = (self->size < value.size ) ? self->size : value.size;
+	size_t min_size = (self->size < value->size ) ? self->size : value->size;
 	size_t i;
 	for (i = 0; i < min_size; ++i)
-		self->table[i] = value.table[i];
+		self->table[i] = value->table[i];
 	
-	if (self->size > value.size) {
+	if (self->size > value->size) {
 		big_num_strg_t fill;
-		if (int_type)
+		if (uint_type)
 			fill = 0;
 		else
-			fill = (value.table[value.size-1] & BIG_NUM_HIGHEST_BIT) != 0 ? BIG_NUM_MAX_VALUE : 0;
+			fill = (value->table[value->size-1] & BIG_NUM_HIGHEST_BIT) != 0 ? BIG_NUM_MAX_VALUE : 0;
 		
 		for ( ; i < self->size ; ++i)
 			self->table[i] = fill;
 	} else {
 		big_num_carry_t test = (self->table[self->size-1] & BIG_NUM_HIGHEST_BIT) != 0 ? BIG_NUM_MAX_VALUE : 0;
-		if (int_type && test != 0)
+		if (uint_type && test != 0)
 			return 1;
-		for ( ; i < value.size ; ++i)
-			if (value.table[i] != test)
+		for ( ; i < value->size ; ++i)
+			if (value->table[i] != test)
 				return 1;
 	}
 	return 0;

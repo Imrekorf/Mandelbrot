@@ -17,6 +17,9 @@
 extern "C" {
 #endif
 
+#define BIG_NUM_EXP_PREC	2
+#define BIG_NUM_MAN_PREC	1
+
 /**
  * Convert float to string
  * @param[in] self the big num object
@@ -29,16 +32,17 @@ extern "C" {
  * @param[in] trim_zeroes if true, 1234,78000 -> 1234,78, default true
  * @param[in] comma the main comma operator, default '.'
  */
-void big_float_to_string(big_float_t * self, char * result, size_t result_len, size_t b,
+void big_float_to_string(const big_float_t * self, char * result, size_t result_len, size_t b,
 	bool scient, ssize_t scient_from, ssize_t round_index, bool trim_zeroes, char comma)
 {
 	memset(result, 0, result_len);
 
-	ttmath::Big<BIG_NUM_PREC, BIG_NUM_PREC> _self;
-	for (size_t i = 0; i < BIG_NUM_PREC; i++) {
-		_self.mantissa.table[i] = self->mantissa.table[i];
+	ttmath::Big<BIG_NUM_EXP_PREC, BIG_NUM_MAN_PREC> _self;
+	for (size_t i = 0; i < BIG_NUM_EXP_PREC; i++)
 		_self.exponent.table[i] = self->exponent.table[i];
-	}
+	for (size_t i = 0; i < BIG_NUM_MAN_PREC; i++)
+		_self.mantissa.table[i] = self->mantissa.table[i];
+	
 	_self.info = self->info;
 	
 	std::string _result;
@@ -49,3 +53,22 @@ void big_float_to_string(big_float_t * self, char * result, size_t result_len, s
 #ifdef __cplusplus
 }
 #endif
+
+std::ostream& operator<<(std::ostream& os, const big_int_t& n)
+{
+	char buffer[128];
+	if (big_int_is_sign(&n))
+		big_uint_to_string(&n, buffer, 128, 10);
+	else
+		big_int_to_string(&n, buffer, 128, 10);
+    os << buffer;
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const big_float_t& n)
+{
+	char buffer[128];
+	big_float_to_string(&n, buffer, 128, 10, false, 15, -1, true, '.');
+    os << buffer;
+    return os;
+}

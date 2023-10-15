@@ -22,6 +22,7 @@
 #include "BigNum/BigUInt.h"
 #include "BigNum/BigInt.h"
 #include "BigNum/BigFloat.h"
+#include "BigNum/BigNumWrapper.h"
 
 class glsl_big_uint_t {
         struct {
@@ -60,8 +61,10 @@ class glsl_big_uint_t {
     };
 
 namespace my_window {
-    constexpr size_t        height = 800;           // window height
-    constexpr size_t        width  = 800;           // window width
+    constexpr size_t        height = 400;           // window height
+    constexpr size_t        width  = 400;           // window width
+    constexpr size_t        man_prec = 1;           // mantissa precision
+    constexpr size_t        exp_prec = 2;           // exponent precision
     constexpr char const*   title  = "mandelbrot";  // window name
     constexpr float         start_offset_x =  0.2;  // starting x offset of mandelbrot
     constexpr float         start_offset_y =  0.0;  // starting y offset of mandelbrot
@@ -85,17 +88,118 @@ big_float_t zoom;
 big_float_t zoom_lvl;
 std::deque<big_float_t> prev_diff_x, prev_diff_y;
 
+#define MAX_ITTERATIONS     256
+
+void step_mandelbrot_big_num(
+		big_float_t* z_r, big_float_t* z_i,
+		big_float_t c_r, big_float_t c_i)
+{
+	big_float_t z_r_t, z_i_t, z_r_t2, z_i_t2;
+	big_float_init_big_float(&z_r_t, my_window::man_prec, my_window::exp_prec, z_r);
+	big_float_init_big_float(&z_i_t, my_window::man_prec, my_window::exp_prec, z_i);
+	z_r_t2 = z_r_t; // copy here as mul does not work when both are the same object
+    z_i_t2 = z_i_t; // copy here as mul does not work when both are the same object
+    // calculate 'z.real
+	big_float_mul(&z_r_t, &z_r_t2, true); 	// z_r_t = z.real^2
+    big_float_mul(&z_i_t, &z_i_t2, true);	// z_i_t = z.imag^2
+    big_float_sub(&z_r_t, &z_i_t, true);	// z_r_t = z.real^2 - z.imag^2
+    big_float_add(&z_r_t, &c_r, true);	    // z_r_t = z.real^2 - z.imag^2 + c.real
+
+	// calculate 'z.imag
+	big_float_set_uint(&z_i_t, 2);
+	big_float_mul(&z_i_t, z_r, true);	    // 2 * z.real
+	big_float_mul(&z_i_t, z_i, true);	    // 2 * z.real * z.imag
+	big_float_add(&z_i_t, &c_i, true);	    // 2 * z.real * z.imag + c.imag
+
+	big_float_set_big_float(z_r, &z_r_t);
+	big_float_set_big_float(z_i, &z_i_t);
+}
+
+void step_mandelbrot(
+    double* z_r_ptr, double* z_i_ptr,
+    double c_r, double c_i)
+{
+
+    double z_r, z_i, z_r_t, z_i_t;
+    z_r = *z_r_ptr;
+    z_i = *z_i_ptr;
+
+    z_r_t = z_r * z_r - z_i * z_i + c_r;
+    z_i_t = 2 * z_r * z_i + c_i;
+
+    *z_r_ptr = z_r_t;
+    *z_i_ptr = z_i_t;
+}
+
+double mandelbrot_bignum(double c_x, double c_y, big_float_t offset_r, big_float_t offset_i, big_float_t zoom)
+{
+	big_float_t c_r, c_i, z_r, z_i;
+	// C = (x, y)
+	big_float_init_double(&c_r, my_window::man_prec, my_window::exp_prec, c_x);
+	big_float_init_double(&c_i, my_window::man_prec, my_window::exp_prec, c_y);
+	big_float_init(&z_r, my_window::man_prec, my_window::exp_prec);
+	big_float_init(&z_i, my_window::man_prec, my_window::exp_prec);
+	// Z = (0, 0)
+	big_float_set_zero(&z_r);
+	big_float_set_zero(&z_i);
+
+	// apply translation
+	big_float_mul(&c_r, &zoom, true);
+	big_float_mul(&c_i, &zoom, true);
+	
+	big_float_sub(&c_r, &offset_r, true);
+	big_float_sub(&c_i, &offset_i, true);
+
+	int itterations = 0;
+	for (; itterations <= MAX_ITTERATIONS; itterations++) {
+		big_float_t a_sqr, b_sqr, four;
+		big_float_init_big_float(&a_sqr, my_window::man_prec, my_window::exp_prec, &z_r);
+		big_float_init_big_float(&b_sqr, my_window::man_prec, my_window::exp_prec, &z_i);
+        big_float_init_uint(&four, my_window::man_prec, my_window::exp_prec, 4U);
+		big_float_mul(&a_sqr, &z_r, true); // a^2 = z_r^2
+        big_float_mul(&b_sqr, &z_i, true); // b^2 = z_i^2
+        big_float_add(&a_sqr, &b_sqr, true); // a^2 + b^2 = c^2
+        
+        if (big_float_cmp_bigger(&a_sqr, &four)) { // pretend a_sqr here is the length of z^2
+            return (double)itterations;
+        }
+
+		step_mandelbrot_big_num(&z_r, &z_i, c_r, c_i);
+	}
+
+	return INFINITY;
+}
+
+double mandelbrot(double c_x, double c_y, double offset_r, double offset_i, double zoom)
+{
+    double c_r = c_x, c_i = c_y, z_r = 0, z_i = 0;
+    c_r *= zoom;
+    c_i *= zoom;
+    c_r -= offset_r;
+    c_i -= offset_i;
+
+    int itterations = 0;
+    for (; itterations <= MAX_ITTERATIONS; itterations++) {
+        if ((z_r*z_r + z_i*z_i) > 4.0) {
+            return (double)itterations;
+        }
+        step_mandelbrot(&z_r, &z_i, c_r, c_i);
+    }
+
+    return INFINITY;
+}
+
 // profiling
 void countFPS();
 
 int main(void)
 {
-    big_float_init_float(&offset_x, BIG_NUM_PREC, BIG_NUM_PREC, my_window::start_offset_x);
-    big_float_init_float(&offset_y, BIG_NUM_PREC, BIG_NUM_PREC, my_window::start_offset_y);
-    big_float_init_uint(&zoom, BIG_NUM_PREC, BIG_NUM_PREC, 1);
-    big_float_init_float(&zoom_lvl, BIG_NUM_PREC, BIG_NUM_PREC, my_window::start_zoom);
+    big_float_init_float(&offset_x, my_window::man_prec, my_window::exp_prec, my_window::start_offset_x);
+    big_float_init_float(&offset_y, my_window::man_prec, my_window::exp_prec, my_window::start_offset_y);
+    big_float_init_uint(&zoom, my_window::man_prec, my_window::exp_prec, 1);
+    big_float_init_float(&zoom_lvl, my_window::man_prec, my_window::exp_prec, my_window::start_zoom);
     
-    big_float_pow_big_frac(&zoom, zoom_lvl);
+    big_float_pow_big_frac(&zoom, &zoom_lvl);
 
     GLFWwindow* window;
 
@@ -107,30 +211,27 @@ int main(void)
         << GLFW_VERSION_MAJOR << "." << GLFW_VERSION_MINOR << "." << GLFW_VERSION_REVISION << std::endl;
     #ifdef DEBUG
         std::cout << "[DEBUG BUILD]" << std::endl;
-        // #define TEST_ARB_PREC
+        #define TEST_ARB_PREC
         #ifdef TEST_ARB_PREC
-        if (0) {
-            std::cout << "TTMATH TESTS:" << std::endl;
-            ttmath::Big<2, 2> temp;
-            temp.FromDouble(5);
 
-            std::cout << std::endl;
+        for (size_t x = 0; x < my_window::width; x++) {
+            for (size_t y = 0; y < my_window::height; y++) {
+                double c_x = (double)x / (double)my_window::width - 0.5;
+                double c_y = (double)y / (double)my_window::height - 0.5;
+
+
+                double ittr_bignum = mandelbrot_bignum(c_x, c_y, offset_x, offset_y, zoom);
+                double ittr = mandelbrot(c_x, c_y, my_window::start_offset_x, my_window::start_offset_y, my_window::start_zoom);
+                if (ittr != ittr_bignum) {
+                    std::cout << "mismatch calculation @ (" << c_x << ", " << c_y << ") ittr_bignum: " << ittr_bignum << ", ittr: " << ittr << std::endl;
+                    return 0;
+                }
+            }
         }
 
-        {
-            std::cout << "BIGNUM TESTS:" << std::endl;
-            big_float_t temp;
-            big_float_init_double(&temp, BIG_NUM_PREC, BIG_NUM_PREC, -5.2345123);
-            
-            double res;
-            big_float_to_double(temp, &res);
+        std::cout << "no mismatches found!" << std::endl;
 
-            char buffer[128];
-            big_float_to_string(&temp, buffer, 128, 10, false, 15, -1, true, '.');
-            std::cout << "val:" << buffer << std::endl;
-        }
-
-        // return 0;
+        return 0;
         #endif
     #endif // DEBUG
 
@@ -364,32 +465,23 @@ void handle_mouse(GLFWwindow* window)
 
     // translate coordinates to center
     big_float_t diff_x, diff_y;
-    big_float_init_double(&diff_x, BIG_NUM_PREC, BIG_NUM_PREC, (xpos - my_window::width /2) / (my_window::width /2));
-    big_float_init_double(&diff_y, BIG_NUM_PREC, BIG_NUM_PREC, (ypos - my_window::height/2) / (my_window::height/2));
+    big_float_init_double(&diff_x, my_window::man_prec, my_window::exp_prec, (xpos - my_window::width /2) / (my_window::width /2));
+    big_float_init_double(&diff_y, my_window::man_prec, my_window::exp_prec, (ypos - my_window::height/2) / (my_window::height/2));
 
     // divide zoom constant by 2 as number range is -1.0 - 1.0
     big_float_t two;
-    big_float_init_uint(&two, BIG_NUM_PREC, BIG_NUM_PREC, 2);
-    big_float_div(&zoom, two, true);
-    big_float_mul(&diff_x, zoom, true);
-    big_float_mul(&diff_y, zoom, true);
+    big_float_init_uint(&two, my_window::man_prec, my_window::exp_prec, 2);
+    big_float_div(&zoom, &two, true);
+    big_float_mul(&diff_x, &zoom, true);
+    big_float_mul(&diff_y, &zoom, true);
 
-    big_float_sub(&offset_x, diff_x, true);
-    big_float_add(&offset_y, diff_y, true);
+    big_float_sub(&offset_x, &diff_x, true);
+    big_float_add(&offset_y, &diff_y, true);
 
-    char buffer[128];
-    big_float_to_string(&zoom_lvl, buffer, 128, 10, false, -1, -1, true, '.');
-    std::cout << "zoom: 2^" << buffer;
-    big_float_to_string(&zoom, buffer, 128, 10, false, -1, -1, true, '.');
-    std::cout << " = " << buffer << std::endl;
-    big_float_to_string(&diff_x, buffer, 128, 10, false, -1, -1, true, '.');
-    std::cout << "diff (" << buffer;
-    big_float_to_string(&diff_y, buffer, 128, 10, false, -1, -1, true, '.');
-    std::cout << ", " << buffer << ")" << std::endl;
-    big_float_to_string(&offset_x, buffer, 128, 10, false, -1, -1, true, '.');
-    std::cout << "\n offset: (" << buffer;
-    big_float_to_string(&offset_y, buffer, 128, 10, false, -1, -1, true, '.');
-    std::cout << ", " << buffer << ")" << std::endl;
+    std::cout << "zoom: 2^" << zoom_lvl << " = " << zoom 
+        << "\ndiff (" << diff_x  << ", " << diff_y << ")" 
+        << "\noffset: (" << offset_x << ", " << offset_y << ")" 
+        << std::endl;
 }
 
 
@@ -455,23 +547,19 @@ void event_scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     PARAM_UNUSED(xoffset);
 
     big_float_t zoom_mul, zoom_step, _yoffset;
-    big_float_init_uint(&zoom_mul, BIG_NUM_PREC, BIG_NUM_PREC, 2);
+    big_float_init_uint(&zoom_mul, my_window::man_prec, my_window::exp_prec, 2);
     if (yoffset > 0) {
-        big_float_init_float(&zoom_step, BIG_NUM_PREC, BIG_NUM_PREC, -my_window::zoom_step);
-        big_float_pow_big_frac(&zoom_mul, zoom_step);
+        big_float_init_float(&zoom_step, my_window::man_prec, my_window::exp_prec, -my_window::zoom_step);
+        big_float_pow_big_frac(&zoom_mul, &zoom_step);
     } else if (yoffset < 0) {
-        big_float_init_float(&zoom_step, BIG_NUM_PREC, BIG_NUM_PREC, my_window::zoom_step);
-        big_float_pow_big_frac(&zoom_mul, zoom_step);
+        big_float_init_float(&zoom_step, my_window::man_prec, my_window::exp_prec, my_window::zoom_step);
+        big_float_pow_big_frac(&zoom_mul, &zoom_step);
     }
-    big_float_mul(&zoom, zoom_mul, true);
+    big_float_mul(&zoom, &zoom_mul, true);
     
-    big_float_init_float(&_yoffset, BIG_NUM_PREC, BIG_NUM_PREC, yoffset * my_window::zoom_step);
-    big_float_sub(&zoom_lvl, _yoffset, true);
-    char buffer[128];
-    big_float_to_string(&zoom_lvl, buffer, 128, 10, false, -1, -1, true, '.');
-    std::cout << "zoom: 2^" << buffer;
-    big_float_to_string(&zoom, buffer, 128, 10, false, -1, -1, true, '.');
-    std::cout << " = " << buffer << std::endl;
+    big_float_init_float(&_yoffset, my_window::man_prec, my_window::exp_prec, yoffset * my_window::zoom_step);
+    big_float_sub(&zoom_lvl, &_yoffset, true);
+    std::cout << "zoom: 2^" << zoom_lvl << " = " << zoom << std::endl;
 }
 
 void event_framebuffer_size_callback(GLFWwindow* window, int width, int height)

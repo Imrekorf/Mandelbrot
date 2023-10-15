@@ -37,26 +37,26 @@ _big_num_static big_num_carry_t 	_big_float_standardizing(_big_num_inout(big_flo
 _big_num_static bool				_big_float_correct_zero(_big_num_inout(big_float_t, self));
 _big_num_static void				_big_float_clear_info_bit(_big_num_inout(big_float_t, self), big_float_info_t bit);
 _big_num_static void				_big_float_set_info_bit(_big_num_inout(big_float_t, self), big_float_info_t bit);
-_big_num_static bool				_big_float_is_info_bit(big_float_t self, big_float_info_t bit);
+_big_num_static bool				_big_float_is_info_bit(_big_num_const_param _big_num_inout(big_float_t, self), big_float_info_t bit);
 
 _big_num_static big_num_carry_t 	_big_float_round_half_to_even(_big_num_inout(big_float_t, self), bool is_half, bool rounding_up);
-_big_num_static void 				_big_float_add_check_exponents(_big_num_inout(big_float_t, self), _big_num_inout(big_float_t, ss2), big_int_t exp_offset, _big_num_out(bool, last_bit_set), _big_num_out(bool, rest_zero), _big_num_out(bool, do_adding), _big_num_out(bool, do_rounding));
-_big_num_static big_num_carry_t 	_big_float_add_mantissas(_big_num_inout(big_float_t, self), big_float_t ss2, _big_num_out(bool, last_bit_set), _big_num_out(bool, rest_zero));
+_big_num_static void 				_big_float_add_check_exponents(_big_num_inout(big_float_t, self), _big_num_inout(big_float_t, ss2), _big_num_const_param _big_num_inout(big_int_t, exp_offset), _big_num_out(bool, last_bit_set), _big_num_out(bool, rest_zero), _big_num_out(bool, do_adding), _big_num_out(bool, do_rounding));
+_big_num_static big_num_carry_t 	_big_float_add_mantissas(_big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, ss2), _big_num_out(bool, last_bit_set), _big_num_out(bool, rest_zero));
 _big_num_static big_num_carry_t 	_big_float_add(_big_num_inout(big_float_t, self), big_float_t ss2, bool round, bool adding);
 _big_num_static	bool				_big_float_check_greater_or_equal_half(_big_num_inout(big_float_t, self), big_num_strg_t tab[2*BIG_MAN_PREC], big_num_strg_t len);
-_big_num_static big_num_ret_t 		_big_float_pow_big_float_uint(_big_num_inout(big_float_t, self), big_float_t pow);
-_big_num_static big_num_ret_t 		_big_float_pow_big_float_int(_big_num_inout(big_float_t, self), big_float_t pow);
-_big_num_static void 				_big_float_exp_surrounding_0(_big_num_inout(big_float_t, self), big_float_t x, _big_num_out(size_t, steps));
-_big_num_static void 				_big_float_ln_surrounding_1(_big_num_inout(big_float_t, self), big_float_t x, _big_num_out(size_t, steps));
-_big_num_static void 				_big_float_init_uint_or_int(_big_num_inout(big_float_t, self), big_uint_t value, big_num_sstrg_t compensation);
-_big_num_static big_num_carry_t 	_big_float_to_uint_or_int(big_float_t self, _big_num_out(big_num_strg_t, result));
+_big_num_static big_num_ret_t 		_big_float_pow_big_float_uint(_big_num_inout(big_float_t, self), big_float_t _pow);
+_big_num_static big_num_ret_t 		_big_float_pow_big_float_int(_big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, _pow));
+_big_num_static void 				_big_float_exp_surrounding_0(_big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, x), _big_num_out(size_t, steps));
+_big_num_static void 				_big_float_ln_surrounding_1(_big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, x), _big_num_out(size_t, steps));
+_big_num_static void 				_big_float_init_uint_or_int(_big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_uint_t, value), big_num_sstrg_t compensation);
+_big_num_static big_num_carry_t 	_big_float_to_uint_or_int(_big_num_const_param _big_num_inout(big_float_t, self), _big_num_out(big_num_strg_t, result));
 _big_num_static void 				_big_float_init_double_set_exp_and_man(_big_num_inout(big_float_t, self), bool is_sign, big_num_sstrg_t e, big_num_strg_t mhighest, big_num_strg_t m1, big_num_strg_t m2);
-_big_num_static double 				_big_float_to_double_set_double(big_float_t self, bool is_sign, big_num_strg_t e, big_num_sstrg_t move, bool infinity, bool nan);
-_big_num_static bool 				_big_float_smaller_without_sign_than(big_float_t self, big_float_t ss2);
-_big_num_static bool				_big_float_greater_without_sign_than(big_float_t self, big_float_t ss2);
-_big_num_static bool				_big_float_equal_without_sign(big_float_t self, big_float_t ss2);
+_big_num_static double 				_big_float_to_double_set_double(_big_num_const_param _big_num_inout(big_float_t, self), bool is_sign, big_num_strg_t e, big_num_sstrg_t move, bool infinity, bool nan);
+_big_num_static bool 				_big_float_smaller_without_sign_than(_big_num_const_param _big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, ss2));
+_big_num_static bool				_big_float_greater_without_sign_than(_big_num_const_param _big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, ss2));
+_big_num_static bool				_big_float_equal_without_sign(_big_num_const_param _big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, ss2));
 _big_num_static void 				_big_float_skip_fraction(_big_num_inout(big_float_t, self));
-_big_num_static bool 				_big_float_is_integer(big_float_t self);
+_big_num_static bool 				_big_float_is_integer(_big_num_const_param _big_num_inout(big_float_t, self));
 /**
  * this method sets zero
  * @param[in, out] self the big num object
@@ -2241,7 +2241,7 @@ void big_float_set_min(_big_num_inout(big_float_t, self))
  * @return true the big num object is zero
  * @return false the big num object is not zero
  */
-bool big_float_is_zero(big_float_t self)
+bool big_float_is_zero(_big_num_const_param _big_num_inout(big_float_t, self))
 {
 	return _big_float_is_info_bit(self, BIG_FLOAT_INFO_ZERO);
 }
@@ -2253,7 +2253,7 @@ bool big_float_is_zero(big_float_t self)
  * @return true the big num object is negative
  * @return false the big num object is positive
  */
-bool big_float_is_sign(big_float_t self)
+bool big_float_is_sign(_big_num_const_param _big_num_inout(big_float_t, self))
 {
 	return _big_float_is_info_bit(self, BIG_FLOAT_INFO_SIGN);
 }
@@ -2264,7 +2264,7 @@ bool big_float_is_sign(big_float_t self)
  * @return true the big num object is nan
  * @return false the big num object is not nan
  */
-bool big_float_is_nan(big_float_t self)
+bool big_float_is_nan(_big_num_const_param _big_num_inout(big_float_t, self))
 {
 	return _big_float_is_info_bit(self, BIG_FLOAT_INFO_NAN);
 }
@@ -2299,20 +2299,20 @@ big_num_carry_t	big_float_round(_big_num_inout(big_float_t, self))
 {
 	big_float_t _half;
 	big_num_carry_t c;
-	if (big_float_is_nan(_big_num_deref(self)))
+	if (big_float_is_nan(self))
 		return 1;
-	if (big_float_is_zero(_big_num_deref(self)))
+	if (big_float_is_zero(self))
 		return 0;
 	
 	big_float_init(_big_num_ref(_half), self->mantissa.size, self->exponent.size);
 	big_float_set_05(_big_num_ref(_half));
 
-	if (big_float_is_sign(_big_num_deref(self))) {
+	if (big_float_is_sign(self)) {
 		// self < 0
-		c = big_float_sub(self, _half, true);
+		c = big_float_sub(self, _big_num_ref(_half), true);
 	} else {
 		// self > 0
-		c = big_float_add(self, _half, true);
+		c = big_float_add(self, _big_num_ref(_half), true);
 	}
 
 	_big_float_skip_fraction(self);
@@ -2331,12 +2331,12 @@ big_num_carry_t	big_float_round(_big_num_inout(big_float_t, self))
  */
 void big_float_sgn(_big_num_inout(big_float_t, self))
 {
-	if (big_float_is_nan(_big_num_deref(self)) )
+	if (big_float_is_nan(self) )
 		return;
-	if (big_float_is_sign(_big_num_deref(self))) {
+	if (big_float_is_sign(self)) {
 		big_float_set_one(self);
 		big_float_set_sign(self);
-	} else if (big_float_is_zero(_big_num_deref(self))) {
+	} else if (big_float_is_zero(self)) {
 		big_float_set_zero(self);
 	} else {
 		big_float_set_one(self);
@@ -2371,10 +2371,10 @@ void big_float_set_sign(_big_num_inout(big_float_t, self))
 void big_float_change_sign(_big_num_inout(big_float_t, self))
 {
 	// we don't have to check the NaN flag here
-	if( big_float_is_zero(_big_num_deref(self)) )
+	if( big_float_is_zero(self) )
 		return;
 
-	if( big_float_is_sign(_big_num_deref(self)) )
+	if( big_float_is_sign(self) )
 		_big_float_clear_info_bit(self, BIG_FLOAT_INFO_SIGN);
 	else
 		_big_float_set_info_bit(self, BIG_FLOAT_INFO_SIGN);
@@ -2387,9 +2387,9 @@ void big_float_change_sign(_big_num_inout(big_float_t, self))
  * @param[in] round true if round result
  * @return big_num_carry_t >0 if the result is too big
  */
-big_num_carry_t big_float_add(_big_num_inout(big_float_t, self), big_float_t ss2, bool round)
+big_num_carry_t big_float_add(_big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, ss2), bool round)
 {
-	return _big_float_add(self, ss2, round, true);
+	return _big_float_add(self, _big_num_deref(ss2), round, true);
 }
 
 /**
@@ -2399,9 +2399,9 @@ big_num_carry_t big_float_add(_big_num_inout(big_float_t, self), big_float_t ss2
  * @param[in] round true if round result
  * @return big_num_carry_t >0 if the result is too big
  */
-big_num_carry_t big_float_sub(_big_num_inout(big_float_t, self), big_float_t ss2, bool round)
+big_num_carry_t big_float_sub(_big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, ss2), bool round)
 {
-	return _big_float_add(self, ss2, round, false);
+	return _big_float_add(self, _big_num_deref(ss2), round, false);
 }
 
 /**
@@ -2417,16 +2417,16 @@ big_num_carry_t big_float_mul_uint(_big_num_inout(big_float_t, self), big_num_st
 	size_t i;
 	big_num_carry_t c = 0;
 
-	if (big_float_is_nan(_big_num_deref(self)))
+	if (big_float_is_nan(self))
 		return 1;
-	if (big_float_is_zero(_big_num_deref(self)))
+	if (big_float_is_zero(self))
 		return 0;
 	if (ss2 == 0) {
 		big_float_set_zero(self);
 		return 0;
 	}
 
-	// man_result = mantissa * ss2.mantissa
+	// man_result = mantissa * ss2->mantissa
 	for(i=0 ; i<self->mantissa.size ; ++i)
 		man_result.table[i] = self->mantissa.table[i];
 	for (; i < 2*BIG_MAN_PREC; ++i)
@@ -2465,15 +2465,15 @@ big_num_carry_t big_float_mul_uint(_big_num_inout(big_float_t, self), big_num_st
  */
 big_num_carry_t big_float_mul_int(_big_num_inout(big_float_t, self), big_num_sstrg_t ss2)
 {
-	if (big_float_is_nan(_big_num_deref(self)))
+	if (big_float_is_nan(self))
 		return 1;
 	if (ss2 == 0) {
 		big_float_set_zero(self);
 		return 0;
 	}
-	if (big_float_is_zero(_big_num_deref(self)))
+	if (big_float_is_zero(self))
 		return 0;
-	if (big_float_is_sign(_big_num_deref(self)) == (ss2<0)) {
+	if (big_float_is_sign(self) == (ss2<0)) {
 		// the signs are the same (both are either - or +), the result is positive
 		big_float_abs(self);
 	} else {
@@ -2494,17 +2494,17 @@ big_num_carry_t big_float_mul_int(_big_num_inout(big_float_t, self), big_num_sst
  * @param[in] round true if result should be rounded
  * @return big_num_carry_t 
  */
-big_num_carry_t big_float_mul(_big_num_inout(big_float_t, self), big_float_t ss2, bool round)
+big_num_carry_t big_float_mul(_big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, ss2), bool round)
 {
 	big_uint_t man_result;
 	big_uint_init(_big_num_ref(man_result), 2 * self->mantissa.size);
 	big_num_carry_t c = 0;
 	size_t i;
 
-	if( big_float_is_nan(_big_num_deref(self)) || big_float_is_nan(ss2) )
+	if( big_float_is_nan(self) || big_float_is_nan(ss2) )
 		return _big_float_check_carry(self, 1);
 
-	if( big_float_is_zero(_big_num_deref(self)) )
+	if( big_float_is_zero(self) )
 		return 0;
 
 	if( big_float_is_zero(ss2) ) {
@@ -2512,11 +2512,11 @@ big_num_carry_t big_float_mul(_big_num_inout(big_float_t, self), big_float_t ss2
 		return 0;
 	}
 
-	// man_result = mantissa * ss2.mantissa
-	big_uint_mul_no_carry(_big_num_ref(self->mantissa), ss2.mantissa, _big_num_ref(man_result), BIG_NUM_MUL_DEF);
+	// man_result = mantissa * ss2->mantissa
+	big_uint_mul_no_carry(_big_num_ref(self->mantissa), _big_num_ref(ss2->mantissa), _big_num_ref(man_result), BIG_NUM_MUL_DEF);
 
 	// 'i' will be from 0 to man*BIG_NUM_BITS_PER_UNIT
-	// because mantissa and ss2.mantissa are standardized 
+	// because mantissa and ss2->mantissa are standardized 
 	// (the highest bit in man_result is set to 1 or
 	// if there is a zero value in man_result the method CompensationToLeft()
 	// returns 0 but we'll correct this at the end in Standardizing() method)
@@ -2526,7 +2526,7 @@ big_num_carry_t big_float_mul(_big_num_inout(big_float_t, self), big_float_t ss2
 	if( exp_add != 0 )
 		c += big_int_add_int(_big_num_ref(self->exponent), exp_add, 0);
 
-	c += big_int_add(_big_num_ref(self->exponent), ss2.exponent);
+	c += big_int_add(_big_num_ref(self->exponent), _big_num_ref(ss2->exponent));
 
 	for(i=0 ; i<self->mantissa.size ; ++i)
 		self->mantissa.table[i] = man_result.table[i+self->mantissa.size];
@@ -2536,7 +2536,7 @@ big_num_carry_t big_float_mul(_big_num_inout(big_float_t, self), big_float_t ss2
 		c += _big_float_round_half_to_even(self, is_half, true);
 	}
 
-	if( big_float_is_sign(_big_num_deref(self)) == big_float_is_sign(ss2) ) {
+	if( big_float_is_sign(self) == big_float_is_sign(ss2) ) {
 		// the signs are the same, the result is positive
 		big_float_abs(self);
 	} else {
@@ -2562,7 +2562,7 @@ big_num_carry_t big_float_mul(_big_num_inout(big_float_t, self), big_float_t ss2
  * @param[in] round true if result should be rounded
  * @return big_num_ret_t 
  */
-big_num_ret_t big_float_div(_big_num_inout(big_float_t, self), big_float_t ss2, bool round)
+big_num_ret_t big_float_div(_big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, ss2), bool round)
 {
 	big_uint_t man1;
 	big_uint_init(_big_num_ref(man1), 2 * self->mantissa.size);
@@ -2571,7 +2571,7 @@ big_num_ret_t big_float_div(_big_num_inout(big_float_t, self), big_float_t ss2, 
 	size_t i;
 	big_num_carry_t c = 0;
 		
-	if( big_float_is_nan(_big_num_deref(self)) || big_float_is_nan(ss2) )
+	if( big_float_is_nan(self) || big_float_is_nan(ss2) )
 		return _big_float_check_carry(self, 1);
 
 	if( big_float_is_zero(ss2) ) {
@@ -2579,26 +2579,26 @@ big_num_ret_t big_float_div(_big_num_inout(big_float_t, self), big_float_t ss2, 
 		return 2;
 	}
 
-	if( big_float_is_zero(_big_num_deref(self)) )
+	if( big_float_is_zero(self) )
 		return 0;
 
 	for(i=0 ; i<self->mantissa.size ; ++i) {
-		man1.table[i] 				= 0;
+		man1.table[i] 						= 0;
 		man1.table[i+self->mantissa.size] 	= self->mantissa.table[i];
-		man2.table[i]     			= ss2.mantissa.table[i];
+		man2.table[i]     					= ss2->mantissa.table[i];
 		man2.table[i+self->mantissa.size] 	= 0;
 	}
 
 	big_uint_t remainder;
 	big_uint_init(_big_num_ref(remainder), self->mantissa.size);
-	big_uint_div(_big_num_ref(man1), man2, _big_num_ref(remainder), BIG_NUM_DIV_DEF);
+	big_uint_div(_big_num_ref(man1), _big_num_ref(man2), _big_num_ref(remainder), BIG_NUM_DIV_DEF);
 
 	i = big_uint_compensation_to_left(_big_num_ref(man1));
 
 	if( i != 0)
 		c += big_int_sub_int(_big_num_ref(self->exponent), i, 0);
 
-	c += big_int_sub(_big_num_ref(self->exponent), ss2.exponent);
+	c += big_int_sub(_big_num_ref(self->exponent), _big_num_ref(ss2->exponent));
 	
 	for(i=0 ; i<self->mantissa.size ; ++i)
 		self->mantissa.table[i] = man1.table[i+self->mantissa.size];
@@ -2609,7 +2609,7 @@ big_num_ret_t big_float_div(_big_num_inout(big_float_t, self), big_float_t ss2, 
 		c += _big_float_round_half_to_even(self, is_half, true);
 	}
 
-	if( big_float_is_sign(_big_num_deref(self)) == big_float_is_sign(ss2) )
+	if( big_float_is_sign(self) == big_float_is_sign(ss2) )
 		big_float_abs(self);
 	else
 		big_float_set_sign(self); // if there is a zero it will be corrected in Standardizing()
@@ -2638,11 +2638,11 @@ big_num_ret_t big_float_div(_big_num_inout(big_float_t, self), big_float_t ss2, 
  * @param[in] ss2 
  * @return big_num_ret_t 
  */
-big_num_ret_t big_float_mod(_big_num_inout(big_float_t, self), big_float_t ss2)
+big_num_ret_t big_float_mod(_big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, ss2))
 {
 	big_num_carry_t c = 0;
 
-	if( big_float_is_nan(_big_num_deref(self)) || big_float_is_nan(ss2) )
+	if( big_float_is_nan(self) || big_float_is_nan(ss2) )
 		return _big_float_check_carry(self, 1);
 
 	if( big_float_is_zero(ss2) ) {
@@ -2650,16 +2650,16 @@ big_num_ret_t big_float_mod(_big_num_inout(big_float_t, self), big_float_t ss2)
 		return 2;
 	}
 
-	if( !_big_float_smaller_without_sign_than(_big_num_deref(self), ss2) )
+	if( !_big_float_smaller_without_sign_than(self, ss2) )
 	{
 		big_float_t temp = _big_num_deref(self);
 
 		c = big_float_div(_big_num_ref(temp), ss2, true);
 		_big_float_skip_fraction(_big_num_ref(temp));
 		c += big_float_mul(_big_num_ref(temp), ss2, true);
-		c += big_float_sub(self, temp, true);
+		c += big_float_sub(self, _big_num_ref(temp), true);
 
-		if( !_big_float_smaller_without_sign_than(_big_num_deref(self), ss2 ) )
+		if( !_big_float_smaller_without_sign_than(self, ss2 ) )
 			c += 1;
 	}
 
@@ -2674,22 +2674,22 @@ big_num_ret_t big_float_mod(_big_num_inout(big_float_t, self), big_float_t ss2)
  * @param[in] self 
  * @return big_num_strg_t 
  */
-big_num_strg_t big_float_mod2(big_float_t self)
+big_num_strg_t big_float_mod2(_big_num_const_param _big_num_inout(big_float_t, self))
 {	
 	big_int_t zero, negative_bits;
-	big_int_init(_big_num_ref(zero), self.exponent.size);
+	big_int_init(_big_num_ref(zero), self->exponent.size);
 	big_int_set_zero(_big_num_ref(zero));
-	big_int_init_int(_big_num_ref(negative_bits), self.exponent.size, -_big_num_sstrg_t(self.mantissa.size*BIG_NUM_BITS_PER_UNIT));
+	big_int_init_int(_big_num_ref(negative_bits), self->exponent.size, -_big_num_sstrg_t(self->mantissa.size*BIG_NUM_BITS_PER_UNIT));
 
-	if( big_int_cmp_bigger(self.exponent, zero) || big_int_cmp_smaller_equal(self.exponent, negative_bits) )
+	if( big_int_cmp_bigger(_big_num_ref(self->exponent), _big_num_ref(zero)) || big_int_cmp_smaller_equal(_big_num_ref(self->exponent), _big_num_ref(negative_bits)) )
 		return 0;
 
 	big_num_sstrg_t exp_int;
-	big_int_to_int(self.exponent, _big_num_ref(exp_int));
+	big_int_to_int(_big_num_ref(self->exponent), _big_num_ref(exp_int));
 	// 'exp_int' is negative (or zero), we set it as positive
 	exp_int = -exp_int;
 
-	return big_uint_get_bit(self.mantissa, exp_int) ? 1 : 0;
+	return big_uint_get_bit(_big_num_ref(self->mantissa), exp_int) ? 1 : 0;
 }
 
 /**
@@ -2708,11 +2708,11 @@ big_num_strg_t big_float_mod2(big_float_t self)
  */
 big_num_ret_t big_float_pow_big_uint(_big_num_inout(big_float_t, self), big_uint_t _pow)
 {
-	if( big_float_is_nan(_big_num_deref(self)) )
+	if( big_float_is_nan(self) )
 		return 1;
 
-	if( big_float_is_zero(_big_num_deref(self)) ) {
-		if( big_uint_is_zero(_pow) ) {
+	if( big_float_is_zero(self) ) {
+		if( big_uint_is_zero(_big_num_ref(_pow)) ) {
 			// we don't define zero^zero
 			big_float_set_nan(self);
 			return 2;
@@ -2730,14 +2730,14 @@ big_num_ret_t big_float_pow_big_uint(_big_num_inout(big_float_t, self), big_uint
 
 	while( c == 0 ) {
 		if( (_pow.table[0] & 1) != 0)
-			c += big_float_mul(_big_num_ref(result), start, true);
+			c += big_float_mul(_big_num_ref(result), _big_num_ref(start), true);
 
 		big_uint_rcr(_big_num_ref(_pow), 1, 0);
 
-		if( big_uint_is_zero(_pow) )
+		if( big_uint_is_zero(_big_num_ref(_pow)) )
 			break;
 
-		c += big_float_mul(_big_num_ref(start), start, true);
+		c += big_float_mul(_big_num_ref(start), _big_num_ref(start), true);
 	}
 
 	_big_num_deref(self) = result;
@@ -2759,13 +2759,13 @@ big_num_ret_t big_float_pow_big_uint(_big_num_inout(big_float_t, self), big_uint
  */
 big_num_ret_t big_float_pow_big_int(_big_num_inout(big_float_t, self), big_int_t _pow)
 {
-	if( big_float_is_nan(_big_num_deref(self)) )
+	if( big_float_is_nan(self) )
 		return 1;
 
-	if ( !big_int_is_sign(_pow) )
+	if ( !big_int_is_sign(_big_num_ref(_pow)) )
 		return big_float_pow_big_uint(self, _pow);
 	
-	if ( big_float_is_zero(_big_num_deref(self)) ) {
+	if ( big_float_is_zero(self) ) {
 		// if 'p' is negative then
 		// 'this' must be different from zero
 		big_float_set_nan(self);
@@ -2777,7 +2777,7 @@ big_num_ret_t big_float_pow_big_int(_big_num_inout(big_float_t, self), big_int_t
 	c += big_float_pow_big_uint(_big_num_ref(t), _pow); // here can only be a carry (return:1)
 
 	big_float_set_one(self);
-	c += big_float_div(self, t, true);
+	c += big_float_div(self, _big_num_ref(t), true);
 
 	return _big_float_check_carry(self, c);
 }
@@ -2795,15 +2795,14 @@ big_num_ret_t big_float_pow_big_int(_big_num_inout(big_float_t, self), big_int_t
  * @param[in] _pow 
  * @return big_num_ret_t 
  */
-big_num_ret_t big_float_pow_big_frac(_big_num_inout(big_float_t, self), big_float_t _pow)
+big_num_ret_t big_float_pow_big_frac(_big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, _pow))
 {
-	if( big_float_is_nan(_big_num_deref(self)) || big_float_is_nan(_pow) )
+	if( big_float_is_nan(self) || big_float_is_nan(_pow) )
 		return _big_float_check_carry(self, 1);
 
 	big_float_t temp;
 	big_float_init(_big_num_ref(temp), self->mantissa.size, self->exponent.size);
-	big_float_set_one(_big_num_ref(temp));
-	big_num_carry_t c = big_float_ln(_big_num_ref(temp), _big_num_deref(self));
+	big_num_carry_t c = big_float_ln(_big_num_ref(temp), self);
 
 	if( c != 0 ) { // can be 2 from big_float_ln()
 		big_float_set_nan(self);
@@ -2811,7 +2810,7 @@ big_num_ret_t big_float_pow_big_frac(_big_num_inout(big_float_t, self), big_floa
 	}
 
 	c += big_float_mul(_big_num_ref(temp), _pow, true);
-	c += big_float_exp(self, temp);
+	c += big_float_exp(self, _big_num_ref(temp));
 
 	return _big_float_check_carry(self, c);
 }
@@ -2828,12 +2827,12 @@ big_num_ret_t big_float_pow_big_frac(_big_num_inout(big_float_t, self), big_floa
  * @param[in] _pow 
  * @return big_num_ret_t 
  */
-big_num_ret_t big_float_pow(_big_num_inout(big_float_t, self), big_float_t _pow)
+big_num_ret_t big_float_pow(_big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, _pow))
 {
-	if (big_float_is_nan(_big_num_deref(self)) || big_float_is_nan(_pow))
+	if (big_float_is_nan(self) || big_float_is_nan(_pow))
 		return _big_float_check_carry(self, 1);
 
-	if (big_float_is_zero(_big_num_deref(self))) {
+	if (big_float_is_zero(self)) {
 		// 0^pow will be 0 only for pow>0
 		if( big_float_is_sign(_pow) || big_float_is_zero(_pow) ) {
 			big_float_set_nan(self);
@@ -2846,11 +2845,11 @@ big_num_ret_t big_float_pow(_big_num_inout(big_float_t, self), big_float_t _pow)
 	}
 
 	big_int_t zero, negative_bits;
-	big_int_init(_big_num_ref(zero), _pow.exponent.size);
+	big_int_init(_big_num_ref(zero), _pow->exponent.size);
 	big_int_set_zero(_big_num_ref(zero));
-	big_int_init_int(_big_num_ref(negative_bits), _pow.exponent.size, -_big_num_sstrg_t(self->mantissa.size*BIG_NUM_BITS_PER_UNIT));
+	big_int_init_int(_big_num_ref(negative_bits), _pow->exponent.size, -_big_num_sstrg_t(self->mantissa.size*BIG_NUM_BITS_PER_UNIT));
 
-	if ( big_int_cmp_bigger(_pow.exponent, negative_bits) && big_int_cmp_smaller_equal(_pow.exponent, zero)) {
+	if ( big_int_cmp_bigger(_big_num_ref(_pow->exponent), _big_num_ref(negative_bits)) && big_int_cmp_smaller_equal(_big_num_ref(_pow->exponent), _big_num_ref(zero))) {
 		if ( _big_float_is_integer(_pow) )
 			return _big_float_pow_big_float_int(self, _pow);
 	}
@@ -2871,12 +2870,12 @@ big_num_ret_t big_float_pow(_big_num_inout(big_float_t, self), big_float_t _pow)
  */
 big_num_ret_t big_float_sqrt(_big_num_inout(big_float_t, self))
 {
-	if( big_float_is_nan(_big_num_deref(self)) || big_float_is_sign(_big_num_deref(self))) {
+	if( big_float_is_nan(self) || big_float_is_sign(self)) {
 		big_float_set_nan(self);
 		return 2;
 	}
 
-	if (big_float_is_zero(_big_num_deref(self)))
+	if (big_float_is_zero(self))
 		return 0;
 
 	big_float_t old = _big_num_deref(self);
@@ -2885,9 +2884,9 @@ big_num_ret_t big_float_sqrt(_big_num_inout(big_float_t, self))
 	big_num_carry_t c = 0;
 
 	// we're using the formula: sqrt(x) = e ^ (ln(x) / 2)
-	c += big_float_ln(_big_num_ref(ln), _big_num_deref(self));
+	c += big_float_ln(_big_num_ref(ln), self);
 	c += big_int_sub_int(_big_num_ref(ln.exponent), 1, 0); // ln = ln / 2
-	c += big_float_exp(self, ln);
+	c += big_float_exp(self, _big_num_ref(ln));
 
 	// above formula doesn't give accurate results for some integers
 	// e.g. Sqrt(81) would not be 9 but a value very closed to 9
@@ -2895,14 +2894,14 @@ big_num_ret_t big_float_sqrt(_big_num_inout(big_float_t, self))
 	// with the old value, if they are equal then the result is an integer too
 
 
-	if ( c == 0 && _big_float_is_integer(old) && !_big_float_is_integer(_big_num_deref(self))) {
+	if ( c == 0 && _big_float_is_integer(_big_num_ref(old)) && !_big_float_is_integer(self)) {
 		big_float_t temp = _big_num_deref(self);
 		c += big_float_round(_big_num_ref(temp));
 
 		big_float_t temp2 = temp;
-		c += big_float_mul(_big_num_ref(temp), temp2, true);
+		c += big_float_mul(_big_num_ref(temp), _big_num_ref(temp2), true);
 
-		if (big_float_cmp_equal(temp, old))
+		if (big_float_cmp_equal(_big_num_ref(temp), _big_num_ref(old)))
 			_big_num_deref(self) = temp2;
 	}
 
@@ -2922,7 +2921,7 @@ big_num_ret_t big_float_sqrt(_big_num_inout(big_float_t, self))
  * @param[in] x 
  * @return big_num_carry_t 
  */
-big_num_carry_t big_float_exp(_big_num_inout(big_float_t, self), big_float_t x)
+big_num_carry_t big_float_exp(_big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, x))
 {
 	big_num_carry_t c = 0;
 	if ( big_float_is_nan(x) )
@@ -2974,11 +2973,11 @@ big_num_carry_t big_float_exp(_big_num_inout(big_float_t, self), big_float_t x)
 	big_float_init(_big_num_ref(one), e_.mantissa.size, e_.exponent.size);
 	big_float_set_one(_big_num_ref(one));
 	size_t steps;
-	if (big_float_cmp_smaller_equal(e_, one)) {
-		big_float_mul(_big_num_ref(m), e_, true);
-		_big_float_exp_surrounding_0(self, m, _big_num_ref(steps));
+	if (big_float_cmp_smaller_equal(_big_num_ref(e_), _big_num_ref(one))) {
+		big_float_mul(_big_num_ref(m), _big_num_ref(e_), true);
+		_big_float_exp_surrounding_0(self, _big_num_ref(m), _big_num_ref(steps));
 	} else {
-		_big_float_exp_surrounding_0(self, m, _big_num_ref(steps));
+		_big_float_exp_surrounding_0(self, _big_num_ref(m), _big_num_ref(steps));
 		c += _big_float_pow_big_float_uint(self, e_);
 	}
 
@@ -3005,7 +3004,7 @@ big_num_carry_t big_float_exp(_big_num_inout(big_float_t, self), big_float_t x)
  * @param[in] x 
  * @return big_num_carry_t 
  */
-big_num_ret_t big_float_ln(_big_num_inout(big_float_t, self), big_float_t x)
+big_num_ret_t big_float_ln(_big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, x))
 {
 	if (big_float_is_nan(x))
 		return _big_float_check_carry(self, 1);
@@ -3016,7 +3015,7 @@ big_num_ret_t big_float_ln(_big_num_inout(big_float_t, self), big_float_t x)
 	}
 
 	big_float_t exponent_temp, mantissa_compensation;
-	big_float_init_big_int(_big_num_ref(exponent_temp), self->mantissa.size, self->exponent.size, x.exponent);
+	big_float_init_big_int(_big_num_ref(exponent_temp), self->mantissa.size, self->exponent.size, x->exponent);
 
 	// m will be the value of the mantissa in range <1,2)
 	big_float_t m;
@@ -3025,16 +3024,16 @@ big_num_ret_t big_float_ln(_big_num_inout(big_float_t, self), big_float_t x)
 
 	// we must add 'self->mantissa.size*BIG_NUM_BITS_PER_UNIT-1' because we've taken it from the mantissa
 	big_float_init_uint(_big_num_ref(mantissa_compensation), self->mantissa.size, self->exponent.size, self->mantissa.size*BIG_NUM_BITS_PER_UNIT-1);
-	big_num_carry_t c = big_float_add(_big_num_ref(exponent_temp), mantissa_compensation, true);
+	big_num_carry_t c = big_float_add(_big_num_ref(exponent_temp), _big_num_ref(mantissa_compensation), true);
 
 	size_t steps;
-	_big_float_ln_surrounding_1(self, m, _big_num_ref(steps));
+	_big_float_ln_surrounding_1(self, _big_num_ref(m), _big_num_ref(steps));
 
 	big_float_t ln2;
 	big_float_init(_big_num_ref(ln2), self->mantissa.size, self->exponent.size);
 	big_float_set_ln2(_big_num_ref(ln2));
-	c += big_float_mul(_big_num_ref(exponent_temp), ln2, true);
-	c += big_float_add(self, exponent_temp, true);
+	c += big_float_mul(_big_num_ref(exponent_temp), _big_num_ref(ln2), true);
+	c += big_float_add(self, _big_num_ref(exponent_temp), true);
 
 	return _big_float_check_carry(self, c);
 }
@@ -3054,7 +3053,7 @@ big_num_ret_t big_float_ln(_big_num_inout(big_float_t, self), big_float_t x)
  * @param[in] base 
  * @return big_num_carry_t 
  */
-big_num_ret_t big_float_log(_big_num_inout(big_float_t, self), big_float_t x, big_float_t base)
+big_num_ret_t big_float_log(_big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, x), _big_num_const_param _big_num_inout(big_float_t, base))
 {
 	if( big_float_is_nan(x) || big_float_is_nan(base) )
 		return _big_float_check_carry(self, 1);
@@ -3068,12 +3067,12 @@ big_num_ret_t big_float_log(_big_num_inout(big_float_t, self), big_float_t x, bi
 	big_float_init(_big_num_ref(denominator), self->mantissa.size, self->exponent.size);
 	big_float_set_one(_big_num_ref(denominator));
 
-	if( big_float_is_sign(base) || big_float_is_zero(base) || big_float_cmp_equal(base, denominator) ) {
+	if( big_float_is_sign(base) || big_float_is_zero(base) || big_float_cmp_equal(base, _big_num_ref(denominator)) ) {
 		big_float_set_nan(self);
 		return 3;
 	}
 	
-	if( big_float_cmp_equal(x, denominator) ) { // (this is: if x == 1)
+	if( big_float_cmp_equal(x, _big_num_ref(denominator)) ) { // (this is: if x == 1)
 		// log(1) is 0
 		big_float_set_zero(self);
 		return 0;
@@ -3084,7 +3083,7 @@ big_num_ret_t big_float_log(_big_num_inout(big_float_t, self), big_float_t x, bi
 	big_num_carry_t c = big_float_ln(self, x);
 
 	c += big_float_ln(_big_num_ref(denominator), base);
-	c += big_float_div(self, denominator, true);
+	c += big_float_div(self, _big_num_ref(denominator), true);
 
 	return _big_float_check_carry(self, c);
 }
@@ -3260,33 +3259,33 @@ void big_float_init_int(_big_num_inout(big_float_t, self), size_t man, size_t ex
  * @param[in] exp the length of the exponent object
  * @param[in] value the value to set self to
  */
-big_num_carry_t big_float_init_big_float(_big_num_inout(big_float_t, self), size_t man, size_t exp, big_float_t value)
+big_num_carry_t big_float_init_big_float(_big_num_inout(big_float_t, self), size_t man, size_t exp, _big_num_const_param _big_num_inout(big_float_t, value))
 {
 	big_float_init(self, man, exp);
 	
-	self->info = value.info;
-	if (big_float_is_nan(_big_num_deref(self)));
+	self->info = value->info;
+	if (big_float_is_nan(self))
 		return 1;
 	
-	if (0 != big_int_init_big_int(_big_num_ref(self->exponent), self->exponent.size, value.exponent) ) {
+	if (0 != big_int_init_big_int(_big_num_ref(self->exponent), self->exponent.size, _big_num_ref(value->exponent)) ) {
 		big_float_set_nan(self);
 		return 1;
 	}
 
-	size_t man_len_min = (self->mantissa.size < value.mantissa.size) ? self->mantissa.size : value.mantissa.size;
+	size_t man_len_min = (self->mantissa.size < value->mantissa.size) ? self->mantissa.size : value->mantissa.size;
 	size_t i;
 	big_num_carry_t c = 0;
 
 	for ( i = 0; i < man_len_min ; ++i)
-		self->mantissa.table[self->mantissa.size-1-i] = value.mantissa.table[value.mantissa.size-1-i];
+		self->mantissa.table[self->mantissa.size-1-i] = value->mantissa.table[value->mantissa.size-1-i];
 	for ( ; i < self->mantissa.size ; ++i)
 		self->mantissa.table[self->mantissa.size-1-i] = 0;
 
-	if (self->mantissa.size > value.mantissa.size) {
-		big_num_strg_t man_diff = (self->mantissa.size - value.mantissa.size) * BIG_NUM_BITS_PER_UNIT;
+	if (self->mantissa.size > value->mantissa.size) {
+		big_num_strg_t man_diff = (self->mantissa.size - value->mantissa.size) * BIG_NUM_BITS_PER_UNIT;
 		c += big_int_sub_int(_big_num_ref(self->exponent), man_diff, 0);
-	} else if(self->mantissa.size < value.mantissa.size) {
-		big_num_strg_t man_diff =(value.mantissa.size - self->mantissa.size) * BIG_NUM_BITS_PER_UNIT;
+	} else if(self->mantissa.size < value->mantissa.size) {
+		big_num_strg_t man_diff =(value->mantissa.size - self->mantissa.size) * BIG_NUM_BITS_PER_UNIT;
 		c += big_int_add_int(_big_num_ref(self->exponent), man_diff, 0);
 	}
 
@@ -3308,7 +3307,7 @@ void big_float_init_big_uint(_big_num_inout(big_float_t, self), size_t man, size
 
 	self->info = 0;
 	big_num_sstrg_t compensation = _big_num_sstrg_t(big_uint_compensation_to_left(_big_num_ref(value)));
-	_big_float_init_uint_or_int(self, value, compensation);
+	_big_float_init_uint_or_int(self, _big_num_ref(value), compensation);
 }
 
 /**
@@ -3324,13 +3323,13 @@ void big_float_init_big_int(_big_num_inout(big_float_t, self), size_t man, size_
 
 	self->info = 0;
 	bool is_sign = false;
-	if (big_int_is_sign(value)) {
+	if (big_int_is_sign(_big_num_ref(value))) {
 		big_int_change_sign(_big_num_ref(value));
 		is_sign = true;
 	}
 
 	big_num_sstrg_t compensation = _big_num_sstrg_t(big_int_compensation_to_left(_big_num_ref(value)));
-	_big_float_init_uint_or_int(self, value, compensation);
+	_big_float_init_uint_or_int(self, _big_num_ref(value), compensation);
 
 	if (is_sign)
 		big_float_set_sign(self);
@@ -3342,7 +3341,7 @@ void big_float_init_big_int(_big_num_inout(big_float_t, self), size_t man, size_
  * @param[in] result the converted value
  * @return big_num_carry_t 
  */
-big_num_carry_t	big_float_to_double(big_float_t self, _big_num_out(double, result))
+big_num_carry_t	big_float_to_double(_big_num_const_param _big_num_inout(big_float_t, self), _big_num_out(double, result))
 {
 	if ( big_float_is_zero(self) ) {
 		_big_num_deref(result) = 0.0;
@@ -3354,16 +3353,16 @@ big_num_carry_t	big_float_to_double(big_float_t self, _big_num_out(double, resul
 		return 0;
 	}
 
-	big_num_sstrg_t e_correction = _big_num_sstrg_t((self.mantissa.size*BIG_NUM_BITS_PER_UNIT)) - 1;
+	big_num_sstrg_t e_correction = _big_num_sstrg_t((self->mantissa.size*BIG_NUM_BITS_PER_UNIT)) - 1;
 	big_int_t _e_correction;
-	big_int_init_int(_big_num_ref(_e_correction), self.exponent.size, 1024 - e_correction);
-	if (big_int_cmp_bigger_equal(self.exponent, _e_correction) ) {
+	big_int_init_int(_big_num_ref(_e_correction), self->exponent.size, 1024 - e_correction);
+	if (big_int_cmp_bigger_equal(_big_num_ref(self->exponent), _big_num_ref(_e_correction)) ) {
 		// +/- infinity
 		_big_num_deref(result) = _big_float_to_double_set_double(self, big_float_is_sign(self), 2047, 0, true, false);
 		return 1;
 	} else {
-		big_int_init_int(_big_num_ref(_e_correction), self.exponent.size, -1023 -52 - e_correction);
-		if (big_int_cmp_smaller_equal(self.exponent, _e_correction)) {
+		big_int_init_int(_big_num_ref(_e_correction), self->exponent.size, -1023 -52 - e_correction);
+		if (big_int_cmp_smaller_equal(_big_num_ref(self->exponent), _big_num_ref(_e_correction))) {
 			// too small value - we assume that there'll be a zero and return a carry
 			_big_num_deref(result) = 0.0;
 			return 1;
@@ -3371,7 +3370,7 @@ big_num_carry_t	big_float_to_double(big_float_t self, _big_num_out(double, resul
 	}
 
 	big_num_sstrg_t e;
-	big_int_to_int(self.exponent, _big_num_ref(e));
+	big_int_to_int(_big_num_ref(self->exponent), _big_num_ref(e));
 	e += e_correction;
 
 	if ( e <= -1023 ) {
@@ -3389,7 +3388,7 @@ big_num_carry_t	big_float_to_double(big_float_t self, _big_num_out(double, resul
  * @param[in] result the converted value
  * @return big_num_carry_t 
  */
-big_num_carry_t	big_float_to_float(big_float_t self, _big_num_out(float, result))
+big_num_carry_t	big_float_to_float(_big_num_const_param _big_num_inout(big_float_t, self), _big_num_out(float, result))
 {
 	double result_double;
 	big_num_carry_t c = big_float_to_double(self, _big_num_ref(result_double));
@@ -3430,7 +3429,7 @@ big_num_carry_t	big_float_to_float(big_float_t self, _big_num_out(float, result)
  * @param[in] result the converted value
  * @return big_num_carry_t 
  */
-big_num_carry_t	big_float_to_uint(big_float_t self, _big_num_out(big_num_strg_t, result))
+big_num_carry_t	big_float_to_uint(_big_num_const_param _big_num_inout(big_float_t, self), _big_num_out(big_num_strg_t, result))
 {
 	if ( 0 != _big_float_to_uint_or_int(self, result) )
 		return 1;
@@ -3445,7 +3444,7 @@ big_num_carry_t	big_float_to_uint(big_float_t self, _big_num_out(big_num_strg_t,
  * @param[in] result the converted value
  * @return big_num_carry_t 
  */
-big_num_carry_t	big_float_to_int(big_float_t self, _big_num_out(big_num_sstrg_t, result))
+big_num_carry_t	big_float_to_int(_big_num_const_param _big_num_inout(big_float_t, self), _big_num_out(big_num_sstrg_t, result))
 {
 	big_num_strg_t result_uint;
 	big_num_carry_t c = _big_float_to_uint_or_int(self, _big_num_ref(result_uint));
@@ -3470,7 +3469,7 @@ big_num_carry_t	big_float_to_int(big_float_t self, _big_num_out(big_num_sstrg_t,
  * @return true 
  * @return false 
  */
-bool big_float_cmp_smaller(big_float_t self, big_float_t l)
+bool big_float_cmp_smaller(_big_num_const_param _big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, l))
 {
 	if (big_float_is_sign(self) && !big_float_is_sign(l)) {
 		// self < 0 and l >= 0
@@ -3496,7 +3495,7 @@ bool big_float_cmp_smaller(big_float_t self, big_float_t l)
  * @return true 
  * @return false 
  */
-bool big_float_cmp_bigger(big_float_t self, big_float_t l)
+bool big_float_cmp_bigger(_big_num_const_param _big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, l))
 {
 	if (big_float_is_sign(self) && !big_float_is_sign(l)) {
 		// self < 0 and l >= 0
@@ -3522,7 +3521,7 @@ bool big_float_cmp_bigger(big_float_t self, big_float_t l)
  * @return true 
  * @return false 
  */
-bool big_float_cmp_equal(big_float_t self, big_float_t l)
+bool big_float_cmp_equal(_big_num_const_param _big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, l))
 {
 	if ( big_float_is_sign(self) != big_float_is_sign(l) )
 		return false;
@@ -3537,7 +3536,7 @@ bool big_float_cmp_equal(big_float_t self, big_float_t l)
  * @return true 
  * @return false 
  */
-bool big_float_cmp_smaller_equal(big_float_t self, big_float_t l)
+bool big_float_cmp_smaller_equal(_big_num_const_param _big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, l))
 {
 	return !big_float_cmp_bigger(self, l);
 }
@@ -3549,7 +3548,7 @@ bool big_float_cmp_smaller_equal(big_float_t self, big_float_t l)
  * @return true 
  * @return false 
  */
-bool big_float_cmp_bigger_equal(big_float_t self, big_float_t l)
+bool big_float_cmp_bigger_equal(_big_num_const_param _big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, l))
 {
 	return !big_float_cmp_smaller(self, l);
 }
@@ -3587,7 +3586,7 @@ _big_num_static big_num_carry_t _big_float_check_carry(_big_num_inout(big_float_
  */
 _big_num_static big_num_carry_t _big_float_standardizing(_big_num_inout(big_float_t, self))
 {
-	if ( big_uint_is_the_highest_bit_set(self->mantissa) ) {
+	if ( big_uint_is_the_highest_bit_set(_big_num_ref(self->mantissa)) ) {
 		_big_float_clear_info_bit(self, BIG_FLOAT_INFO_ZERO);
 		return 0;
 	}
@@ -3597,7 +3596,7 @@ _big_num_static big_num_carry_t _big_float_standardizing(_big_num_inout(big_floa
 	
 	big_int_t comp;
 	big_int_init_int(_big_num_ref(comp), self->exponent.size, _big_num_sstrg_t(big_uint_compensation_to_left(_big_num_ref(self->mantissa))));
-	return big_int_sub(_big_num_ref(self->exponent), comp);
+	return big_int_sub(_big_num_ref(self->exponent), _big_num_ref(comp));
 }
 
 /**
@@ -3609,7 +3608,7 @@ _big_num_static big_num_carry_t _big_float_standardizing(_big_num_inout(big_floa
  */
 _big_num_static bool	_big_float_correct_zero(_big_num_inout(big_float_t, self))
 {
-	if (big_uint_is_zero(self->mantissa)) {
+	if (big_uint_is_zero(_big_num_ref(self->mantissa))) {
 		_big_float_set_info_bit(self, BIG_FLOAT_INFO_ZERO);
 		_big_float_clear_info_bit(self, BIG_FLOAT_INFO_SIGN);
 		big_int_set_zero(_big_num_ref(self->exponent));
@@ -3647,9 +3646,9 @@ _big_num_static void	_big_float_set_info_bit(_big_num_inout(big_float_t, self), 
  * @return true bit was set
  * @return false bit was not set
  */
-_big_num_static bool	_big_float_is_info_bit(big_float_t self, big_float_info_t bit)
+_big_num_static bool	_big_float_is_info_bit(_big_num_const_param _big_num_inout(big_float_t, self), big_float_info_t bit)
 {
-	return (self.info & bit) != 0;
+	return (self->info & bit) != 0;
 }
 
 /**
@@ -3670,7 +3669,7 @@ big_num_carry_t _big_float_round_half_to_even(_big_num_inout(big_float_t, self),
 {
 	big_num_carry_t c = 0;
 
-	if( !is_half || big_uint_is_the_lowest_bit_set(self->mantissa) )
+	if( !is_half || big_uint_is_the_lowest_bit_set(_big_num_ref(self->mantissa)) )
 	{
 		if( rounding_up )
 		{
@@ -3683,7 +3682,7 @@ big_num_carry_t _big_float_round_half_to_even(_big_num_inout(big_float_t, self),
 			big_uint_sub_uint(_big_num_ref(self->mantissa), 1);
 
 			// we're using rounding_up=false in Add() when the mantissas have different signs
-			// mantissa can be zero only when previous mantissa was equal to ss2.mantissa
+			// mantissa can be zero only when previous mantissa was equal to ss2->mantissa
 			// but in such a case 'last_bit_set' will not be set and consequently 'do_rounding' will be false
 		}
 	}
@@ -3702,25 +3701,25 @@ big_num_carry_t _big_float_round_half_to_even(_big_num_inout(big_float_t, self),
  * @param[out] do_adding 
  * @param[out] do_rounding 
  */
-_big_num_static void _big_float_add_check_exponents(_big_num_inout(big_float_t, self), _big_num_inout(big_float_t, ss2), big_int_t exp_offset, _big_num_out(bool, last_bit_set), _big_num_out(bool, rest_zero), _big_num_out(bool, do_adding), _big_num_out(bool, do_rounding))
+_big_num_static void _big_float_add_check_exponents(_big_num_inout(big_float_t, self), _big_num_inout(big_float_t, ss2), _big_num_const_param _big_num_inout(big_int_t, exp_offset), _big_num_out(bool, last_bit_set), _big_num_out(bool, rest_zero), _big_num_out(bool, do_adding), _big_num_out(bool, do_rounding))
 {
 	big_int_t mantissa_size_in_bits;
 	big_int_init_uint(_big_num_ref(mantissa_size_in_bits), self->exponent.size, self->mantissa.size * BIG_NUM_BITS_PER_UNIT);
 
-	if (big_int_cmp_equal(exp_offset, mantissa_size_in_bits)) {
-		_big_num_deref(last_bit_set) = big_uint_is_the_highest_bit_set(ss2->mantissa);
-		_big_num_deref(rest_zero) = big_uint_are_first_bits_zero(ss2->mantissa, self->mantissa.size * BIG_NUM_BITS_PER_UNIT - 1);
+	if (big_int_cmp_equal(exp_offset, _big_num_ref(mantissa_size_in_bits))) {
+		_big_num_deref(last_bit_set) = big_uint_is_the_highest_bit_set(_big_num_ref(ss2->mantissa));
+		_big_num_deref(rest_zero) = big_uint_are_first_bits_zero(_big_num_ref(ss2->mantissa), self->mantissa.size * BIG_NUM_BITS_PER_UNIT - 1);
 		_big_num_deref(do_rounding) = true;
-	} else if (big_int_cmp_smaller(exp_offset, mantissa_size_in_bits)) {
+	} else if (big_int_cmp_smaller(exp_offset, _big_num_ref(mantissa_size_in_bits))) {
 		big_num_strg_t moved;
-		big_int_to_int(exp_offset, _big_num_ref(moved)); // how many times we must move ss2.mantissa
+		big_int_to_int(exp_offset, _big_num_ref(moved)); // how many times we must move ss2->mantissa
 		_big_num_deref(rest_zero) = true;
 
 		if ( moved > 0 ) {
-			_big_num_deref(last_bit_set) = big_uint_get_bit(ss2->mantissa, moved-1);
+			_big_num_deref(last_bit_set) = big_uint_get_bit(_big_num_ref(ss2->mantissa), moved-1);
 
 			if (moved > 1)
-				_big_num_deref(rest_zero) = big_uint_are_first_bits_zero(ss2->mantissa, moved-1);
+				_big_num_deref(rest_zero) = big_uint_are_first_bits_zero(_big_num_ref(ss2->mantissa), moved-1);
 			
 			// (2) moving 'exp_offset' times
 			big_uint_rcr(_big_num_ref(ss2->mantissa), moved, 0);
@@ -3742,12 +3741,12 @@ _big_num_static void _big_float_add_check_exponents(_big_num_inout(big_float_t, 
  * @param[in] rest_zero 
  * @return big_num_carry_t 
  */
-_big_num_static big_num_carry_t _big_float_add_mantissas(_big_num_inout(big_float_t, self), big_float_t ss2, _big_num_out(bool, last_bit_set), _big_num_out(bool, rest_zero))
+_big_num_static big_num_carry_t _big_float_add_mantissas(_big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, ss2), _big_num_out(bool, last_bit_set), _big_num_out(bool, rest_zero))
 {
 	big_num_carry_t c = 0;
-	if (big_float_is_sign(_big_num_deref(self)) == big_float_is_sign(ss2)) {
+	if (big_float_is_sign(self) == big_float_is_sign(ss2)) {
 		// values have the same signs
-		if (0 != big_uint_add(_big_num_ref(self->mantissa), ss2.mantissa, 0)) {
+		if (0 != big_uint_add(_big_num_ref(self->mantissa), _big_num_ref(ss2->mantissa), 0)) {
 			// we have one bit more from addition (carry)
 			// now rest_zero means the old rest_zero with the old last_bit_set
 			_big_num_deref(rest_zero)    = (!_big_num_deref(last_bit_set) && _big_num_deref(rest_zero));
@@ -3760,7 +3759,7 @@ _big_num_static big_num_carry_t _big_float_add_mantissas(_big_num_inout(big_floa
 		// (1) (2) guarantee that the mantissa of this
 		// is greater than or equal to the mantissa of the ss2
 
-		big_uint_sub(_big_num_ref(self->mantissa), ss2.mantissa, 0);
+		big_uint_sub(_big_num_ref(self->mantissa), _big_num_ref(ss2->mantissa), 0);
 	}
 
 	return c;
@@ -3779,21 +3778,21 @@ _big_num_static big_num_carry_t _big_float_add(_big_num_inout(big_float_t, self)
 	bool last_bit_set, rest_zero, do_adding, do_rounding, rounding_up;
 	big_num_carry_t c = 0;
 
-	if( big_float_is_nan(_big_num_deref(self)) || big_float_is_nan(ss2) )
+	if( big_float_is_nan(self) || big_float_is_nan(_big_num_ref(ss2)) )
 		return _big_float_check_carry(self, 1);
 
 	if( !adding )
 		big_float_change_sign(_big_num_ref(ss2)); // subtracting
 
 	// (1) abs(this) will be >= abs(ss2)
-	if( _big_float_smaller_without_sign_than(_big_num_deref(self), ss2) )
+	if( _big_float_smaller_without_sign_than(self, _big_num_ref(ss2)) )
 		big_float_swap(self, _big_num_ref(ss2));
 
-	if( big_float_is_zero(ss2) )
+	if( big_float_is_zero(_big_num_ref(ss2)) )
 		return 0;
 
 	big_int_t exp_offset = self->exponent;
-	big_int_sub(_big_num_ref(exp_offset), ss2.exponent);
+	big_int_sub(_big_num_ref(exp_offset), _big_num_ref(ss2.exponent));
 
 	if( 0 == big_int_abs(_big_num_ref(exp_offset)) ) {
 		// if there is a carry in Abs it means the value in exp_offset has only the lowest bit set
@@ -3803,12 +3802,12 @@ _big_num_static big_num_carry_t _big_float_add(_big_num_inout(big_float_t, self)
 
 
 		last_bit_set = rest_zero = do_adding = do_rounding = false;
-		rounding_up = (big_float_is_sign(_big_num_deref(self)) == big_float_is_sign(ss2));
+		rounding_up = (big_float_is_sign(self) == big_float_is_sign(_big_num_ref(ss2)));
 
-		_big_float_add_check_exponents(self, _big_num_ref(ss2), exp_offset, _big_num_ref(last_bit_set), _big_num_ref(rest_zero), _big_num_ref(do_adding), _big_num_ref(do_rounding));
+		_big_float_add_check_exponents(self, _big_num_ref(ss2), _big_num_ref(exp_offset), _big_num_ref(last_bit_set), _big_num_ref(rest_zero), _big_num_ref(do_adding), _big_num_ref(do_rounding));
 		
 		if( do_adding )
-			c += _big_float_add_mantissas(self, ss2, _big_num_ref(last_bit_set), _big_num_ref(rest_zero));
+			c += _big_float_add_mantissas(self, _big_num_ref(ss2), _big_num_ref(last_bit_set), _big_num_ref(rest_zero));
 
 		if( !round || !last_bit_set )
 			do_rounding = false;
@@ -3864,11 +3863,11 @@ _big_num_static bool _big_float_check_greater_or_equal_half(_big_num_inout(big_f
  */
 _big_num_static big_num_ret_t _big_float_pow_big_float_uint(_big_num_inout(big_float_t, self), big_float_t _pow)
 {
-	if( big_float_is_nan(_big_num_deref(self)) || big_float_is_nan(_pow) )
+	if( big_float_is_nan(self) || big_float_is_nan(_big_num_ref(_pow)) )
 		return _big_float_check_carry(self, 1);
 
-	if( big_float_is_zero(_big_num_deref(self)) ) {
-		if( big_float_is_zero(_pow) ) {
+	if( big_float_is_zero(self) ) {
+		if( big_float_is_zero(_big_num_ref(_pow)) ) {
 			// we don't define zero^zero
 			big_float_set_nan(self);
 			return 2;
@@ -3878,7 +3877,7 @@ _big_num_static big_num_ret_t _big_float_pow_big_float_uint(_big_num_inout(big_f
 		return 0;
 	}
 
-	if (big_float_is_sign(_pow))
+	if (big_float_is_sign(_big_num_ref(_pow)))
 		big_float_abs(_big_num_ref(_pow));
 
 	big_float_t start = _big_num_deref(self);
@@ -3890,15 +3889,15 @@ _big_num_static big_num_ret_t _big_float_pow_big_float_uint(_big_num_inout(big_f
 	result = one;
 
 	while( c == 0 ) {
-		if( 0 != big_float_mod2(_pow) )
-			c += big_float_mul(_big_num_ref(result), start, true);
+		if( 0 != big_float_mod2(_big_num_ref(_pow)) )
+			c += big_float_mul(_big_num_ref(result), _big_num_ref(start), true);
 
 		c += big_int_sub_int(_big_num_ref(_pow.exponent), 1, 0);
 
-		if( big_float_cmp_smaller(_pow, one) )
+		if( big_float_cmp_smaller(_big_num_ref(_pow), _big_num_ref(one)) )
 			break;
 
-		c += big_float_mul(_big_num_ref(start), start, true);
+		c += big_float_mul(_big_num_ref(start), _big_num_ref(start), true);
 	}
 
 	_big_num_deref(self) = result;
@@ -3919,15 +3918,15 @@ _big_num_static big_num_ret_t _big_float_pow_big_float_uint(_big_num_inout(big_f
  * @param[in] pow 
  * @return big_num_ret_t 
  */
-_big_num_static big_num_ret_t _big_float_pow_big_float_int(_big_num_inout(big_float_t, self), big_float_t pow)
+_big_num_static big_num_ret_t _big_float_pow_big_float_int(_big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, _pow))
 {
-	if( big_float_is_nan(_big_num_deref(self)) )
+	if( big_float_is_nan(self) )
 		return 1;
 
-	if ( !big_float_is_sign(pow) )
-		return _big_float_pow_big_float_uint(self, pow);
+	if ( !big_float_is_sign(_pow) )
+		return _big_float_pow_big_float_uint(self, _big_num_deref(_pow));
 	
-	if ( big_float_is_zero(_big_num_deref(self)) ) {
+	if ( big_float_is_zero(self) ) {
 		// if 'p' is negative then
 		// 'this' must be different from zero
 		big_float_set_nan(self);
@@ -3935,10 +3934,10 @@ _big_num_static big_num_ret_t _big_float_pow_big_float_int(_big_num_inout(big_fl
 	}
 
 	big_float_t temp = _big_num_deref(self);
-	big_num_carry_t c = _big_float_pow_big_float_uint(_big_num_ref(temp), pow); // here can only be a carry (return:1)
+	big_num_carry_t c = _big_float_pow_big_float_uint(_big_num_ref(temp), _big_num_deref(_pow)); // here can only be a carry (return:1)
 
 	big_float_set_one(self);
-	c += big_float_div(self, temp, true);
+	c += big_float_div(self, _big_num_ref(temp), true);
 
 	return _big_float_check_carry(self, c);
 }
@@ -3951,7 +3950,7 @@ _big_num_static big_num_ret_t _big_float_pow_big_float_int(_big_num_inout(big_fl
  * @param[in] x 
  * @param[out] steps 
  */
-_big_num_static void _big_float_exp_surrounding_0(_big_num_inout(big_float_t, self), big_float_t x, _big_num_out(size_t, steps))
+_big_num_static void _big_float_exp_surrounding_0(_big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, x), _big_num_out(size_t, steps))
 {
 	big_float_t denominator, denominator_i;
 	big_float_t one, old_value, next_part;
@@ -3969,17 +3968,17 @@ _big_num_static void _big_float_exp_surrounding_0(_big_num_inout(big_float_t, se
 	for (i = 1 ; i <= BIG_NUM_ARITHMETIC_MAX_LOOP ; ++i) {
 		bool testing = ((i & 3) == 0); // it means '(i % 4) == 0'
 		next_part = numerator;
-		if (0 != big_float_div(_big_num_ref(next_part), denominator, true))
+		if (0 != big_float_div(_big_num_ref(next_part), _big_num_ref(denominator), true))
 			// if there is a carry here we only break the loop 
 			// however the result we return as good
 			// it means there are too many parts of the formula
 			break;
 		
 		// there shouldn't be a carry here
-		big_float_add(self, next_part, true);
+		big_float_add(self, _big_num_ref(next_part), true);
 
 		if (testing) {
-			if ( big_float_cmp_equal(old_value, _big_num_deref(self)) )
+			if ( big_float_cmp_equal(_big_num_ref(old_value), self) )
 				// we've added next few parts of the formula but the result
 				// is still the same then we break the loop
 				break;
@@ -3988,11 +3987,11 @@ _big_num_static void _big_float_exp_surrounding_0(_big_num_inout(big_float_t, se
 		}
 
 		// we set the denominator and the numerator for a next part of the formula
-		if (0 != big_float_add(_big_num_ref(denominator_i), one, true))
+		if (0 != big_float_add(_big_num_ref(denominator_i), _big_num_ref(one), true))
 			// if there is a carry here the result we return as good
 			break;
 
-		if (0 != big_float_mul(_big_num_ref(denominator), denominator_i, true))
+		if (0 != big_float_mul(_big_num_ref(denominator), _big_num_ref(denominator_i), true))
 			break;
 		
 		if (0 != big_float_mul(_big_num_ref(numerator), x, true))
@@ -4015,7 +4014,7 @@ _big_num_static void _big_float_exp_surrounding_0(_big_num_inout(big_float_t, se
  * @param[in] x 
  * @param[out] steps 
  */
-_big_num_static void _big_float_ln_surrounding_1(_big_num_inout(big_float_t, self), big_float_t x, _big_num_out(size_t, steps))
+_big_num_static void _big_float_ln_surrounding_1(_big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, x), _big_num_out(size_t, steps))
 {
 	big_float_t old_value, next_part, denominator, one, two, x1, x2;
 	big_float_init_big_float(_big_num_ref(x1), self->mantissa.size, self->exponent.size, x);
@@ -4023,7 +4022,7 @@ _big_num_static void _big_float_ln_surrounding_1(_big_num_inout(big_float_t, sel
 	big_float_init(_big_num_ref(one), self->mantissa.size, self->exponent.size);
 	big_float_set_one(_big_num_ref(one));
 
-	if ( big_float_cmp_equal(x, one) ) {
+	if ( big_float_cmp_equal(x, _big_num_ref(one)) ) {
 		// LnSurrounding1(1) is 0
 		big_float_set_zero(self);
 		return;
@@ -4031,12 +4030,12 @@ _big_num_static void _big_float_ln_surrounding_1(_big_num_inout(big_float_t, sel
 
 	big_float_init_uint(_big_num_ref(two), self->mantissa.size, self->exponent.size, 2);
 
-	big_float_sub(_big_num_ref(x1), one, true);
-	big_float_add(_big_num_ref(x2), one, true);
+	big_float_sub(_big_num_ref(x1), _big_num_ref(one), true);
+	big_float_add(_big_num_ref(x2), _big_num_ref(one), true);
 
-	big_float_div(_big_num_ref(x1), x2, true);
+	big_float_div(_big_num_ref(x1), _big_num_ref(x2), true);
 	x2 = x1;
-	big_float_mul(_big_num_ref(x2), x1, true);
+	big_float_mul(_big_num_ref(x2), _big_num_ref(x1), true);
 
 	denominator = one;
 	big_float_set_zero(self);
@@ -4049,17 +4048,17 @@ _big_num_static void _big_float_ln_surrounding_1(_big_num_inout(big_float_t, sel
 
 		next_part = x1;
 
-		if (0 != big_float_div(_big_num_ref(next_part), denominator, true))
+		if (0 != big_float_div(_big_num_ref(next_part), _big_num_ref(denominator), true))
 			// if there is a carry here we only break the loop 
 			// however the result we return as good
 			// it means there are too many parts of the formula
 			break;
 		
 		// there shouldn't be a carry here
-		big_float_add(self, next_part, true);
+		big_float_add(self, _big_num_ref(next_part), true);
 
 		if (testing) {
-			if (big_float_cmp_equal(old_value, _big_num_deref(self)))
+			if (big_float_cmp_equal(_big_num_ref(old_value), self))
 				// we've added next (step_test) parts of the formula but the result
 				// is still the same then we break the loop
 				break;
@@ -4067,11 +4066,11 @@ _big_num_static void _big_float_ln_surrounding_1(_big_num_inout(big_float_t, sel
 				old_value = _big_num_deref(self);
 		}
 
-		if (0 != big_float_mul(_big_num_ref(x1), x2, true) )
+		if (0 != big_float_mul(_big_num_ref(x1), _big_num_ref(x2), true) )
 			// if there is a carry here the result we return as good
 			break;
 		
-		if (0 != big_float_add(_big_num_ref(denominator), two, true))
+		if (0 != big_float_add(_big_num_ref(denominator), _big_num_ref(two), true))
 			break;
 	}
 
@@ -4096,15 +4095,15 @@ _big_num_static void _big_float_ln_surrounding_1(_big_num_inout(big_float_t, sel
  * @param[in] value the big num object to set self to
  * @param[in] compensation 
  */
-_big_num_static void _big_float_init_uint_or_int(_big_num_inout(big_float_t, self), big_uint_t value, big_num_sstrg_t compensation)
+_big_num_static void _big_float_init_uint_or_int(_big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_uint_t, value), big_num_sstrg_t compensation)
 {
-	size_t minimum_size = (value.size < self->mantissa.size) ? value.size : self->mantissa.size;
-	big_int_init_int(_big_num_ref(self->exponent), self->exponent.size, (_big_num_sstrg_t(value.size) - _big_num_sstrg_t(self->mantissa.size)) * _big_num_sstrg_t(BIG_NUM_BITS_PER_UNIT) - compensation);
+	size_t minimum_size = (value->size < self->mantissa.size) ? value->size : self->mantissa.size;
+	big_int_init_int(_big_num_ref(self->exponent), self->exponent.size, (_big_num_sstrg_t(value->size) - _big_num_sstrg_t(self->mantissa.size)) * _big_num_sstrg_t(BIG_NUM_BITS_PER_UNIT) - compensation);
 
 	// copying the highest words
 	size_t i;
 	for(i=1 ; i<=minimum_size ; ++i)
-		self->mantissa.table[self->mantissa.size-i] = value.table[value.size-i];
+		self->mantissa.table[self->mantissa.size-i] = value->table[value->size-i];
 
 	// setting the rest of mantissa.table into zero (if some has left)
 	for( ; i<=self->mantissa.size ; ++i)
@@ -4122,37 +4121,37 @@ _big_num_static void _big_float_init_uint_or_int(_big_num_inout(big_float_t, sel
  * @param[in] result the converted value
  * @return big_num_carry_t 
  */
-_big_num_static big_num_carry_t _big_float_to_uint_or_int(big_float_t self, _big_num_out(big_num_strg_t, result))
+_big_num_static big_num_carry_t _big_float_to_uint_or_int(_big_num_const_param _big_num_inout(big_float_t, self), _big_num_out(big_num_strg_t, result))
 {
 	_big_num_deref(result) = 0;
 
 	if ( big_float_is_zero(self) )
 		return 0;
 
-	big_num_sstrg_t max_bit = -_big_num_sstrg_t(self.mantissa.size * BIG_NUM_BITS_PER_UNIT);
+	big_num_sstrg_t max_bit = -_big_num_sstrg_t(self->mantissa.size * BIG_NUM_BITS_PER_UNIT);
 	big_int_t _max_bit;
-	big_int_init_int(_big_num_ref(_max_bit), self.exponent.size, max_bit + _big_num_sstrg_t(BIG_NUM_BITS_PER_UNIT));
+	big_int_init_int(_big_num_ref(_max_bit), self->exponent.size, max_bit + _big_num_sstrg_t(BIG_NUM_BITS_PER_UNIT));
 
-	if ( big_int_cmp_bigger(self.exponent, _max_bit) )
+	if ( big_int_cmp_bigger(_big_num_ref(self->exponent), _big_num_ref(_max_bit)) )
 		// if exponent > (maxbit + big_num_sstrg_t(BIG_NUM_BITS_PER_UNIT)) the value can't be passed
 		// into the 'big_num_sstrg_t' type (it's too big)
 		return 1;
 	
-	big_int_init_int(_big_num_ref(_max_bit), self.exponent.size, max_bit);
+	big_int_init_int(_big_num_ref(_max_bit), self->exponent.size, max_bit);
 
-	if ( big_int_cmp_smaller_equal(self.exponent, _max_bit) )
+	if ( big_int_cmp_smaller_equal(_big_num_ref(self->exponent), _big_num_ref(_max_bit)) )
 		// our value is from the range of (-1,1) and we return zero
 		return 0;
 
 	// exponent is from a range of (maxbit, maxbit + big_num_sstrg_t(BIG_NUM_BITS_PER_UNIT) >
 	// and [maxbit + big_num_sstrg_t(BIG_NUM_BITS_PER_UNIT] <= 0
 	big_num_sstrg_t how_many_bits;
-	big_int_to_int(self.exponent, _big_num_ref(how_many_bits));
+	big_int_to_int(_big_num_ref(self->exponent), _big_num_ref(how_many_bits));
 
 	// how_many_bits is negative, we'll make it positive
 	how_many_bits = -how_many_bits;
 
-	_big_num_deref(result) = (self.mantissa.table[self.mantissa.size-1] >> (how_many_bits % BIG_NUM_BITS_PER_UNIT));
+	_big_num_deref(result) = (self->mantissa.table[self->mantissa.size-1] >> (how_many_bits % BIG_NUM_BITS_PER_UNIT));
 
 	return 0;
 }
@@ -4168,7 +4167,7 @@ _big_num_static big_num_carry_t _big_float_to_uint_or_int(big_float_t self, _big
  */
 _big_num_static void _big_float_init_double_set_exp_and_man(_big_num_inout(big_float_t, self), bool is_sign, big_num_sstrg_t e, big_num_strg_t mhighest, big_num_strg_t m1, big_num_strg_t m2)
 {
-	big_int_init_int(_big_num_ref(self->exponent), self->exponent.size, e);
+	big_int_set_int(_big_num_ref(self->exponent), e);
 
 	if( self->mantissa.size > 1 ) {
 		self->mantissa.table[self->mantissa.size-1] = m1 | mhighest;
@@ -4201,7 +4200,7 @@ _big_num_static void _big_float_init_double_set_exp_and_man(_big_num_inout(big_f
  * @param[in] nan 
  * @return double 
  */
-_big_num_static double _big_float_to_double_set_double(big_float_t self, bool is_sign, big_num_strg_t e, big_num_sstrg_t move, bool infinity, bool nan)
+_big_num_static double _big_float_to_double_set_double(_big_num_const_param _big_num_inout(big_float_t, self), bool is_sign, big_num_strg_t e, big_num_sstrg_t move, bool infinity, bool nan)
 {
 	#ifndef GL_core_profile
 	union {
@@ -4240,8 +4239,8 @@ _big_num_static double _big_float_to_double_set_double(big_float_t self, bool is
 	
 	big_uint_t m;
 	big_uint_init(_big_num_ref(m), 2);
-	m.table[1] = self.mantissa.table[self.mantissa.size-1];
-	m.table[0] = (self.mantissa.size > 1) ? self.mantissa.table[self.mantissa.size-2] : 0;
+	m.table[1] = self->mantissa.table[self->mantissa.size-1];
+	m.table[0] = (self->mantissa.size > 1) ? self->mantissa.table[self->mantissa.size-2] : 0;
 	
 	big_uint_rcr(_big_num_ref(m), 12 + move, 0);
 	
@@ -4266,7 +4265,7 @@ _big_num_static double _big_float_to_double_set_double(big_float_t self, bool is
  * @return true 
  * @return false 
  */
-_big_num_static bool _big_float_smaller_without_sign_than(big_float_t self, big_float_t ss2)
+_big_num_static bool _big_float_smaller_without_sign_than(_big_num_const_param _big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, ss2))
 {
 	if (big_float_is_zero(self)) {
 		if (big_float_is_zero(ss2))
@@ -4281,10 +4280,10 @@ _big_num_static bool _big_float_smaller_without_sign_than(big_float_t self, big_
 
 	// we're using the fact that all bits in mantissa are pushed
 	// into the left side -- Standardizing()
-	if( big_int_cmp_equal(self.exponent, ss2.exponent) )
-		return big_uint_cmp_smaller(self.mantissa, ss2.mantissa, -1);
+	if( big_int_cmp_equal(_big_num_ref(self->exponent), _big_num_ref(ss2->exponent)) )
+		return big_uint_cmp_smaller(_big_num_ref(self->mantissa), _big_num_ref(ss2->mantissa), -1);
 
-	return big_int_cmp_smaller(self.exponent, ss2.exponent);
+	return big_int_cmp_smaller(_big_num_ref(self->exponent), _big_num_ref(ss2->exponent));
 }
 
 /**
@@ -4298,7 +4297,7 @@ _big_num_static bool _big_float_smaller_without_sign_than(big_float_t self, big_
  * @return true 
  * @return false 
  */
-_big_num_static bool	_big_float_greater_without_sign_than(big_float_t self, big_float_t ss2)
+_big_num_static bool	_big_float_greater_without_sign_than(_big_num_const_param _big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, ss2))
 {
 	if (big_float_is_zero(self)) {
 		if (big_float_is_zero(ss2))
@@ -4313,10 +4312,10 @@ _big_num_static bool	_big_float_greater_without_sign_than(big_float_t self, big_
 
 	// we're using the fact that all bits in mantissa are pushed
 	// into the left side -- Standardizing()
-	if( big_int_cmp_equal(self.exponent, ss2.exponent) )
-		return big_uint_cmp_bigger(self.mantissa, ss2.mantissa, -1);
+	if( big_int_cmp_equal(_big_num_ref(self->exponent), _big_num_ref(ss2->exponent)) )
+		return big_uint_cmp_bigger(_big_num_ref(self->mantissa), _big_num_ref(ss2->mantissa), -1);
 
-	return big_int_cmp_bigger(self.exponent, ss2.exponent);
+	return big_int_cmp_bigger(_big_num_ref(self->exponent), _big_num_ref(ss2->exponent));
 }
 
 /**
@@ -4330,7 +4329,7 @@ _big_num_static bool	_big_float_greater_without_sign_than(big_float_t self, big_
  * @return true 
  * @return false 
  */
-_big_num_static bool	_big_float_equal_without_sign(big_float_t self, big_float_t ss2)
+_big_num_static bool	_big_float_equal_without_sign(_big_num_const_param _big_num_inout(big_float_t, self), _big_num_const_param _big_num_inout(big_float_t, ss2))
 {
 	if (big_float_is_zero(self)) {
 		if (big_float_is_zero(ss2))
@@ -4343,7 +4342,7 @@ _big_num_static bool	_big_float_equal_without_sign(big_float_t self, big_float_t
 		return false; // self != 0 & ss2 == 0
 	}
 
-	if( big_int_cmp_equal(self.exponent, ss2.exponent) && big_uint_cmp_equal(self.mantissa, ss2.mantissa, -1) )
+	if( big_int_cmp_equal(_big_num_ref(self->exponent), _big_num_ref(ss2->exponent)) && big_uint_cmp_equal(_big_num_ref(self->mantissa), _big_num_ref(ss2->mantissa), -1) )
 		return true;
 	
 	return false;
@@ -4362,16 +4361,16 @@ _big_num_static bool	_big_float_equal_without_sign(big_float_t self, big_float_t
  * @param[in] self the big num object
  */
 _big_num_static void _big_float_skip_fraction(_big_num_inout(big_float_t, self)) {
-	if (big_float_is_nan(_big_num_deref(self)) || big_float_is_zero(_big_num_deref(self)) )
+	if (big_float_is_nan(self) || big_float_is_zero(self) )
 		return;
 	
-	if ( !big_int_is_sign(self->exponent))
+	if ( !big_int_is_sign(_big_num_ref(self->exponent)))
 		// exponent >= 0 -- the value doesn't have any fractions
 		return;
 	
 	big_int_t negative_bits;
 	big_int_init_int(_big_num_ref(negative_bits), self->exponent.size, -_big_num_sstrg_t(self->mantissa.size * BIG_NUM_BITS_PER_UNIT));
-	if (big_int_cmp_smaller_equal(self->exponent, negative_bits)) {
+	if (big_int_cmp_smaller_equal(_big_num_ref(self->exponent), _big_num_ref(negative_bits))) {
 		// value is from (-1, 1), return zero
 		big_float_set_zero(self);
 		return;
@@ -4379,7 +4378,7 @@ _big_num_static void _big_float_skip_fraction(_big_num_inout(big_float_t, self))
 
 	// exponent is in range (-self->mantissa.size * BIG_NUM_BITS_PER_UNIT, 0)
 	big_num_sstrg_t e;
-	big_int_to_int(self->exponent, _big_num_ref(e));
+	big_int_to_int(_big_num_ref(self->exponent), _big_num_ref(e));
 	big_uint_clear_first_bits(_big_num_ref(self->mantissa), -e);
 
 	// we don't have to standardize 'Standardizing()' the value because
@@ -4394,26 +4393,26 @@ _big_num_static void _big_float_skip_fraction(_big_num_inout(big_float_t, self))
  * @return true 
  * @return false 
  */
-_big_num_static bool _big_float_is_integer(big_float_t self)
+_big_num_static bool _big_float_is_integer(_big_num_const_param _big_num_inout(big_float_t, self))
 {
 	if (big_float_is_zero(self))
 		return true;
 	
-	if (!big_int_is_sign(self.exponent))
+	if (!big_int_is_sign(_big_num_ref(self->exponent)))
 		// exponent >= 0 -- the value doesn't have any fractions
 		return true;
 
 	big_int_t negative_bits;
-	big_int_init_int(_big_num_ref(negative_bits), self.exponent.size, -_big_num_sstrg_t(self.mantissa.size * BIG_NUM_BITS_PER_UNIT));
+	big_int_init_int(_big_num_ref(negative_bits), self->exponent.size, -_big_num_sstrg_t(self->mantissa.size * BIG_NUM_BITS_PER_UNIT));
 
-	if (big_int_cmp_smaller_equal(self.exponent, negative_bits)) {
+	if (big_int_cmp_smaller_equal(_big_num_ref(self->exponent), _big_num_ref(negative_bits))) {
 		// value is from (-1, 1), return zero
 		return false;
 	}
 
 	// exponent is in range (-self->mantissa.size * BIG_NUM_BITS_PER_UNIT, 0)
 	big_num_sstrg_t e;
-	big_int_to_int(self.exponent, _big_num_ref(e));
+	big_int_to_int(_big_num_ref(self->exponent), _big_num_ref(e));
 	e = -e; // e means how many bits we must check
 
 	big_num_strg_t len  = e / BIG_NUM_BITS_PER_UNIT;
@@ -4421,12 +4420,12 @@ _big_num_static bool _big_float_is_integer(big_float_t self)
 	size_t i = 0;
 
 	for ( ; i < len; ++i)
-		if (self.mantissa.table[i] != 0)
+		if (self->mantissa.table[i] != 0)
 			return false;
 	
 	if (rest > 0) {
 		big_num_strg_t rest_mask = BIG_NUM_MAX_VALUE >> (BIG_NUM_BITS_PER_UNIT - rest);
-		if( (self.mantissa.table[i] & rest_mask) != 0)
+		if( (self->mantissa.table[i] & rest_mask) != 0)
 			return false;
 	}
 

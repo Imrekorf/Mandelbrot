@@ -240,9 +240,9 @@ typedef struct big_uint_s 	big_uint_t;
 typedef big_uint_t		 	big_int_t;
 typedef struct big_float_s 	big_float_t;
 
-void big_uint_to_string(big_uint_t * self, char * result, size_t result_len, size_t b);
-void big_int_to_string(big_int_t * self, char * result, size_t result_len, size_t b);
-extern void big_float_to_string(big_float_t * self, char * result, size_t result_len, size_t b,
+void big_uint_to_string(const big_uint_t * self, char * result, size_t result_len, size_t b);
+void big_int_to_string(const big_int_t * self, char * result, size_t result_len, size_t b);
+extern void big_float_to_string(const big_float_t * self, char * result, size_t result_len, size_t b,
 	bool scient, ssize_t scient_from, ssize_t round_index, bool trim_zeroes, char comma);
 #endif
 
