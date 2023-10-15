@@ -637,7 +637,14 @@ void main()
 	big_float_set_double(offset_i, 0.0);
 
 	// FragColor = mandelbrot_bignum(translated, offset_r, offset_i, zoom);
-	FragColor = mandelbrot(translated.x, translated.y, 0.2, 0.0, pow(2, 2));
+	double _zoom, _offset_r, _offset_i;
+	zoom = u_zoom;
+	offset_r = u_offset_r;
+	offset_i = u_offset_i;
+	big_float_to_double(zoom, _zoom);
+	big_float_to_double(offset_r, _offset_r);
+	big_float_to_double(offset_i, _offset_i);
+	FragColor = mandelbrot(translated.x, translated.y, _offset_r, _offset_i, _zoom);
 }
 
 vec4 integerToColor(in float i)

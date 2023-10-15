@@ -476,21 +476,23 @@ void handle_mouse(GLFWwindow* window)
 
     // translate coordinates to center
     big_float_t diff_x, diff_y;
-    big_float_init_double(&diff_x, my_window::man_prec, my_window::exp_prec, (xpos - my_window::width /2) / (my_window::width /2));
-    big_float_init_double(&diff_y, my_window::man_prec, my_window::exp_prec, (ypos - my_window::height/2) / (my_window::height/2));
+    big_float_init_double(&diff_x, my_window::man_prec, my_window::exp_prec, (xpos - my_window::width /2.0) / (my_window::width /2.0));
+    big_float_init_double(&diff_y, my_window::man_prec, my_window::exp_prec, (ypos - my_window::height/2.0) / (my_window::height/2.0));
 
     // divide zoom constant by 2 as number range is -1.0 - 1.0
     big_float_t two;
     big_float_init_uint(&two, my_window::man_prec, my_window::exp_prec, 2);
     big_float_t _zoom = zoom;
     big_float_div(&_zoom, &two, true);
-    big_float_mul(&diff_x, &zoom, true);
-    big_float_mul(&diff_y, &zoom, true);
+    big_float_mul(&diff_x, &_zoom, true);
+    big_float_mul(&diff_y, &_zoom, true);
+
+    // TODO: figure out why this doesn't work when zoom_lvl > 1
 
     big_float_sub(&offset_x, &diff_x, true);
     big_float_add(&offset_y, &diff_y, true);
 
-    std::cout << "zoom: 2^" << zoom_lvl << " = " << zoom 
+    std::cout << "zoom: 2^" << zoom_lvl << " = " << _zoom 
         << "\ndiff (" << diff_x  << ", " << diff_y << ")" 
         << "\noffset: (" << offset_x << ", " << offset_y << ")" 
         << std::endl;
@@ -562,6 +564,7 @@ void event_scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     
     big_float_init_float(&_yoffset, my_window::man_prec, my_window::exp_prec, yoffset * my_window::zoom_step);
     big_float_sub(&zoom_lvl, &_yoffset, true);
+    big_float_set_double(&zoom, 2.0);
     big_float_pow_big_frac(&zoom, &zoom_lvl);
     
     std::cout << "zoom: 2^" << zoom_lvl << " = " << zoom << std::endl;
@@ -582,7 +585,7 @@ void countFPS()
     num_frames++;
     if (current_time - last_time >= 1.0)
     {
-        std::cout << num_frames << " fps" << std::endl;
+        // std::cout << num_frames << " fps" << std::endl;
         num_frames = 0;
         last_time += 1.0;
     }
