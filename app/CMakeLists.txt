@@ -12,11 +12,13 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 	-Wl,-Bstatic # hack to make sure that libraries asre linked statically
 	stdc++
 	pthread
+	mpfr
 	glfw3
 	gdi32
 	opengl32
 	LibGlad
 	Shaders
+	gmp # needs to be last for some reason
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC 	
