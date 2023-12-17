@@ -6,6 +6,7 @@ add_subdirectory(generated/)
 add_executable(${PROJECT_NAME}
 	main.cpp
 	src/util.cpp
+	src/arb_prec.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC 	
