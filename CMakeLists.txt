@@ -23,8 +23,9 @@ option(CMAKE_C_EXTENSIONS "Enable to allow compiler-specific C extensions" OFF)
 
 # set(CMAKE_VERBOSE_MAKEFILE 1)
 
+find_package(glfw3 3.3 REQUIRED)
+
+add_subdirectory(res/)
 add_subdirectory(lib/)
 add_subdirectory(tools/)
 add_subdirectory(app/)
-
-find_package(glfw3 3.3 REQUIRED)

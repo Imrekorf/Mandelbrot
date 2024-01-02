@@ -1,0 +1,3 @@
+[submodule "tools/ConsoleArgumentCpp"]
+	path = tools/ConsoleArgumentCpp
+	url = https://github.com/Imrekorf/ConsoleArgumentCpp.git

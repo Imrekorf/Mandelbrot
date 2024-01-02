@@ -2,3 +2,4 @@ Debug/*
 Release/*
 .vscode/*
 app/generated/**
+res/git_rev.h
